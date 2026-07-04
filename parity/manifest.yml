@@ -109,9 +109,11 @@ findings:
     matrix_rows: []
     verified_by: ".github/workflows/harnessgates.yml present and running"
   crit-422-encoding:
-    status: identical            # Phase 3.2 (the one intentional wire diff)
+    status: changed              # Phase 3.2 — the one intentional wire diff
     step: "3.2"
     matrix_rows: ["C:422-body"]
+    tests:
+      - "projects/agent-web/tests/test_e2e_agui.py::test_422_body_is_json_object"
   crit-retry-coverage:
     status: identical            # Phase 4.2
     step: "4.2"

@@ -6,7 +6,6 @@ GET  /debug/mcp  registry status: answers "why is this tool missing"
 """
 from __future__ import annotations
 
-import json
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path as _Path
@@ -59,7 +58,10 @@ def create_app(
         try:
             run_input = AGUIAdapter.build_run_input(await request.body())
         except ValidationError as e:
-            return Response(content=json.dumps(e.json()), media_type="application/json",
+            # e.json() already returns a JSON string (the error list). Wrapping it
+            # in json.dumps() double-encoded it into a JSON string literal, so
+            # json.loads(body) yielded a str, not the error object (Phase 3.2).
+            return Response(content=e.json(), media_type="application/json",
                             status_code=HTTPStatus.UNPROCESSABLE_ENTITY)
 
         thread_id = run_input.thread_id

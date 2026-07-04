@@ -36,12 +36,14 @@ def test_422_body_shape(client_code_default, baseline):
     assert r.status_code == b["status_code"] == 422
     loaded = json.loads(r.text)
     got_type = type(loaded).__name__
-    # v1 baseline is 'str' (double-encoded). Step 3.2 FLIPS this row: the body
-    # becomes the actual JSON error object (list/dict). When 3.2 lands, change
-    # the expected below to {"list", "dict"} and flip crit-422-encoding.
-    assert got_type == b["body_json_loads_type"], (
-        f"Matrix C[422-body]: body json type {got_type!r} != baseline "
-        f"{b['body_json_loads_type']!r} (intentional flip is step 3.2)")
+    # ROW FLIPPED by step 3.2 (crit-422-encoding). v1 baseline was 'str' (the
+    # double-encoded body); the fix makes the body the actual JSON error object,
+    # so json.loads() now yields a list/dict. The baseline file is kept as the v1
+    # witness (body_json_loads_type == 'str'); this assertion encodes the new,
+    # intended shape.
+    assert b["body_json_loads_type"] == "str"  # v1 witness unchanged
+    assert got_type in ("list", "dict"), (
+        f"Matrix C[422-body]: post-3.2 body must be a JSON object, got {got_type!r}")
 
 
 # ------------------ Matrix D: /healthz and /debug/mcp ---------------------

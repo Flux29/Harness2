@@ -39,6 +39,21 @@ async def test_invalid_input_is_422(app):
     assert r.status_code == 422
 
 
+async def test_422_body_is_json_object(app):
+    """Phase 3.2: the error body is the actual JSON error object, not a JSON
+    string literal. json.loads(body) must yield a list/dict, never a str."""
+    async with app.router.lifespan_context(app):
+        import httpx
+
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            r = await client.post("/agent", content=b"{not json", headers={"content-type": "application/json"})
+    assert r.status_code == 422
+    loaded = json.loads(r.text)
+    assert isinstance(loaded, (list, dict)), f"422 body double-encoded: got {type(loaded).__name__}"
+
+
 async def test_history_persisted_server_side(app, tmp_path):
     async with app.router.lifespan_context(app):
         code, _ = await post_run(app, run_input_json("remember me", thread_id="keeper"))
