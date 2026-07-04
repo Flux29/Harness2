@@ -1,0 +1,17 @@
+
+# Parked-instead-of-deleted files (agentic deletion is disabled by policy)
+Obsolete/
+
+# environments & build artifacts (recreated by uv / npm)
+.venv/
+__pycache__/
+*.pyc
+node_modules/
+projects/agent-web/frontend/dist/
+
+# per-thread agent workspaces & harness runtime state
+projects/agent-web/workspaces/
+.pydantic-deep/
+
+# local config: commit .env.example, never .env
+.env

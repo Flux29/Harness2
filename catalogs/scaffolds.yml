@@ -1,0 +1,40 @@
+version: 1
+root: ${AGENTIC_SCAFFOLDS}
+policy:
+  prefer_existing_scaffolds: true
+  require_source_url: true
+  require_license_note: true
+  require_validation_command: true
+categories:
+  python_agent:
+    preferred:
+      - pydantic-ai
+      - pydantic-graph
+      - pydantic-evals
+      - logfire
+  notebook_math:
+    preferred:
+      - uv
+      - jupyter
+      - marimo
+      - numpy
+      - scipy
+      - sympy
+      - pandas
+      - polars
+      - duckdb
+      - matplotlib
+      - plotly
+  gui:
+    preferred:
+      - nicegui
+      - streamlit
+      - gradio
+      - fastapi
+  testing:
+    preferred:
+      - pytest
+      - hypothesis
+      - pytest-asyncio
+      - playwright
+      - pytest-playwright

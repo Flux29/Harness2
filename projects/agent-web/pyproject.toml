@@ -1,0 +1,36 @@
+[project]
+name = "agent-web"
+version = "0.1.0"
+description = "AG-UI web service for the vendored pydantic-deepagents harness (ADR-0012..0016)."
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic-deep[web,mcp,yaml]",   # vendored harness — see [tool.uv.sources]
+    "pydantic-ai-slim[ag-ui]",       # AGUIAdapter + ag-ui-protocol + starlette
+    "pydantic-ai-slim[openai,openrouter]",  # resolves openrouter:/openai: model strings (live smoke)
+    "ddgs",                          # harness web_search backend
+    "python-dotenv",
+    "logfire",                       # tracing, opt-in via LOGFIRE_TOKEN (observability.py)
+]
+
+# Consolidation rule (PDR 2026-07-01): harness ONLY from vendor/, never PyPI.
+[tool.uv.sources]
+pydantic-deep = { path = "../../vendor/pydantic-deepagents", editable = true }
+
+# Heavy opt-ins matching the env flags (EXECUTE/BROWSER/LITEPARSE):
+#   uv sync --extra full
+[project.optional-dependencies]
+full = ["pydantic-deep[sandbox,browser,liteparse]"]
+
+[dependency-groups]
+dev = ["pytest", "pytest-asyncio", "httpx"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agent_web"]

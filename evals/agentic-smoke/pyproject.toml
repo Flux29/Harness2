@@ -1,0 +1,18 @@
+[project]
+name = "agentic-smoke"
+version = "0.1.0"
+description = "Smoke tests for the AgenticWork Python policy."
+readme = "README.md"
+requires-python = ">=3.13,<3.15"
+dependencies = [
+    "hypothesis",
+    "jupyter",
+    "numpy",
+    "pydantic-ai",
+    "pydantic-evals",
+    "pytest",
+    "scipy",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

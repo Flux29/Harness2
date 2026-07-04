@@ -1,0 +1,112 @@
+"""App factory — the whole web layer we own (ADR-0012).
+
+POST /agent    AG-UI run endpoint (SSE stream out)
+GET  /healthz  liveness
+GET  /debug/mcp  registry status: answers "why is this tool missing"
+"""
+from __future__ import annotations
+
+import json
+from contextlib import asynccontextmanager
+from datetime import datetime, timezone
+from pathlib import Path as _Path
+from http import HTTPStatus
+from typing import Any
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import ValidationError
+from starlette.requests import Request
+from starlette.responses import Response
+from pydantic_ai.ui import SSE_CONTENT_TYPE
+from pydantic_ai.ui.ag_ui import AGUIAdapter
+
+from . import history, observability
+from .agent import build_agent
+from .deps import make_deps
+from .mcp import build_registry, build_toolsets, status
+from .settings import Settings
+
+
+def create_app(
+    settings: Settings | None = None,
+    model: Any | None = None,
+    extra_tools: tuple[Any, ...] = (),
+) -> FastAPI:
+    settings = settings or Settings()
+    if settings.tracing:
+        observability.configure()  # still a no-op without LOGFIRE_TOKEN
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        registry = build_registry(settings.mcp_config, settings.mcp_enable)
+        app.state.registry = registry
+        app.state.agent = build_agent(
+            settings, model=model, mcp_toolsets=build_toolsets(registry),
+            extra_tools=extra_tools,
+        )
+        yield
+
+    app = FastAPI(title="agent-web", lifespan=lifespan)
+    app.add_middleware(
+        CORSMiddleware, allow_origins=list(settings.cors_origins),
+        allow_methods=["*"], allow_headers=["*"],
+    )
+
+    @app.post("/agent")
+    async def run_agent(request: Request) -> Response:
+        accept = request.headers.get("accept", SSE_CONTENT_TYPE)
+        try:
+            run_input = AGUIAdapter.build_run_input(await request.body())
+        except ValidationError as e:
+            return Response(content=json.dumps(e.json()), media_type="application/json",
+                            status_code=HTTPStatus.UNPROCESSABLE_ENTITY)
+
+        thread_id = run_input.thread_id
+
+        async def on_complete(result: Any) -> None:
+            history.save(settings.workspaces_dir, thread_id, result.all_messages())
+
+        adapter = AGUIAdapter(agent=request.app.state.agent, run_input=run_input, accept=accept)
+        stream = adapter.run_stream(
+            deps=make_deps(settings.workspaces_dir, thread_id),
+            message_history=history.load(settings.workspaces_dir, thread_id),
+            on_complete=on_complete,
+        )
+        return adapter.streaming_response(stream)
+
+    @app.get("/healthz")
+    async def healthz() -> dict[str, str]:
+        import pydantic_deep
+
+        dist = _frontend_dist()
+        built = (
+            datetime.fromtimestamp(dist.joinpath("index.html").stat().st_mtime, timezone.utc).isoformat()
+            if dist and dist.joinpath("index.html").exists() else "not built (dev mode?)"
+        )
+        return {
+            "status": "ok",
+            "harness": getattr(pydantic_deep, "__version__", "?"),
+            "frontend_built": built,
+        }
+
+    @app.get("/debug/mcp")
+    async def debug_mcp() -> list[dict[str, Any]]:
+        return status(app.state.registry)
+
+    dist = _frontend_dist()
+    if dist:
+        from starlette.staticfiles import StaticFiles
+
+        app.mount("/", StaticFiles(directory=str(dist), html=True), name="frontend")
+
+    return app
+
+
+
+def _frontend_dist() -> _Path | None:
+    """Locate the built frontend (frontend/dist); env-overridable, None if absent."""
+    import os
+
+    p = _Path(os.getenv("FRONTEND_DIST", str(_Path(__file__).parents[2] / "frontend" / "dist")))
+    return p if (p / "index.html").exists() else None

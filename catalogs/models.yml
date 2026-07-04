@@ -1,0 +1,30 @@
+version: 1
+defaults:
+  compatibility_python: "3.13.x"
+  latest_python_experiment: "3.14.x"
+providers:
+  nvidia:
+    base_url_env: NVIDIA_BASE_URL
+    api_key_env: NVIDIA_API_KEY
+    default_base_url: https://integrate.api.nvidia.com/v1
+    use_for:
+      - direct inference experiments
+      - OpenAI-compatible API smoke tests
+    rules:
+      - Verify model availability before use.
+      - Do not hard-code API keys.
+      - Keep project examples provider-switchable.
+  local:
+    provider: ollama
+    use_for:
+      - private prompts
+      - offline fallback
+      - cheap iteration
+  openai:
+    use_for:
+      - Codex-native workflows
+      - high-reliability structured outputs
+  anthropic:
+    use_for:
+      - Claude Code workflows
+      - cross-agent comparison

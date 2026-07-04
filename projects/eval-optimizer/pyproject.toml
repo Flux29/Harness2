@@ -1,0 +1,44 @@
+[project]
+name = "eval-optimizer"
+version = "0.1.0"
+description = "Two-agent evaluator-optimizer core on pydantic-deepagents + NVIDIA GLM 5.1."
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "pydantic-deep",        # the agent harness (Vstorm) — resolved from vendor/, see [tool.uv.sources]
+    "pydantic-ai",          # underlying framework (pulled in by pydantic-deep, pinned explicit)
+    "pydantic-graph",       # typed, resumable orchestration graph (Workstream B)
+    "ddgs",                 # DuckDuckGo search backend for the harness's web_search tool
+    "openai",               # Phase-0 check + Ollama OpenAI-compatible embeddings client
+    "python-dotenv",        # load .env
+    "psycopg[binary]",      # Phase 3: Postgres access (durable memory)
+    "logfire",              # observability (Pydantic Logfire / OTel) — opt-in via LOGFIRE_TOKEN
+    "tenacity",             # transport-level HTTP retry (pydantic_ai.retries)
+]
+
+# Consolidation (PDR 2026-07-01): the harness comes ONLY from the vendored tree,
+# never PyPI. Editable, so vendor patches (branch_outcomes) are live immediately.
+[tool.uv.sources]
+pydantic-deep = { path = "../../vendor/pydantic-deepagents", editable = true }
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "hypothesis",
+    "ruff",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/eval_optimizer"]

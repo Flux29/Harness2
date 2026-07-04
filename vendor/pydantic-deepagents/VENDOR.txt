@@ -1,0 +1,12 @@
+Vendored: pydantic-deepagents
+Upstream: https://github.com/vstorm-co/pydantic-deepagents
+Commit:   f2224c5 (version 0.3.34)
+Vendored: 2026-07-01
+Patches:  patches/0001-branch-outcomes.patch (public ForkCoordinator.branch_outcomes accessor)
+Notes:
+  - .git and .venv removed from tree (parked in Obsolete/vendor-pydantic-deepagents/):
+    venvs are per-consumer, provenance lives here instead of a dead .git.
+  - apps/deepresearch/workspace(s)/ are runtime dirs: exclude from backups/sync.
+  - On re-vendor: clone upstream, apply patches/, copy tree, run revendor_check.py
+    then verify_core.py. Check upstream CHANGELOG.md for pydantic_ai.ui adoption
+    before writing new UI glue (may shrink projects/agent-web).

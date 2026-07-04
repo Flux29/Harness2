@@ -1,0 +1,41 @@
+version: 1
+python:
+  env:
+    - uv
+    - venv
+    - conda-only-when-needed
+  quality:
+    - ruff
+    - pyright
+    - mypy
+    - pytest
+    - hypothesis
+  math:
+    - numpy
+    - scipy
+    - sympy
+    - pandas
+    - polars
+    - duckdb
+    - pyarrow
+  visualization:
+    - matplotlib
+    - plotly
+    - jupyter
+    - marimo
+agents:
+  frameworks:
+    - pydantic-ai
+    - pydantic-graph
+    - pydantic-evals
+  observability:
+    - logfire
+ui:
+  python:
+    - nicegui
+    - streamlit
+    - gradio
+    - fastapi
+browser_testing:
+  - playwright
+  - pytest-playwright

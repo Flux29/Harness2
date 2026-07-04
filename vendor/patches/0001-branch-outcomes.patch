@@ -1,0 +1,34 @@
+--- a/pydantic_deep/features/forking/coordinator.py
++++ b/pydantic_deep/features/forking/coordinator.py
+@@ -1144,6 +1144,31 @@
+             # Shield the tempdir cleanup so it completes even under cancellation.
+             await asyncio.shield(loop.run_in_executor(None, snap_ctx.__exit__, None, None, None))
+ 
++    async def branch_outcomes(self) -> list[BranchOutcome]:
++        """Public accessor for per-branch outcomes - the deterministic-selection path.
++
++        Returns one :class:`BranchOutcome` per branch, each carrying
++        ``branch_id``, ``branch_label``, ``test_pass_ratio``, ``cost_usd``,
++        ``turns``, ``error_count``, ``retry_count``, ``stuck_loop_hits`` and a
++        ``final_assistant_message`` preview. Exposes the same evidence the judge
++        sees so a caller can pick a winner WITHOUT the judge/confidence path::
++
++            outcomes = await coordinator.branch_outcomes()
++            best = max(outcomes, key=lambda o: o.test_pass_ratio or -1.0)
++            await coordinator.merge_or_select(f"pick:{best.branch_id}")
++
++        Requires a ``test_command`` on the :class:`LiveForkCapability` for
++        ``test_pass_ratio`` to be populated; otherwise it is ``None``.
++
++        VENDOR PATCH (local fork): thin wrapper over the internal
++        ``_build_branch_outcomes()`` (which returns ``(outcomes, goal)``; the
++        goal is dropped here). Kept minimal so it rebases cleanly against
++        upstream. If upstream adds an equivalent public API, delete this and
++        switch callers to it.
++        """
++        outcomes, _goal = await self._build_branch_outcomes()
++        return outcomes
++
+     async def _build_branch_outcomes(self) -> tuple[list[BranchOutcome], str]:
+         """Materialise per-branch summaries + the parent's first user message.
+ 

@@ -1,0 +1,19 @@
+# GPU overlay for the AgenticWork stack.
+# Usage: docker compose -p agentic -f docker-compose.yml -f docker-compose.gpu.yml up -d
+#
+# Gives Ollama access to the NVIDIA GPU for fast local embedding / inference.
+# Embedding models are tiny (mxbai-embed-large / bge-m3 ~ <1GB VRAM), so this is
+# optional — CPU is fine for embeddings. Enable it if you also run a local LLM.
+
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility

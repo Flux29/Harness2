@@ -1,0 +1,67 @@
+# AgenticWork — minimal stateful-services stack
+#
+# Scope: ONLY the durable services the agent harness needs.
+#   - postgres (pgvector)  -> durable shared memory / agent_state
+#   - ollama               -> local embeddings (and optional local LLM fallback)
+#
+# Deliberately separate from C:\Work\Repositories\RAG\infra\compose:
+#   different project name, network, volumes, ports, and DB credentials,
+#   so this stack and the RAG stack never collide and never share data.
+#
+# Usage:
+#   docker compose -p agentic up -d
+#   docker compose -p agentic -f docker-compose.yml -f docker-compose.gpu.yml up -d   # GPU
+#
+# Agent CODE does NOT run here — it runs on the Windows host under `uv`
+# during development. This file is stateful services only.
+
+name: agentic
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    ports:
+      - "5433:5432"          # host 5433 -> avoids clashing with the RAG stack's 5432
+    environment:
+      - POSTGRES_DB=agentic
+      - POSTGRES_USER=agentic
+      - POSTGRES_PASSWORD=agentic        # dev-only; override via .env for anything real
+    volumes:
+      - agentic-pg-data:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agentic -d agentic"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - agentic-net
+
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    ports:
+      - "11435:11434"        # host 11435 -> avoids clashing with the RAG stack's 11434
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_ORIGINS=*
+    volumes:
+      - agentic-ollama-data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - agentic-net
+
+volumes:
+  agentic-pg-data:
+  agentic-ollama-data:
+
+networks:
+  agentic-net:
+    driver: bridge
