@@ -30,7 +30,7 @@ uv run uvicorn agent_web.main:app --host 127.0.0.1 --port 8801
 ```
 
 Env (all optional; `.env` supported): `AGENT_MODEL` (default
-`openrouter:z-ai/glm-4.6` — needs `OPENROUTER_API_KEY`), `FALLBACK_MODEL`
+`openrouter:z-ai/glm-5.2` — needs `OPENROUTER_API_KEY`), `FALLBACK_MODEL`
 (auto-retry model), `WORKSPACES_DIR`, `MCP_CONFIG`, `MCP_ENABLE` (default
 `context7,deepwiki`), `CORS_ORIGINS`, `COST_BUDGET_USD`, `SKILLS_DIR`,
 `WEB_TOOLS=0` (required for TestModel), `TRACING=0`.

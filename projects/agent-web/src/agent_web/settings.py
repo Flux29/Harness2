@@ -37,12 +37,15 @@ def _flag(name: str, default: bool) -> bool:
 
 @dataclass(frozen=True)
 class Settings:
-    model: str = os.getenv("AGENT_MODEL", "openrouter:z-ai/glm-4.6")
+    model: str = os.getenv("AGENT_MODEL", "openrouter:z-ai/glm-5.2")
     # Auto-retry on another model if the primary errors (rate limits, outages).
     fallback_model: str | None = os.getenv("FALLBACK_MODEL") or None
     workspaces_dir: Path = Path(os.getenv("WORKSPACES_DIR", "workspaces"))
     mcp_config: Path = Path(os.getenv("MCP_CONFIG", "mcp.json"))
     # Comma-separated server names to enable (builtins and/or mcp.json entries).
+    # 3.4a decision: the CODE default stays secret-free (context7,deepwiki). The
+    # deployed roster (context7,deepwiki,github,logfire) needs a PAT + read token,
+    # so it lives in .env, not here — a default that fails without secrets is worse.
     mcp_enable: tuple[str, ...] = tuple(
         s.strip() for s in os.getenv("MCP_ENABLE", "context7,deepwiki").split(",") if s.strip()
     )

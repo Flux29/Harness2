@@ -49,7 +49,7 @@ def main() -> int:
     try:
         from pydantic_ai.models.openai import OpenAIChatModel
         from pydantic_ai.providers.openai import OpenAIProvider
-        m = OpenAIChatModel("z-ai/glm-4.6", provider=OpenAIProvider(
+        m = OpenAIChatModel("z-ai/glm-5.2", provider=OpenAIProvider(
             base_url="https://openrouter.ai/api/v1", api_key="dummy-not-used"))
         ok(f"OpenRouter model object -> {m.model_name}")
     except ImportError:

@@ -35,6 +35,6 @@ def test_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     from eval_optimizer.config import Settings
 
     s = Settings.from_env()
-    assert s.glm_model == "z-ai/glm-5.1"
+    assert s.glm_model == "z-ai/glm-5.2"
     assert s.embed_dim == 1024
     assert s.nvidia_base_url.endswith("/v1")

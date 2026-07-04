@@ -59,7 +59,7 @@ PLANNER_INSTRUCTIONS = (
 def build_planner(model: Any | None = None) -> Any:
     """High-reasoning Planner (deep-agent harness) -> structured ExecutionPlan.
 
-    Model defaults to PLANNER_MODEL (e.g. openrouter:z-ai/glm-5.1 or z-ai/glm-5.1).
+    Model defaults to PLANNER_MODEL (e.g. openrouter:z-ai/glm-5.2 or z-ai/glm-5.2).
     """
     from pydantic_deep import create_deep_agent
     from .config import Settings

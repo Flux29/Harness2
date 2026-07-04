@@ -18,7 +18,7 @@ class Settings:
     embed_model: str
     embed_dim: int
     database_url: str
-    # Per-role models (default to GLM; override e.g. PLANNER_MODEL=openrouter:z-ai/glm-5.1)
+    # Per-role models (default to GLM; override e.g. PLANNER_MODEL=openrouter:z-ai/glm-5.2)
     planner_model: str
     generator_model: str
     critic_model: str
@@ -33,7 +33,7 @@ class Settings:
             raise RuntimeError(
                 "NVIDIA_API_KEY is not set. Copy .env.example to .env and fill it in."
             )
-        glm = os.environ.get("GLM_MODEL", "z-ai/glm-5.1")
+        glm = os.environ.get("GLM_MODEL", "z-ai/glm-5.2")
         return cls(
             nvidia_api_key=key,
             nvidia_base_url=os.environ.get(

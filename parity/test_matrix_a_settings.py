@@ -27,9 +27,11 @@ def test_settings_code_defaults_match_baseline(code_default_settings, baseline):
     b = baseline("schemas-v1/settings.json")
     got = _asdict(code_default_settings)
 
-    # --- Row: model. FLIPS in step 3.4 to openrouter:z-ai/glm-5.2. Until then,
-    # identical to the v1 baseline (openrouter:z-ai/glm-4.6). ---
-    assert got["model"] == b["model"], "Matrix A[model]: unexpected model default (flip belongs to step 3.4)"
+    # --- Row: model. FLIPPED by step 3.4 (crit-model-default-mismatch). The v1
+    # witness stays glm-4.6; the code default is now glm-5.2 (all inference on
+    # 5.2, enforced live by Matrix E's model-attribute row). ---
+    assert b["model"] == "openrouter:z-ai/glm-4.6"  # v1 witness unchanged
+    assert got["model"] == "openrouter:z-ai/glm-5.2", "Matrix A[model]: default must be glm-5.2 after 3.4"
 
     # --- Rows that are identical throughout Phases 0-3 ---
     for row in ("fallback_model", "workspaces_dir", "mcp_config", "mcp_enable",

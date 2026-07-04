@@ -85,9 +85,11 @@ findings:
     matrix_rows: []
     verified_by: "doc-grep job bans NVIDIA-hosted / GLM 5.1 in living docs (added at Phase 2 exit); AGENTS.md, eval-optimizer README + pyproject updated"
   crit-model-default-mismatch:
-    status: identical            # Phase 3.4 (glm-5.2 everywhere)
+    status: changed              # Phase 3.4 — glm-5.2 everywhere
     step: "3.4"
     matrix_rows: ["A:model"]
+    tests:
+      - "projects/eval-optimizer/tests/test_smoke.py::test_settings_defaults"
   crit-obsolete-fiction:
     status: changed              # Phase 1.6 — README/PDR stop presenting Obsolete/ as repo structure
     step: "1.6"

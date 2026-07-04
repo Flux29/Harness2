@@ -75,7 +75,7 @@ setx OPENROUTER_API_KEY "sk-or-..."     # new shells pick it up; or put it in a 
 ```
 
 Then reference models as `openrouter:<slug>`, confirming exact slugs at
-https://openrouter.ai/models — e.g. `openrouter:z-ai/glm-4.6`,
+https://openrouter.ai/models — e.g. `openrouter:z-ai/glm-5.2`,
 `openrouter:anthropic/claude-opus-4-6`, `openrouter:qwen/qwen-2.5-coder-32b-instruct`.
 
 Model-stack note: agentic quality is driven mostly by the model, not the harness.
