@@ -5,8 +5,8 @@
 ## Context
 The initial deliverable was a two-agent evaluator-optimizer loop (Optimizer +
 Evaluator). It proved the loop mechanics, but a single generation trajectory is
-the biggest weakness of LLM coding agents. `E:\Schema\Schema.txt` specifies a
-stronger pattern: explore a tree of candidate solutions, then have multiple
+the biggest weakness of LLM coding agents. The project's design schema specifies
+a stronger pattern: explore a tree of candidate solutions, then have multiple
 critics debate and rank them.
 
 ## Decision

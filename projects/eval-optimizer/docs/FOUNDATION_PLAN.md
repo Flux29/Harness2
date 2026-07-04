@@ -5,7 +5,7 @@ This plan addresses four requests, in order, each gated by an exit test:
 
 1. Fix the memory "duplicate recall" issue (de-duplicate on write).
 2. Rebuild the linear evaluator-optimizer into the **Planner → Tree-of-Generators
-   → Debate-Critics** architecture from `E:\Schema\Schema.txt`.
+   → Debate-Critics** architecture from the project's design schema.
 3. Use **pydantic-graph** as the orchestration substrate (typed nodes, durable
    resumable state).
 4. Pilot the **memory** agent via structured-spec output, then batch the rest.

@@ -85,17 +85,20 @@ findings:
     step: "3.4"
     matrix_rows: ["A:model"]
   crit-obsolete-fiction:
-    status: identical            # Phase 1.6 (docs)
+    status: changed              # Phase 1.6 — README/PDR stop presenting Obsolete/ as repo structure
     step: "1.6"
     matrix_rows: []
+    verified_by: "README layout table no longer lists Obsolete/; parking policy restated local-only/gitignored/never-pushed in README + PDR"
   crit-vendor-provenance:
-    status: identical            # Phase 1.6 (CI provenance job)
+    status: changed              # Phase 1.6 — provenance recorded + CI job
     step: "1.6"
     matrix_rows: []
+    verified_by: "VENDOR.txt pins upstream f2224c5 (0.3.34); vendor-integrity provenance step runs revendor_check.py vs the pinned clone (arms when repo var UPSTREAM_REPO is set)"
   crit-no-license:
-    status: identical            # Phase 1.3
+    status: changed              # Phase 1.3 — MIT LICENSE added
     step: "1.3"
     matrix_rows: []
+    verified_by: "root LICENSE present (MIT); scope noted in README layout table"
   crit-no-ci:
     status: changed              # Phase 0.3 — CI now exists
     step: "0.3"
@@ -140,9 +143,10 @@ findings:
     step: "6.6"
     matrix_rows: []
   crit-personal-paths:
-    status: identical            # Phase 1.5
+    status: changed              # Phase 1.5 — scrubbed to <workspace-root> placeholders
     step: "1.5"
     matrix_rows: []
+    verified_by: "secrets-scan job (personal-path grep) reports clean after the scrub; only the scanner's own file and the excluded plan docs still carry sample paths"
   crit-pip-hook:
     status: identical            # Phase 6.6
     step: "6.6"

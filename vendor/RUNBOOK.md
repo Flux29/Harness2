@@ -9,7 +9,7 @@ Written 2026-07-01. Vendored from `github.com/vstorm-co/pydantic-deepagents` @ `
 The full harness **source** now lives at:
 
 ```
-C:\Users\pollm\AgenticWork\vendor\pydantic-deepagents\
+<workspace-root>\vendor\pydantic-deepagents\
 ```
 
 This is the whole repository, not the trimmed PyPI package. The difference that
@@ -36,7 +36,7 @@ The dead `.git/` and the in-tree `.venv/` were removed 2026-07-01 (parked in
 Primary path — the AG-UI web service (`projects/agent-web`):
 
 ```powershell
-cd C:\Users\pollm\AgenticWork\projects\agent-web
+cd <workspace-root>\projects\agent-web
 uv venv
 uv pip install -e "..\..\vendor\pydantic-deepagents[web,mcp,yaml]" "pydantic-ai-slim[ag-ui]" -e .
 ```
@@ -124,7 +124,7 @@ long-term move is to upstream the same method so your local diff drops to zero.
 
 ## Updating / re-vendoring later (IMPORTANT)
 
-Git does **not** work inside `C:\Users\pollm\AgenticWork\` — that folder is a
+Git does **not** work inside `<workspace-root>\` — that folder is a
 special mount and git can't write its metadata there (you'll see "operation not
 permitted"). Large writes into it can also truncate silently. The procedure is now
 mechanical:

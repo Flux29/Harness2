@@ -2,7 +2,7 @@
 
 Date: 2026-07-01
 
-Scope: the whole `C:\Users\pollm\AgenticWork` workspace, including root docs,
+Scope: the whole `<workspace-root>` (AgenticWork) workspace, including root docs,
 catalogs, rules, infra, evals, cache/scaffolds/notebooks, and
 `projects/eval-optimizer`.
 

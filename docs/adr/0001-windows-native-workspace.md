@@ -10,7 +10,8 @@ workspace. Maintaining both a Windows root and a Linux VM root would double the
 setup surface and split the work.
 
 ## Decision
-Use **Windows-native** `C:\Users\pollm\AgenticWork` as the single working root.
+Use a **Windows-native** `<workspace-root>` (an `AgenticWork` root under the
+user's profile) as the single working root.
 Defer the DevDrive/Hyper-V Linux VM and managed-settings governance layer
 indefinitely. Stateful services run in Docker Desktop containers; agent code runs
 on the Windows host under `uv`.

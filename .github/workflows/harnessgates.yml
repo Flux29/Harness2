@@ -233,8 +233,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Personal-path / contamination grep (plan step 1.5)
         run: |
+          # NOTE: this job's own file carries the search patterns (including the
+          # literal 'pollm'), so it must exclude itself or it flags its own
+          # signatures. EXCLUSIONS.md documents the same paths for auditability
+          # and is likewise excluded.
           ! grep -rn --include='*.py' --include='*.md' --include='*.yml' --include='*.ps1' \
             -e 'C:\\Users\\' -e 'pollm' -e 'E:\\Schema' \
             --exclude-dir=vendor --exclude-dir=.git --exclude-dir=baseline . \
-            --exclude=HarnessRefactor.md --exclude=HarnessCritique.md . \
+            --exclude=HarnessRefactor.md --exclude=HarnessCritique.md \
+            --exclude=harnessgates.yml --exclude=EXCLUSIONS.md . \
             || { echo 'Personal environment details found (plan step 1.5 / EXCLUSIONS policy)'; exit 1; }

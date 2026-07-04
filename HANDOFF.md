@@ -41,14 +41,14 @@ the sandbox has no Python ≥3.11, no OpenRouter egress, and no browser.
 
 1. **eval-optimizer full sync (needs Python ≥3.11 — sandbox had 3.10):**
    ```powershell
-   cd C:\Users\pollm\AgenticWork\projects\eval-optimizer
+   cd <workspace-root>\projects\eval-optimizer
    uv sync            # now installs pydantic-deep from vendor\ (editable)
    uv run python ..\..\vendor\verify_core.py     # expect CORE OK + AG-UI/MCP OKs
    uv run pytest -q                              # existing smoke tests
    ```
 2. **agent-web env + tests:**
    ```powershell
-   cd C:\Users\pollm\AgenticWork\projects\agent-web
+   cd <workspace-root>\projects\agent-web
    uv venv; uv sync
    uv run pytest -q                              # expect 10 passed
    uv run python ..\..\vendor\verify_core.py

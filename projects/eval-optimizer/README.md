@@ -11,7 +11,7 @@ structured `Verdict`; a bounded loop iterates until pass or `max_iterations`.
 ## Setup (Windows, uv)
 
 ```powershell
-cd C:\Users\pollm\AgenticWork\projects\eval-optimizer
+cd <workspace-root>\projects\eval-optimizer
 copy .env.example .env       # then edit .env: paste your NVIDIA_API_KEY
 uv sync                      # creates .venv from pyproject.toml
 ```

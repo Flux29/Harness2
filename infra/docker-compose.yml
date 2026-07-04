@@ -4,7 +4,7 @@
 #   - postgres (pgvector)  -> durable shared memory / agent_state
 #   - ollama               -> local embeddings (and optional local LLM fallback)
 #
-# Deliberately separate from C:\Work\Repositories\RAG\infra\compose:
+# Deliberately separate from the RAG project's infra compose stack:
 #   different project name, network, volumes, ports, and DB credentials,
 #   so this stack and the RAG stack never collide and never share data.
 #

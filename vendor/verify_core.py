@@ -1,7 +1,7 @@
 """Core smoke test for the vendored pydantic-deepagents harness.
 
 Run from any consumer venv that installed the vendored package, e.g. (Windows):
-    cd C:\\Users\\pollm\\AgenticWork\\projects\\agent-web
+    cd <workspace-root>\\projects\\agent-web
     uv venv
     uv pip install -e "..\\..\\vendor\\pydantic-deepagents[web,mcp,yaml]" "pydantic-ai-slim[ag-ui]"
     uv run python ..\\..\\vendor\\verify_core.py

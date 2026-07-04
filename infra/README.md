@@ -8,7 +8,7 @@ volumes, ports, and DB credentials).
 ## Start
 
 ```powershell
-cd C:\Users\pollm\AgenticWork\infra
+cd <workspace-root>\infra
 docker compose -p agentic up -d
 # GPU (optional, for local LLM inference; embeddings don't need it):
 docker compose -p agentic -f docker-compose.yml -f docker-compose.gpu.yml up -d

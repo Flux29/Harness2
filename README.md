@@ -14,12 +14,17 @@ Everything traced end-to-end with Logfire.
 
 | Path | What |
 |---|---|
-| `vendor/pydantic-deepagents/` | pristine upstream + `vendor/patches/` (one patch: public `branch_outcomes()`) |
+| `vendor/pydantic-deepagents/` | pristine upstream (its own MIT license) + `vendor/patches/` (one patch: public `branch_outcomes()`) |
+| `LICENSE` | MIT — covers first-party code; the vendored tree keeps its own MIT license |
 | `projects/agent-web/` | the web service: FastAPI + `AGUIAdapter` + MCP registry + CopilotKit frontend |
 | `projects/eval-optimizer/` | C5 fork-based plan-viability pipeline (headless) |
 | `docs/adr/`, `docs/PLAN-agent-web-startup.md` | decisions & the startup/always-on plan |
 | `HANDOFF.md` | what was verified where (sandbox vs Windows-native) |
-| `Obsolete/` | parked-instead-of-deleted files (never agent-deleted; git-ignored) |
+
+> Parking policy: files scheduled for deletion are moved to a **local-only**
+> parking directory that is git-ignored and **never pushed** — so a clone never
+> receives it. Git history (this is a real fork now, not a squash) is the durable
+> record of anything removed.
 
 ## Quickstart (Windows)
 

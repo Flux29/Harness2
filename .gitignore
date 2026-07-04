@@ -8,6 +8,7 @@ __pycache__/
 *.pyc
 node_modules/
 projects/agent-web/frontend/dist/
+*.tsbuildinfo   # tsc incremental state (Phase 1.1; excluded from the fork per EXCLUSIONS.md)
 
 # per-thread agent workspaces & harness runtime state
 projects/agent-web/workspaces/

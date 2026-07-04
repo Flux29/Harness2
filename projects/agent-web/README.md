@@ -8,7 +8,7 @@ we own ~150 lines of Python and one React component.
 ## Quick start (single-server mode — PLAN Phase 1)
 
 ```powershell
-cd C:\Users\pollm\AgenticWork\projects\agent-web
+cd <workspace-root>\projects\agent-web
 powershell -File scripts\build-frontend.ps1     # once, and after UI changes
 powershell -File scripts\Start-AgentWeb.ps1     # starts server if needed, opens browser
 ```
@@ -23,7 +23,7 @@ frontend\ (:3000, proxies /agent to :8801).
 ## Backend (Windows PowerShell)
 
 ```powershell
-cd C:\Users\pollm\AgenticWork\projects\agent-web
+cd <workspace-root>\projects\agent-web
 uv venv                                   # local .venv (never inside vendor\)
 uv sync                                   # installs harness FROM vendor\ (see pyproject [tool.uv.sources])
 uv run uvicorn agent_web.main:app --port 8000

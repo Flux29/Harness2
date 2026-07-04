@@ -1,5 +1,7 @@
 """Typed data shapes for the Planner -> Tree-of-Generators -> Debate-Critics
-pipeline (E:\\Schema\\Schema.txt).
+pipeline. Stage flow: the Planner freezes an ExecutionPlan; Generators produce
+Candidates; Critics score each Candidate along DIMENSIONS; the Rank step weights
+those into RankedCandidates.
 
 These are pure Pydantic models — no logic. The graph (graph.py) moves instances
 of these through its nodes; the agents (agents.py, Workstream C) produce them.

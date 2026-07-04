@@ -11,7 +11,8 @@ files that implement it.
 **Consolidation rule (2026-07-01):** the harness installs **only** from
 `vendor/pydantic-deepagents` (editable path dependency) — never from PyPI. Our own
 code stays out of `vendor/` (pristine upstream + `patches/` + meta docs only). Files
-scheduled for deletion are parked in `Obsolete/` (git-ignored), never agent-deleted.
+scheduled for deletion are parked in a **local-only, git-ignored, never-pushed**
+directory (never agent-deleted); git history is the durable record.
 
 ## AG-UI web frontend (ADR-0012–0016) — LIVE since 2026-07-02
 The vendored harness's TUI is **abandoned** as the interface. Instead, the UI
