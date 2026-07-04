@@ -1,7 +1,7 @@
 [project]
 name = "eval-optimizer"
 version = "0.1.0"
-description = "Two-agent evaluator-optimizer core on pydantic-deepagents + NVIDIA GLM 5.1."
+description = "Evaluator-optimizer core on pydantic-deepagents; provider-flexible inference (OpenRouter default, NVIDIA/Ollama supported)."
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
 dependencies = [

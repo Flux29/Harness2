@@ -14,10 +14,13 @@ agents.
 
 - **uv-first.** No global `pip install`. Use `uv add` / `uv run`. (Enforced by
   the AgenticWork pre-tool-use policy.)
-- **Secrets via env only.** Never hard-code `NVIDIA_API_KEY` or any key. Read
-  from `.env`.
-- **Reasoning vs. embeddings are split.** GLM 5.1 (NVIDIA) reasons; local Ollama
-  embeds. Don't call the NVIDIA endpoint for embeddings.
+- **Secrets via USER env vars.** Never hard-code any key. Secrets are set as user
+  environment variables (e.g. `setx OPENROUTER_API_KEY ...`); `.env` holds only
+  non-secret flags, never keys.
+- **Reasoning vs. embeddings are split.** Reasoning runs on per-role models via
+  OpenRouter (default `openrouter:z-ai/glm-5.2`; override with `PLANNER_MODEL` /
+  `GENERATOR_MODEL` / `CRITIC_MODEL`). Local Ollama does embeddings — never route
+  embeddings to a reasoning provider.
 - **The Optimizer never grades its own work.** The Evaluator never edits the
   artifact. Keep the roles separate.
 
@@ -26,5 +29,6 @@ agents.
 - Test: `uv run pytest`
 - Lint: `uv run ruff check .`
 - Python: 3.11–3.13, `uv` managed.
-- Keep the NVIDIA free-tier rate limit (~40 req/min, no SLA) in mind: bound loop
-  iterations and rely on the harness cost tracker.
+- Mind your inference provider's rate limits (a free NVIDIA tier, for example, is
+  ~40 req/min with no SLA): bound loop iterations and rely on the harness cost
+  tracker.

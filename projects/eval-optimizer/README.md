@@ -4,7 +4,8 @@ The two-agent **evaluator-optimizer** core (PDR Phase 1–2). An Optimizer gener
 an artifact toward a spec; an Evaluator skeptically grades it and returns a
 structured `Verdict`; a bounded loop iterates until pass or `max_iterations`.
 
-- **Reasoning:** NVIDIA-hosted GLM 5.1 (`z-ai/glm-5.1`, OpenAI-compatible).
+- **Reasoning:** per-role models via OpenRouter (default `openrouter:z-ai/glm-5.2`);
+  NVIDIA and local Ollama are also supported providers (ADR-0003).
 - **Harness:** `pydantic-deepagents` (PyPI `pydantic-deep`).
 - **Embeddings (Phase 3):** local Ollama, 1024-dim, pinned.
 
@@ -12,7 +13,7 @@ structured `Verdict`; a bounded loop iterates until pass or `max_iterations`.
 
 ```powershell
 cd <workspace-root>\projects\eval-optimizer
-copy .env.example .env       # then edit .env: paste your NVIDIA_API_KEY
+copy .env.example .env       # non-secret config only; set keys (e.g. OPENROUTER_API_KEY) as USER env vars
 uv sync                      # creates .venv from pyproject.toml
 ```
 
@@ -46,7 +47,7 @@ uv run pytest
 ```
 src/eval_optimizer/
   config.py            # env-driven Settings
-  models.py            # GLM 5.1 wiring (pydantic-ai OpenAI-compatible)
+  models.py            # provider-flexible model wiring (OpenRouter / NVIDIA / Ollama)
   agents.py            # Verdict + build_optimizer() + build_evaluator()
   loop.py              # bounded evaluator-optimizer driver (+ __main__ demo)
   check_connection.py  # Phase 0 endpoint + tool-calling check

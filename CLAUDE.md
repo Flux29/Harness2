@@ -16,4 +16,6 @@ Findings reference: docs/HarnessCritique.md.
 3. Every PR declares a Gate 1 tier per touched file:
    byte-identical | AST-identical | behavioral (manifest entry required).
 4. Secrets live in USER env vars, never in .env or committed files.
- 
+5. Commit at every completed plan step (one step = one commit minimum);
+   never carry more than one step's work uncommitted.
+6. Exit gates require pushed, CI-green state — not just local passing tests.
