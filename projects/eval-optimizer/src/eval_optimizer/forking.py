@@ -59,9 +59,9 @@ def _builder_agent():
     return create_deep_agent(
         model=build_model(s.generator_model),
         forking=LiveForkCapability(
-            test_command="pytest -q",
-            test_timeout_s=90.0,
-            max_branches=8,
+            test_command=s.fork_test_command,
+            test_timeout_s=s.fork_test_timeout_s,
+            max_branches=s.fork_max_branches,
             keep_artifacts=False,   # discard branch overlays; winner flushes to parent
         ),
         include_checkpoints=True,
@@ -86,10 +86,17 @@ async def run_forked_viability(
     approaches: list[tuple[str, str]] | None = None,
     *,
     save_winner_dir: str | None = None,
-    per_branch_budget_usd: float = 0.75,
-    aggregate_budget_usd: float = 2.5,
+    per_branch_budget_usd: float | None = None,
+    aggregate_budget_usd: float | None = None,
 ) -> HarnessForkReport:
     setup_observability()
+    # Fork budgets come from the single declared config (Phase 3.5); explicit
+    # args still override. Defaults are unchanged (0.75 / 2.5).
+    _s = Settings.from_env()
+    if per_branch_budget_usd is None:
+        per_branch_budget_usd = _s.fork_per_branch_budget_usd
+    if aggregate_budget_usd is None:
+        aggregate_budget_usd = _s.fork_aggregate_budget_usd
     approaches = approaches or DEFAULT_APPROACHES
 
     work = tempfile.mkdtemp(prefix="evalopt-fork-")

@@ -45,3 +45,16 @@ def test_execute_false_is_off(monkeypatch):
     """The headline v1 bug: EXECUTE=False (capital F) must NOT enable execution."""
     monkeypatch.setenv("EXECUTE", "False")
     assert _flag("EXECUTE", False) is False
+
+
+def test_fork_config_centralized_defaults():
+    """Phase 3.5: fork knobs live on Settings and default conservatively.
+    build_agent reads settings.fork_* (exercised by test_agent_build)."""
+    from agent_web.settings import Settings
+
+    s = Settings()
+    assert s.fork_test_command == "pytest -q"
+    assert s.fork_max_branches == 4
+    assert s.fork_test_timeout_s == 60.0
+    assert s.fork_branch_budget_usd == 0.75
+    assert s.fork_aggregate_budget_usd == 2.5

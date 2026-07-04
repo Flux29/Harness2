@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -70,3 +70,13 @@ class Settings:
     tool_search: bool = _flag("TOOL_SEARCH", False)
     # /improve: analyzes past sessions, proposes updates to MEMORY.md/SOUL.md/AGENTS.md
     improve: bool = _flag("IMPROVE", False)
+    # --- Fork configuration (ADR-0011), centralized here (Phase 3.5). Defaults
+    # preserve the previous hardcoded behavior. Whether forking stays always-on is
+    # a Phase 5.2 decision; this step only gathers the knobs into one place.
+    fork_test_command: str = os.getenv("FORK_TEST_COMMAND", "pytest -q")
+    fork_max_branches: int = int(os.getenv("FORK_MAX_BRANCHES", "4"))
+    fork_test_timeout_s: float = float(os.getenv("FORK_TEST_TIMEOUT_S", "60"))
+    # Conservative budgets so a runaway branch can't repeat the 22-min/48-call
+    # burn (ADR-0011). Applied per-branch / aggregate when a fork is invoked.
+    fork_branch_budget_usd: float = float(os.getenv("FORK_BRANCH_BUDGET_USD", "0.75"))
+    fork_aggregate_budget_usd: float = float(os.getenv("FORK_AGGREGATE_BUDGET_USD", "2.5"))

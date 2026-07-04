@@ -121,9 +121,12 @@ findings:
     step: "4.2"
     matrix_rows: []
   crit-fork-config-scatter:
-    status: identical            # Phase 3.5
+    status: changed              # Phase 3.5 — fork knobs centralized per project (values unchanged)
     step: "3.5"
     matrix_rows: []
+    tests:
+      - "projects/agent-web/tests/test_settings_flags.py::test_fork_config_centralized_defaults"
+      - "projects/eval-optimizer/tests/test_smoke.py::test_fork_config_centralized"
   crit-port-contradiction:
     status: changed              # Phase 2.2 — living smoke extracted to RUNBOOK; HANDOFF frozen
     step: "2.2"

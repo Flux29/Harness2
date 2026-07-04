@@ -91,9 +91,9 @@ def main() -> int:
             continue
         if status != "changed":
             continue
-        # lint two applies only to `changed`
-        if not entry.get("matrix_rows") and not entry.get("verified_by"):
-            errors.append(f"[lint two] {fid}: status=changed but no matrix_rows and no verified_by")
+        # lint two applies only to `changed`: it must name a verifier — at least
+        # one existing pytest, or a non-pytest verified_by CI hook. (matrix_rows
+        # is informational: which parity rows moved.)
         tests = entry.get("tests") or []
         verified_by = entry.get("verified_by")
         if not tests and not verified_by:

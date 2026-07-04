@@ -43,7 +43,11 @@ def build_agent(
         mcp_servers=list(mcp_toolsets) or None,
         # Opt-ins per ADR-0015 (defaults already cover todo/fs/subagents/skills/
         # memory/monitoring/context/eviction/history-archive/cost/stuck-loop):
-        forking=LiveForkCapability(test_command="pytest -q", max_branches=4),
+        forking=LiveForkCapability(
+            test_command=settings.fork_test_command,
+            max_branches=settings.fork_max_branches,
+            test_timeout_s=settings.fork_test_timeout_s,
+        ),
         include_checkpoints=True,
         skill_directories=[settings.skills_dir] if settings.skills_dir else None,
         cost_budget_usd=settings.cost_budget_usd,

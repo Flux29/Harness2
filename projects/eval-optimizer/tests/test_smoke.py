@@ -38,3 +38,20 @@ def test_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     assert s.glm_model == "z-ai/glm-5.2"
     assert s.embed_dim == 1024
     assert s.nvidia_base_url.endswith("/v1")
+
+
+def test_fork_config_centralized(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Phase 3.5: fork knobs come from the single declared Settings, defaults
+    preserving forking.py's previous hardcoded values."""
+    monkeypatch.setenv("NVIDIA_API_KEY", "nvapi-test")
+    for var in ("FORK_MAX_BRANCHES", "FORK_TEST_COMMAND", "FORK_TEST_TIMEOUT_S",
+                "FORK_PER_BRANCH_BUDGET_USD", "FORK_AGGREGATE_BUDGET_USD"):
+        monkeypatch.delenv(var, raising=False)
+    from eval_optimizer.config import Settings
+
+    s = Settings.from_env()
+    assert s.fork_max_branches == 8
+    assert s.fork_test_command == "pytest -q"
+    assert s.fork_test_timeout_s == 90.0
+    assert s.fork_per_branch_budget_usd == 0.75
+    assert s.fork_aggregate_budget_usd == 2.5
