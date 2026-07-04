@@ -66,9 +66,14 @@ findings:
     step: "4.4"
     matrix_rows: []
   crit-thread-slug-collision:
-    status: identical            # 3.6 pins red tests; fix lands in 4.3
+    status: identical            # 3.6 pins red tests (xfail); behavior fix lands in 4.3
     step: "4.3"
     matrix_rows: ["D:workspace-layout"]
+    note: >-
+      Red tests committed in 3.6 pin the defect without changing behavior:
+      projects/agent-web/tests/test_deps_factory.py::test_slug_distinguishes_slash_from_underscore
+      and ::test_slug_distinguishes_long_prefix_twins (xfail strict). 4.3 flips
+      this to changed, adds the content hash, and removes the xfail markers.
   crit-nvidia-coupling:
     status: identical            # Phase 4.1
     step: "4.1"
