@@ -5,7 +5,7 @@ in isolation, and keeps the winner — built on a vendored
 [pydantic-deepagents](https://github.com/vstorm-co/pydantic-deepagents)
 harness, fronted by a CopilotKit React UI speaking the
 [AG-UI protocol](https://docs.ag-ui.com/introduction) to a FastAPI backend.
-Everything traced end-to-end with Logfire.
+Traceable end-to-end with Logfire (opt-in via `LOGFIRE_TOKEN`).
 
 **Start here:** [`PDR.md`](PDR.md) (architecture → files) and
 [`docs/adr/`](docs/adr/) (16 decision records, 0001–0016).
