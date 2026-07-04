@@ -9,6 +9,31 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+_TRUTHY = {"1", "true", "yes", "on"}
+_FALSY = {"0", "false", "no", "off"}
+
+
+def _flag(name: str, default: bool) -> bool:
+    """Unified env-flag parsing (Phase 3.3).
+
+    Case-insensitive, one truthy/falsy set for every flag. Empty string and
+    unset both mean "use the default"; an unknown value also falls back to the
+    default — so `EXECUTE=False` resolves to OFF, never ON (the v1 case-
+    sensitivity bug). Semantic parity with v1: every v1-valid value resolves
+    identically except the documented fix (`False`/`FALSE` -> off).
+    """
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    v = raw.strip().lower()
+    if v == "":
+        return default
+    if v in _TRUTHY:
+        return True
+    if v in _FALSY:
+        return False
+    return default
+
 
 @dataclass(frozen=True)
 class Settings:
@@ -30,14 +55,15 @@ class Settings:
     skills_dir: str | None = os.getenv("SKILLS_DIR") or None
     # web_search/web_fetch are pydantic-ai BUILT-IN tools: real providers support
     # them, TestModel does not. Off in tests via make_settings(web_tools=False).
-    web_tools: bool = os.getenv("WEB_TOOLS", "1") not in ("0", "false", "no")
+    web_tools: bool = _flag("WEB_TOOLS", True)
     # Logfire tracing (needs LOGFIRE_TOKEN too); TRACING=0 disables explicitly.
-    tracing: bool = os.getenv("TRACING", "1") not in ("0", "false", "no")
+    tracing: bool = _flag("TRACING", True)
     # --- Deferred features (ADR-0015 ledger), all OFF by default. Flip via .env.
-    teams: bool = os.getenv("TEAMS", "0") not in ("0", "false", "no", "")          # agent teams: shared todos + message bus
-    liteparse: bool = os.getenv("LITEPARSE", "0") not in ("0", "false", "no", "")  # PDF/DOCX/XLSX parsing (Node >= 18 + extra)
-    execute: bool = os.getenv("EXECUTE", "0") not in ("0", "false", "no", "")      # shell execute tool, approval-gated (Docker extra advised)
-    browser: bool = os.getenv("BROWSER_AUTOMATION", "0") not in ("0", "false", "no", "")      # Playwright browser automation (extra + browsers)
-    tool_search: bool = os.getenv("TOOL_SEARCH", "0") not in ("0", "false", "no", "")
+    teams: bool = _flag("TEAMS", False)                 # agent teams: shared todos + message bus
+    liteparse: bool = _flag("LITEPARSE", False)         # PDF/DOCX/XLSX parsing (Node >= 18 + extra)
+    execute: bool = _flag("EXECUTE", False)             # shell execute tool, approval-gated (Docker extra advised)
+    browser: bool = _flag("BROWSER_AUTOMATION", False)  # Playwright browser automation (extra + browsers)
+    # search-on-demand tool schemas instead of flat lists (token saver as MCP roster grows)
+    tool_search: bool = _flag("TOOL_SEARCH", False)
     # /improve: analyzes past sessions, proposes updates to MEMORY.md/SOUL.md/AGENTS.md
-    improve: bool = os.getenv("IMPROVE", "0") not in ("0", "false", "no", "")  # search-on-demand tools instead of flat schemas
+    improve: bool = _flag("IMPROVE", False)

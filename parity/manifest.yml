@@ -41,9 +41,12 @@ findings:
     step: "6.1"
     matrix_rows: ["B:test_pass_ratio"]
   crit-flag-case-sensitivity:
-    status: identical            # Phase 3.3 (unified _flag parser)
+    status: changed              # Phase 3.3 — unified _flag parser; EXECUTE=False now OFF
     step: "3.3"
     matrix_rows: ["A:web_tools-rule", "A:tracing-rule", "A:deferred-flags-rule"]
+    tests:
+      - "projects/agent-web/tests/test_settings_flags.py::test_flag_table"
+      - "projects/agent-web/tests/test_settings_flags.py::test_execute_false_is_off"
 
   # ============================= Major ==============================
   crit-merge-threshold:
