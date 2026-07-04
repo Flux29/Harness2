@@ -26,7 +26,7 @@ frontend\ (:3000, proxies /agent to :8801).
 cd <workspace-root>\projects\agent-web
 uv venv                                   # local .venv (never inside vendor\)
 uv sync                                   # installs harness FROM vendor\ (see pyproject [tool.uv.sources])
-uv run uvicorn agent_web.main:app --port 8000
+uv run uvicorn agent_web.main:app --host 127.0.0.1 --port 8801
 ```
 
 Env (all optional; `.env` supported): `AGENT_MODEL` (default
@@ -55,7 +55,7 @@ this tool missing").
 ```powershell
 cd frontend
 npm install        # package-lock.json is committed (built & verified 2026-07-02)
-npm run dev        # http://localhost:3000 -> backend on :8000
+npm run dev        # http://localhost:3000 -> backend on :8801
 ```
 
 OSS-only (ADR-0016): no CopilotKit account, no `INTELLIGENCE_*` env vars.

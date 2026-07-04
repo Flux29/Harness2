@@ -14,6 +14,11 @@
 > secrets migrated to USER env vars, .env files sanitized (+ .env.example
 > templates); tool-discovery skill + IMPROVE loop active. This document is
 > now historical record; current state lives in PDR.md and the ADRs.
+>
+> **Live-smoke procedure moved (2026-07-04):** the living copy is
+> [`docs/RUNBOOK-smoke.md`](docs/RUNBOOK-smoke.md) and runs on **:8801**. The
+> `--port 8000` in step 3 below is frozen history (8000 was held by Docker); do
+> not update it here — use the RUNBOOK.
 
 Written 2026-07-02. Everything below the "Already verified" line is DONE and
 E2E-tested in the Cowork Linux sandbox; the "Run natively" section is what

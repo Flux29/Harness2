@@ -118,9 +118,10 @@ findings:
     step: "3.5"
     matrix_rows: []
   crit-port-contradiction:
-    status: identical            # Phase 2.2 (docs)
+    status: changed              # Phase 2.2 — living smoke extracted to RUNBOOK; HANDOFF frozen
     step: "2.2"
     matrix_rows: []
+    verified_by: "docs/RUNBOOK-smoke.md is the living :8801 procedure; agent-web README ports fixed to 8801; doc-grep bans port 8000 outside frozen HANDOFF"
 
   # ============================= Minor ==============================
   crit-dead-code-strata:
