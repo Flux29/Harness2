@@ -1,0 +1,198 @@
+{
+  "$defs": {
+    "BranchResult": {
+      "description": "One forked branch: a candidate realized from the plan, then validated.\n\n`files` is the manifest of what the branch *would* have created \u2014 kept for\nthe record; the actual files are deleted immediately after validation.",
+      "properties": {
+        "approach": {
+          "title": "Approach",
+          "type": "string"
+        },
+        "candidate_id": {
+          "title": "Candidate Id",
+          "type": "string"
+        },
+        "files": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Files",
+          "type": "array"
+        },
+        "tests_passed": {
+          "default": 0,
+          "title": "Tests Passed",
+          "type": "integer"
+        },
+        "tests_total": {
+          "default": 0,
+          "title": "Tests Total",
+          "type": "integer"
+        },
+        "validation": {
+          "$ref": "#/$defs/ValidationResult"
+        },
+        "viable": {
+          "default": false,
+          "title": "Viable",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "approach",
+        "candidate_id",
+        "validation"
+      ],
+      "title": "BranchResult",
+      "type": "object"
+    },
+    "CheckResult": {
+      "description": "One check (syntax / lint / tests) run against a candidate's files.",
+      "properties": {
+        "detail": {
+          "default": "",
+          "title": "Detail",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "passed": {
+          "title": "Passed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "passed"
+      ],
+      "title": "CheckResult",
+      "type": "object"
+    },
+    "ExecutionPlan": {
+      "description": "Planner output. Immutable for the rest of the pipeline \u2014 generators must\nnot invent architecture mid-run.",
+      "properties": {
+        "functions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Functions",
+          "type": "array"
+        },
+        "goal": {
+          "title": "Goal",
+          "type": "string"
+        },
+        "modules": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Modules",
+          "type": "array"
+        },
+        "steps": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Steps",
+          "type": "array"
+        }
+      },
+      "required": [
+        "goal"
+      ],
+      "title": "ExecutionPlan",
+      "type": "object"
+    },
+    "ValidationResult": {
+      "description": "Outcome of running a candidate's generated code in the sandbox.",
+      "properties": {
+        "checks": {
+          "items": {
+            "$ref": "#/$defs/CheckResult"
+          },
+          "title": "Checks",
+          "type": "array"
+        },
+        "files_written": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Files Written",
+          "type": "array"
+        },
+        "passed": {
+          "title": "Passed",
+          "type": "boolean"
+        },
+        "runner": {
+          "default": "docker",
+          "title": "Runner",
+          "type": "string"
+        },
+        "tests_passed": {
+          "default": 0,
+          "title": "Tests Passed",
+          "type": "integer"
+        },
+        "tests_total": {
+          "default": 0,
+          "title": "Tests Total",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "passed"
+      ],
+      "title": "ValidationResult",
+      "type": "object"
+    }
+  },
+  "description": "Result of forking the frozen plan across approaches and validating each.",
+  "properties": {
+    "any_viable": {
+      "default": false,
+      "title": "Any Viable",
+      "type": "boolean"
+    },
+    "branches": {
+      "items": {
+        "$ref": "#/$defs/BranchResult"
+      },
+      "title": "Branches",
+      "type": "array"
+    },
+    "plan": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ExecutionPlan"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "task": {
+      "title": "Task",
+      "type": "string"
+    },
+    "winner": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Winner"
+    }
+  },
+  "required": [
+    "task"
+  ],
+  "title": "ForkReport",
+  "type": "object"
+}

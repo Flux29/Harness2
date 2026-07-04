@@ -1,0 +1,36 @@
+# parity/layer-rules.yml — Gate 5 layer contract.
+#
+# Each rule forbids imports matching `from_pattern` -> `import_pattern` in
+# first-party code. Patterns are matched against dotted module names as they
+# appear in `import X` / `from X import ...`. A violation fails CI.
+#
+# Cycle detection over first-party packages runs unconditionally in import_lint;
+# these declared rules are the stronger "layer contract" on top of it.
+
+first_party_roots:
+  - projects/agent-web/src
+  - projects/eval-optimizer/src
+  - rules
+
+rules:
+  - name: agent_web-never-imports-eval_optimizer
+    forbid_from: "agent_web"
+    forbid_import: "eval_optimizer"
+    reason: "the two projects are independent; neither depends on the other"
+
+  - name: eval_optimizer-never-imports-agent_web
+    forbid_from: "eval_optimizer"
+    forbid_import: "agent_web"
+    reason: "the two projects are independent; neither depends on the other"
+
+  - name: no-deprecated-forking-shim
+    forbid_from: "*"
+    forbid_import: "pydantic_deep.toolsets.forking"
+    reason: "first-party code reaches forking only through pydantic_deep's public surface (ADR standing rule); the toolsets.forking shim is deprecated"
+
+  # Post-6.5 rule (armed once a legacy/ package exists): the live path must never
+  # import legacy/. Harmless until then — there is no `legacy` module to match.
+  - name: live-path-never-imports-legacy
+    forbid_from: "*"
+    forbid_import: "eval_optimizer.legacy"
+    reason: "ADR 6.5 containment: the live path never imports the legacy strata"

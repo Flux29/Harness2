@@ -1,0 +1,67 @@
+{
+  "enabled_set": [
+    "context7",
+    "deepwiki",
+    "github",
+    "logfire"
+  ],
+  "ignored": [],
+  "requested": [
+    "context7",
+    "deepwiki",
+    "github",
+    "logfire"
+  ],
+  "row_keys": [
+    "builtin",
+    "enabled",
+    "name",
+    "status",
+    "transport"
+  ],
+  "servers": [
+    {
+      "builtin": true,
+      "enabled": true,
+      "name": "context7",
+      "transport": "http"
+    },
+    {
+      "builtin": true,
+      "enabled": true,
+      "name": "deepwiki",
+      "transport": "http"
+    },
+    {
+      "builtin": true,
+      "enabled": false,
+      "name": "figma",
+      "transport": "http"
+    },
+    {
+      "builtin": true,
+      "enabled": false,
+      "name": "figma-local",
+      "transport": "http"
+    },
+    {
+      "builtin": true,
+      "enabled": true,
+      "name": "github",
+      "transport": "http"
+    },
+    {
+      "builtin": false,
+      "enabled": true,
+      "name": "logfire",
+      "transport": "stdio"
+    },
+    {
+      "builtin": false,
+      "enabled": false,
+      "name": "postgres",
+      "transport": "stdio"
+    }
+  ],
+  "status_code": 200
+}

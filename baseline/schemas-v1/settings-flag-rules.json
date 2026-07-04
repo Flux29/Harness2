@@ -1,0 +1,95 @@
+{
+  "browser": {
+    "case_sensitive": true,
+    "default_on": false,
+    "empty_string": "off",
+    "env": "BROWSER_AUTOMATION",
+    "falsy": [
+      "0",
+      "false",
+      "no",
+      ""
+    ]
+  },
+  "execute": {
+    "case_sensitive": true,
+    "default_on": false,
+    "empty_string": "off",
+    "env": "EXECUTE",
+    "falsy": [
+      "0",
+      "false",
+      "no",
+      ""
+    ]
+  },
+  "improve": {
+    "case_sensitive": true,
+    "default_on": false,
+    "empty_string": "off",
+    "env": "IMPROVE",
+    "falsy": [
+      "0",
+      "false",
+      "no",
+      ""
+    ]
+  },
+  "liteparse": {
+    "case_sensitive": true,
+    "default_on": false,
+    "empty_string": "off",
+    "env": "LITEPARSE",
+    "falsy": [
+      "0",
+      "false",
+      "no",
+      ""
+    ]
+  },
+  "note": "v1 per-flag empty-string and case semantics (Matrix A). Phase 3.3 unifies these.",
+  "teams": {
+    "case_sensitive": true,
+    "default_on": false,
+    "empty_string": "off",
+    "env": "TEAMS",
+    "falsy": [
+      "0",
+      "false",
+      "no",
+      ""
+    ]
+  },
+  "tool_search": {
+    "case_sensitive": true,
+    "default_on": false,
+    "empty_string": "off",
+    "env": "TOOL_SEARCH",
+    "falsy": [
+      "0",
+      "false",
+      "no",
+      ""
+    ]
+  },
+  "tracing": {
+    "default_on": true,
+    "empty_string": "on",
+    "env": "TRACING",
+    "falsy": [
+      "0",
+      "false",
+      "no"
+    ]
+  },
+  "web_tools": {
+    "default_on": true,
+    "empty_string": "on",
+    "env": "WEB_TOOLS",
+    "falsy": [
+      "0",
+      "false",
+      "no"
+    ]
+  }
+}

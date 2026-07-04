@@ -1,0 +1,34 @@
+# parity/dup-allowlist.yml — Gate 4 allowlist.
+#
+# Monotonic: this list may only SHRINK. A new function-level duplicate cluster
+# requires a dated, expiring entry added in the same PR that introduces it
+# (5.1's parallel-run dual-write is the template). Removing a resolved cluster
+# is always allowed.
+#
+# Machine-matched entries (each keyed by the dup_scan hash):
+allow: []
+#   Example (the shape a temporary, intentional duplication takes):
+#   - hash: "0123abcd4567ef01"
+#     members: ["projects/agent-web/src/agent_web/history.py::save",
+#               "projects/agent-web/src/agent_web/history.py::save_legacy"]
+#     added: "2026-07-04"
+#     owner: "5.1"
+#     expires: "2026-08-15"   # cutover deadline for the dual-write
+#     reason: "parallel-run history dual-write; expiry IS the read-cutover deadline"
+
+# ---------------------------------------------------------------------------
+# Known v1 duplicates INVENTORY (informational — not function-level clusters, so
+# not matched by this scanner; recorded here so the debt is not invisible):
+#
+#   * Two fork-report vocabularies in eval-optimizer schema.py:
+#       ForkReport/BranchResult      vs  HarnessForkReport/HarnessBranchResult
+#     This is Pydantic *class/field* duplication, not function-body duplication.
+#     Owned by ADR 6.5; its exit criterion resolves the pair. When 6.5 collapses
+#     them, no allowlist change is needed here (nothing was machine-matched).
+#
+#   * features/ vs toolsets/ coordinator copies in the vendor tree:
+#     outside first-party scope (pristine-vendor rule) — inventoried-but-exempt,
+#     never scanned.
+#
+# ADR 6.5 exit criterion (numbered per the plan): the first-party machine
+# allowlist above reaches — and stays at — zero.

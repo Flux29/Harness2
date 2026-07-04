@@ -1,0 +1,177 @@
+# parity/manifest.yml — the canonical state of the refactor (Gate 2)
+#
+# Every finding id from parity/findings-catalog.yml (the enumeration of
+# HarnessCritique.md §8) MUST have an entry here (lint one / completeness).
+#
+# status:
+#   identical  — not yet remediated, OR remediated with no behavioral parity-row
+#                movement and no code change (parity harness sees zero diff).
+#   changed    — behavior changed on purpose. REQUIRES matrix_rows AND either a
+#                named passing pytest (tests:) or a non-pytest CI hook
+#                (verified_by:). This is lint two.
+#   removed    — the subject was deleted from the tree (exclusion / dead-code
+#                removal). No test required.
+#
+# fields:
+#   step         — the plan step that owns the finding.
+#   matrix_rows  — Parity Matrix rows this finding moves (A:/B:/C:/D:/E: keys).
+#   tests        — pytest node-ids that pin the change (checked to exist).
+#   verified_by  — a CI job / artifact that verifies a non-behavioral fix.
+#
+# THE FLIP PROTOCOL: an entry moves off `identical` in the SAME commit that
+# lands the change, never before, never after. A PR that changes behavior
+# without flipping its entry — or flips an entry without a verifier — fails CI.
+
+findings:
+  # ============================ Critical ============================
+  crit-checkpoint-persistence:
+    status: identical            # ADR decision, Phase 6.3
+    step: "6.3"
+    matrix_rows: ["D:checkpoint-store"]
+  crit-history-agent-writable:
+    status: identical            # Phase 5.1 (parallel-run relocation)
+    step: "5.1"
+    matrix_rows: ["D:history-location"]
+  crit-fork-exec-gate:
+    status: identical            # Phase 5.2
+    step: "5.2"
+    matrix_rows: []
+  crit-fork-selection-metric:
+    status: identical            # ADR decision, Phase 6.1
+    step: "6.1"
+    matrix_rows: ["B:test_pass_ratio"]
+  crit-flag-case-sensitivity:
+    status: identical            # Phase 3.3 (unified _flag parser)
+    step: "3.3"
+    matrix_rows: ["A:web_tools-rule", "A:tracing-rule", "A:deferred-flags-rule"]
+
+  # ============================= Major ==============================
+  crit-merge-threshold:
+    status: identical            # ADR sub-decision, Phase 6.1a
+    step: "6.1a"
+    matrix_rows: ["B:any_viable"]
+  crit-silent-judge-fallback:
+    status: identical            # Phase 4.5 instruments; policy is 6.2
+    step: "4.5"
+    matrix_rows: ["B:selection_path", "E:errors"]
+  crit-no-branch-cancel:
+    status: identical            # Phase 4.6
+    step: "4.6"
+    matrix_rows: ["B:winner_dir"]
+  crit-concurrent-history-clobber:
+    status: identical            # Phase 4.4 (per-thread asyncio.Lock)
+    step: "4.4"
+    matrix_rows: []
+  crit-thread-slug-collision:
+    status: identical            # 3.6 pins red tests; fix lands in 4.3
+    step: "4.3"
+    matrix_rows: ["D:workspace-layout"]
+  crit-nvidia-coupling:
+    status: identical            # Phase 4.1
+    step: "4.1"
+    matrix_rows: []
+  crit-toolset-frozen:
+    status: identical            # Phase 4.7
+    step: "4.7"
+    matrix_rows: ["D:debug-mcp-keys", "D:healthz-keys"]
+
+  # ============================ Moderate ============================
+  crit-stale-model-facts:
+    status: identical            # Phase 2.1 (docs)
+    step: "2.1"
+    matrix_rows: []
+  crit-model-default-mismatch:
+    status: identical            # Phase 3.4 (glm-5.2 everywhere)
+    step: "3.4"
+    matrix_rows: ["A:model"]
+  crit-obsolete-fiction:
+    status: identical            # Phase 1.6 (docs)
+    step: "1.6"
+    matrix_rows: []
+  crit-vendor-provenance:
+    status: identical            # Phase 1.6 (CI provenance job)
+    step: "1.6"
+    matrix_rows: []
+  crit-no-license:
+    status: identical            # Phase 1.3
+    step: "1.3"
+    matrix_rows: []
+  crit-no-ci:
+    status: changed              # Phase 0.3 — CI now exists
+    step: "0.3"
+    matrix_rows: []
+    verified_by: ".github/workflows/harnessgates.yml present and running"
+  crit-422-encoding:
+    status: identical            # Phase 3.2 (the one intentional wire diff)
+    step: "3.2"
+    matrix_rows: ["C:422-body"]
+  crit-retry-coverage:
+    status: identical            # Phase 4.2
+    step: "4.2"
+    matrix_rows: []
+  crit-fork-config-scatter:
+    status: identical            # Phase 3.5
+    step: "3.5"
+    matrix_rows: []
+  crit-port-contradiction:
+    status: identical            # Phase 2.2 (docs)
+    step: "2.2"
+    matrix_rows: []
+
+  # ============================= Minor ==============================
+  crit-dead-code-strata:
+    status: identical            # ADR decision, Phase 6.5
+    step: "6.5"
+    matrix_rows: []
+  crit-scratchpad-committed:
+    status: removed              # Phase 0.1a — docs/Deep_Agents.MD excluded pre-commit
+    step: "0.1a"
+    matrix_rows: []
+  crit-stray-artifacts:
+    status: removed              # Phase 0.1a — reg export, body.json, tsbuildinfo excluded pre-commit
+    step: "0.1a"
+    matrix_rows: []
+  crit-aspirational-catalogs:
+    status: identical            # Phase 6.6
+    step: "6.6"
+    matrix_rows: []
+  crit-python-floors:
+    status: identical            # Phase 6.6
+    step: "6.6"
+    matrix_rows: []
+  crit-personal-paths:
+    status: identical            # Phase 1.5
+    step: "1.5"
+    matrix_rows: []
+  crit-pip-hook:
+    status: identical            # Phase 6.6
+    step: "6.6"
+    matrix_rows: []
+
+  # ===================== Discovered (post-§8) ======================
+  # Not in HarnessCritique.md §8 — surfaced during Phase 0.2 baseline capture.
+  # `source` marks it so Gate 2 lint one accepts it outside the catalog.
+  disc-mcp-config-cwd-relative:
+    status: identical
+    source: phase-0-baseline-capture
+    step: "4.7"                  # later-phase decision, NOT a Phase 0 fix
+    matrix_rows: ["D:deployment-config"]
+    note: >-
+      Settings.mcp_config defaults to the RELATIVE path "mcp.json", so which
+      servers register depends on the process CWD. The deployment launches with
+      CWD=projects/agent-web (Start-AgentWeb.ps1 -WorkingDirectory $root), where
+      mcp.json resolves and the deployed roster enables all four
+      {context7, deepwiki, github, logfire} (logfire is a stdio server defined in
+      mcp.json) — matching the PDR's claimed roster, nothing ignored. But launched
+      from any other CWD, the relative default silently drops mcp.json's
+      logfire/postgres and build_registry only log.warnings the now-"unknown"
+      names. This CWD-dependence (not a roster gap) is the real finding; an
+      earlier baseline-capture run from the repo root hit exactly this and showed
+      logfire "ignored". Whether to resolve mcp_config relative to the package (or
+      require an absolute MCP_CONFIG) is a later-phase decision (4.7), not a Phase
+      0 fix. Baseline: baseline/endpoints-v1/debug-mcp.deployed.json.
+
+# relocations — populated only if ADR 6.5 chooses relocation over deletion.
+# Each entry: <old dotted path>: <new dotted path>. Gate 2 lint one verifies the
+# old path no longer resolves and the new path does; Gate 1 AST-matches each.
+relocations: {}

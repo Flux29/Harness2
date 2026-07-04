@@ -1,0 +1,110 @@
+{
+  "$defs": {
+    "HarnessBranchResult": {
+      "description": "One branch from pydantic-deep Live Run Forking, with its real test outcome.",
+      "properties": {
+        "branch_id": {
+          "title": "Branch Id",
+          "type": "string"
+        },
+        "cost_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cost Usd"
+        },
+        "error_count": {
+          "default": 0,
+          "title": "Error Count",
+          "type": "integer"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "preview": {
+          "default": "",
+          "title": "Preview",
+          "type": "string"
+        },
+        "test_pass_ratio": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Test Pass Ratio"
+        },
+        "turns": {
+          "default": 0,
+          "title": "Turns",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "branch_id",
+        "label"
+      ],
+      "title": "HarnessBranchResult",
+      "type": "object"
+    }
+  },
+  "description": "Outcome of a harness Live-Fork viability run.",
+  "properties": {
+    "any_viable": {
+      "default": false,
+      "title": "Any Viable",
+      "type": "boolean"
+    },
+    "branches": {
+      "items": {
+        "$ref": "#/$defs/HarnessBranchResult"
+      },
+      "title": "Branches",
+      "type": "array"
+    },
+    "task": {
+      "title": "Task",
+      "type": "string"
+    },
+    "winner_branch_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Winner Branch Id"
+    },
+    "winner_dir": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Winner Dir"
+    }
+  },
+  "required": [
+    "task"
+  ],
+  "title": "HarnessForkReport",
+  "type": "object"
+}

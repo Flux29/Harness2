@@ -1,0 +1,134 @@
+# parity/findings-catalog.yml
+#
+# The machine-readable enumeration of HarnessCritique.md §8 ("Summary of
+# findings by severity"). §8 is prose; this file assigns each finding a stable
+# id, its severity, its one-line source text, and the plan step that owns it.
+#
+# Gate 2 lint one (completeness) asserts that parity/manifest.yml has an entry
+# for EVERY id here. This is the canonical finding set — adding a finding means
+# adding it here AND to the manifest, or CI fails.
+
+findings:
+  # ---- Critical (contract violations with runtime consequences) ----
+  crit-checkpoint-persistence:
+    severity: critical
+    step: "6.3"
+    summary: "checkpoint persistence claimed but per-request ephemeral"
+  crit-history-agent-writable:
+    severity: critical
+    step: "5.1"
+    summary: "authoritative history writable by the agent it governs"
+  crit-fork-exec-gate:
+    severity: critical
+    step: "5.2"
+    summary: "host code-execution via always-on fork test_command bypassing the approval-gate story"
+  crit-fork-selection-metric:
+    severity: critical
+    step: "6.1"
+    summary: "self-graded fork selection metric"
+  crit-flag-case-sensitivity:
+    severity: critical
+    step: "3.3"
+    summary: "EXECUTE=False-style case-sensitivity enabling gated features"
+
+  # ---- Major (correctness / robustness) ----
+  crit-merge-threshold:
+    severity: major
+    step: "6.1a"
+    summary: "partial-pass merge threshold (>0 merges a 1-of-10 branch)"
+  crit-silent-judge-fallback:
+    severity: major
+    step: "4.5"
+    summary: "silent judge fallback on any exception"
+  crit-no-branch-cancel:
+    severity: major
+    step: "4.6"
+    summary: "no branch cancellation on timeout"
+  crit-concurrent-history-clobber:
+    severity: major
+    step: "4.4"
+    summary: "concurrent-run history clobbering"
+  crit-thread-slug-collision:
+    severity: major
+    step: "4.3"
+    summary: "thread-slug collisions"
+  crit-nvidia-coupling:
+    severity: major
+    step: "4.1"
+    summary: "NVIDIA key required for non-NVIDIA runs with no OpenRouter key validation"
+  crit-toolset-frozen:
+    severity: major
+    step: "4.7"
+    summary: "agent/MCP toolset frozen at startup vs. live-reporting debug endpoint"
+
+  # ---- Moderate (drift and hygiene) ----
+  crit-stale-model-facts:
+    severity: moderate
+    step: "2.1"
+    summary: "stale NVIDIA/GLM-5.1 facts in four documents including agent-injected AGENTS.md"
+  crit-model-default-mismatch:
+    severity: moderate
+    step: "3.4"
+    summary: "template-vs-default model mismatches"
+  crit-obsolete-fiction:
+    severity: moderate
+    step: "1.6"
+    summary: "Obsolete/ referenced but absent"
+  crit-vendor-provenance:
+    severity: moderate
+    step: "1.6"
+    summary: "vendor provenance unverifiable"
+  crit-no-license:
+    severity: moderate
+    step: "1.3"
+    summary: "no root LICENSE"
+  crit-no-ci:
+    severity: moderate
+    step: "0.3"
+    summary: "no CI"
+  crit-422-encoding:
+    severity: moderate
+    step: "3.2"
+    summary: "422 double-encoding"
+  crit-retry-coverage:
+    severity: moderate
+    step: "4.2"
+    summary: "retry-coverage claim gaps"
+  crit-fork-config-scatter:
+    severity: moderate
+    step: "3.5"
+    summary: "fork-config scatter"
+  crit-port-contradiction:
+    severity: moderate
+    step: "2.2"
+    summary: "port 8000/8801 contradiction"
+
+  # ---- Minor (residue) ----
+  crit-dead-code-strata:
+    severity: minor
+    step: "6.5"
+    summary: "four generations of dead code live in the package"
+  crit-scratchpad-committed:
+    severity: minor
+    step: "0.1a"
+    summary: "scratchpad committed as docs (docs/Deep_Agents.MD)"
+  crit-stray-artifacts:
+    severity: minor
+    step: "0.1a"
+    summary: "registry export, curl scratch file, and tsbuildinfo committed"
+  crit-aspirational-catalogs:
+    severity: minor
+    step: "6.6"
+    summary: "aspirational catalogs referencing an undefined env root"
+  crit-python-floors:
+    severity: minor
+    step: "6.6"
+    summary: "three conflicting Python floors"
+  crit-personal-paths:
+    severity: minor
+    step: "1.5"
+    summary: "personal absolute paths throughout"
+  crit-pip-hook:
+    severity: minor
+    step: "6.6"
+    summary: "bypassable pip hook described as enforcement"

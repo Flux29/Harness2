@@ -1,0 +1,5 @@
+{
+  "body_json_loads_type": "str",
+  "content_type": "application/json",
+  "status_code": 422
+}

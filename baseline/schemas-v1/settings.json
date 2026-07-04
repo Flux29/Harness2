@@ -1,0 +1,23 @@
+{
+  "browser": false,
+  "cors_origins": [
+    "http://localhost:3000"
+  ],
+  "cost_budget_usd": null,
+  "execute": false,
+  "fallback_model": null,
+  "improve": false,
+  "liteparse": false,
+  "mcp_config": "mcp.json",
+  "mcp_enable": [
+    "context7",
+    "deepwiki"
+  ],
+  "model": "openrouter:z-ai/glm-4.6",
+  "skills_dir": null,
+  "teams": false,
+  "tool_search": false,
+  "tracing": true,
+  "web_tools": true,
+  "workspaces_dir": "workspaces"
+}

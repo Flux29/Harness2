@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "logfire": {
+      "args": [
+        "logfire-mcp@latest"
+      ],
+      "command": "uvx",
+      "env": {
+        "LOGFIRE_READ_TOKEN": "${LOGFIRE_READ_TOKEN}"
+      }
+    },
+    "postgres": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "${DATABASE_URL}"
+      ],
+      "command": "npx"
+    }
+  }
+}

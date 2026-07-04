@@ -1,0 +1,14 @@
+{
+  "cases": {
+    "": "default",
+    "Thread With Spaces": "Thread_With_Spaces",
+    "a/b": "a_b",
+    "a_b": "a_b",
+    "abc123": "abc123",
+    "default": "default",
+    "unicode-\u00e9\u00e8": "unicode-__",
+    "user@host": "user_host",
+    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "note": "thread_slug(thread_id) -> workspace subdir; history at <slug>/history.json"
+}

@@ -1,0 +1,17 @@
+{
+  "any_viable": true,
+  "branches": [
+    {
+      "branch_id": "b1",
+      "cost_usd": 0.01,
+      "error_count": 0,
+      "label": "approach-a",
+      "preview": "ok",
+      "test_pass_ratio": 1.0,
+      "turns": 3
+    }
+  ],
+  "task": "baseline sample",
+  "winner_branch_id": "b1",
+  "winner_dir": null
+}
