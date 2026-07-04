@@ -220,6 +220,18 @@ jobs:
         if: hashFiles('parity/conftest.py') == ''
         run: echo "parity arms when the harness and baselines land (Phase 0.4)"
 
+  # ------------------------------------------------------------- doc-grep ----
+  # Phase 2 exit gate: keep the fixed doc drift (glm-5.1, NVIDIA-hosted, and
+  # port 8000 in living docs) from silently returning. Scope + patterns live in
+  # parity/doc_grep.py, which deliberately skips ADRs, the plan/critique, and the
+  # frozen HANDOFF.
+  doc-grep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Living-doc drift check
+        run: python3 parity/doc_grep.py
+
   # --------------------------------------------------------- secrets-scan ----
   secrets-scan:
     runs-on: ubuntu-latest

@@ -29,5 +29,5 @@ curl.exe http://127.0.0.1:8801/debug/mcp
 Notes:
 - `--host 127.0.0.1` is the stated bind invariant (pinned in the startup scripts
   by step 5.3); uvicorn already defaults to loopback.
-- Port **8801** is the single-server port. The `:8000` seen in `HANDOFF.md` is
-  frozen history (8000 was held by Docker on the original host).
+- **8801** is the single-server port. (`HANDOFF.md` shows an older port from the
+  original host, held then by Docker; that is frozen history — always use 8801.)
