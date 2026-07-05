@@ -65,6 +65,26 @@ async def test_history_persisted_server_side(app, tmp_path):
                for m in msgs for p in m.get("parts", []))
 
 
+async def test_concurrent_posts_same_thread_both_persisted(app, tmp_path):
+    """Phase 4.4 (crit-concurrent-history-clobber): two simultaneous posts to
+    ONE thread serialize on a per-thread lock; both user messages survive in
+    the final history. RED on v1: both requests loaded the same (empty)
+    history and the last save clobbered the first message."""
+    import asyncio
+
+    async with app.router.lifespan_context(app):
+        (c1, _), (c2, _) = await asyncio.gather(
+            post_run(app, run_input_json("first message", thread_id="clobber")),
+            post_run(app, run_input_json("second message", thread_id="clobber")),
+        )
+    assert c1 == 200 and c2 == 200
+    hist = tmp_path / "workspaces" / "clobber" / "history.json"
+    msgs = json.loads(hist.read_bytes())
+    contents = {p.get("content") for m in msgs for p in m.get("parts", [])}
+    assert "first message" in contents and "second message" in contents, (
+        f"concurrent run clobbered history; surviving user parts: {contents}")
+
+
 async def test_two_threads_isolated_workspaces(app, tmp_path):
     async with app.router.lifespan_context(app):
         await post_run(app, run_input_json("a", thread_id="iso-a"))

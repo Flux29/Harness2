@@ -6,6 +6,7 @@ GET  /debug/mcp  registry status: answers "why is this tool missing"
 """
 from __future__ import annotations
 
+import asyncio
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path as _Path
@@ -52,6 +53,15 @@ def create_app(
         allow_methods=["*"], allow_headers=["*"],
     )
 
+    # Phase 4.4 (crit-concurrent-history-clobber): one in-process lock per
+    # thread id serializes the whole load->run->save window. Concurrent posts
+    # to one thread queue; distinct threads are unaffected. In-process only —
+    # matches the single-server deployment (ADR-0012).
+    thread_locks: dict[str, asyncio.Lock] = {}
+
+    def _thread_lock(thread_id: str) -> asyncio.Lock:
+        return thread_locks.setdefault(thread_id, asyncio.Lock())
+
     @app.post("/agent")
     async def run_agent(request: Request) -> Response:
         accept = request.headers.get("accept", SSE_CONTENT_TYPE)
@@ -70,12 +80,20 @@ def create_app(
             history.save(settings.workspaces_dir, thread_id, result.all_messages())
 
         adapter = AGUIAdapter(agent=request.app.state.agent, run_input=run_input, accept=accept)
-        stream = adapter.run_stream(
-            deps=make_deps(settings.workspaces_dir, thread_id),
-            message_history=history.load(settings.workspaces_dir, thread_id),
-            on_complete=on_complete,
-        )
-        return adapter.streaming_response(stream)
+
+        async def locked_events():
+            # history.load moved INSIDE the lock: a queued request must see the
+            # previous run's saved history, not a pre-lock snapshot.
+            async with _thread_lock(thread_id):
+                stream = adapter.run_stream(
+                    deps=make_deps(settings.workspaces_dir, thread_id),
+                    message_history=history.load(settings.workspaces_dir, thread_id),
+                    on_complete=on_complete,
+                )
+                async for event in stream:
+                    yield event
+
+        return adapter.streaming_response(locked_events())
 
     @app.get("/healthz")
     async def healthz() -> dict[str, str]:

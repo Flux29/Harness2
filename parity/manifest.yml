@@ -62,9 +62,17 @@ findings:
     step: "4.6"
     matrix_rows: ["B:winner_dir"]
   crit-concurrent-history-clobber:
-    status: identical            # Phase 4.4 (per-thread asyncio.Lock)
+    status: changed              # Phase 4.4 — per-thread asyncio.Lock serializes load->run->save
     step: "4.4"
     matrix_rows: []
+    tests:
+      - "projects/agent-web/tests/test_e2e_agui.py::test_concurrent_posts_same_thread_both_persisted"
+    note: >-
+      The E2E test was committed and run RED against the pre-4.4 code first
+      (v1 evidence: only the last save's message survived), then the lock
+      landed in the same commit. history.load moved inside the lock so a
+      queued request sees the previous run's saved history. In-process lock
+      only — matches the single-server deployment (ADR-0012).
   crit-thread-slug-collision:
     status: changed              # Phase 4.3 — content-hash suffix for the collision class
     step: "4.3"
