@@ -28,6 +28,13 @@ dev = ["pytest", "pytest-asyncio", "httpx"]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 
+# Point pyright at the uv-managed venv so `uvx pyright src` (CI typecheck job)
+# resolves third-party imports instead of reporting them all missing.
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+include = ["src"]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

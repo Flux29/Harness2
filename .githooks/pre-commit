@@ -1,0 +1,47 @@
+#!/bin/sh
+# pre-commit -- Harness2 governance hook
+#
+# Blocks any commit containing an unparseable GitHub Actions workflow file.
+# Rationale: a workflow that does not parse never runs, so every gate it
+# defines is silently disabled (see: harnessgates.yml line-104 incident).
+#
+# INSTALL (one time, from the repo root, Git Bash):
+#   git config core.hooksPath .githooks
+#
+# This file lives at .githooks/pre-commit and IS committed/version-controlled,
+# unlike .git/hooks/ which git never tracks. The core.hooksPath setting points
+# git at the tracked folder, so the hook itself is under governance like
+# everything else. Every clone must run the install line once.
+#
+# Requires: python on PATH with PyYAML available (both projects already
+# depend on it; `uv run --project projects/agent-web python` also works --
+# swap PY below if bare python lacks yaml).
+
+PY=python
+
+# Collect staged files under .github/workflows (added/copied/modified only).
+files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '^\.github/workflows/.*\.ya?ml$')
+
+[ -z "$files" ] && exit 0   # no workflow changes staged -> nothing to check
+
+fail=0
+for f in $files; do
+    # Validate the STAGED content (what will actually be committed),
+    # not the working-tree copy, which may differ.
+    if git show ":$f" | "$PY" -c "import sys, yaml; yaml.safe_load(sys.stdin)" 2>/tmp/yamlerr; then
+        echo "pre-commit: OK      $f"
+    else
+        echo "pre-commit: INVALID $f"
+        sed 's/^/    /' /tmp/yamlerr
+        fail=1
+    fi
+done
+
+if [ "$fail" -ne 0 ]; then
+    echo ""
+    echo "pre-commit: commit blocked -- workflow YAML must parse (CLAUDE.md rule 7)."
+    echo "Fix the syntax and re-stage. To bypass in a genuine emergency:"
+    echo "  git commit --no-verify   (do not make a habit of this)"
+    exit 1
+fi
+exit 0

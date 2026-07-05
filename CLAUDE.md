@@ -19,3 +19,7 @@ Findings reference: docs/HarnessCritique.md.
 5. Commit at every completed plan step (one step = one commit minimum);
    never carry more than one step's work uncommitted.
 6. Exit gates require pushed, CI-green state — not just local passing tests.
+7. Before committing any change to .github/workflows/*.yml, validate it:
+   python -c "import yaml,sys; yaml.safe_load(open(sys.argv[1]))" <file>
+   A workflow that does not parse has never run - green history is
+   meaningless if the file is invalid. Fix before commit, no exceptions.

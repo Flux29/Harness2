@@ -1,7 +1,6 @@
 """ADR-0012: requires_approval tool pauses the run into an AG-UI interrupt."""
 from __future__ import annotations
 
-import json
 import warnings
 
 import pytest
