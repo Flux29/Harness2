@@ -22,6 +22,7 @@ older ones (noted inline).
 | [0014](0014-mcp-server-wiring.md) | MCP server wiring via the harness-native registry | Accepted |
 | [0015](0015-full-harness-feature-enablement.md) | Full harness feature enablement (sans TUI) | Accepted |
 | [0016](0016-copilotkit-oss-only-enterprise-later.md) | CopilotKit OSS-only now; Enterprise Intelligence later | Accepted |
+| [0017](0017-selection-failure-policy.md) | Selection failures abort the fork, fail-loud (judge fallback retired) | **Proposed** |
 
 Parent document: `../../PDR.md` (Agentic Build PDR v1.1). Relocated 2026-07-01 from
 `projects/eval-optimizer/docs/adr/` (workspace-level decisions belong at workspace
