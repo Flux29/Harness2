@@ -19,8 +19,10 @@ RUNTIME-VERIFY: the fork→wait→select sequence and the per-branch outcome rea
 from __future__ import annotations
 
 import asyncio
+import logging
 import shutil
 import tempfile
+from typing import Literal
 
 from pydantic_deep import (
     BranchIsolation,
@@ -52,6 +54,8 @@ BUILDER_INSTRUCTIONS = (
 )
 
 _RUNNING_STATES = {"running", "pending", "starting"}
+
+log = logging.getLogger("eval_optimizer.forking")
 
 
 def _builder_agent():
@@ -132,6 +136,7 @@ async def run_forked_viability(
         # Deterministic selection by test-pass ratio; judge fallback if the API differs.
         branches: list[HarnessBranchResult] = []
         winner_id: str | None = None
+        selection_path: Literal["deterministic", "judge_fallback"] | None = None
         try:
             outcomes = await coordinator.branch_outcomes()  # public vendor-patch API (ADR-0011)
             for o in outcomes:
@@ -150,12 +155,22 @@ async def run_forked_viability(
             if best and best.test_pass_ratio and best.test_pass_ratio > 0:
                 merge = await coordinator.merge_or_select(f"pick:{best.branch_id}")
                 winner_id = merge.winner_branch_id
+                if winner_id is not None:
+                    selection_path = "deterministic"
             else:
                 await coordinator.merge_or_select("abort")
         except Exception:
+            # Phase 4.5 (crit-silent-judge-fallback): the swallowed exception is
+            # now logged; whether this path should exist at all is ADR 6.2's.
+            log.warning(
+                "deterministic fork selection failed; falling back to judge resolve",
+                exc_info=True,
+            )
             outcome = await coordinator.resolve(strategy=MergeStrategy(kind="auto"))
             if outcome.merge_result is not None:
                 winner_id = outcome.merge_result.winner_branch_id
+                if winner_id is not None:
+                    selection_path = "judge_fallback"
 
         any_viable = winner_id is not None
         winner_dir = None
@@ -166,6 +181,7 @@ async def run_forked_viability(
         return HarnessForkReport(
             task=task, branches=branches, winner_branch_id=winner_id,
             any_viable=any_viable, winner_dir=winner_dir,
+            selection_path=selection_path,
         )
     finally:
         if coordinator is not None:

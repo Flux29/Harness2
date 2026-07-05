@@ -150,6 +150,7 @@ async def test_deterministic_pick_merges_partial_pass_branch(monkeypatch, fork_e
     assert ("merge_or_select", "pick:b1") in coord.calls
     assert report.winner_branch_id == "b1"
     assert report.any_viable is True
+    assert report.selection_path == "deterministic"  # 4.5 provenance
     assert [b.branch_id for b in report.branches] == ["b1", "b2", "b3"]
     assert ("aclose", None) in coord.calls
 
@@ -165,6 +166,7 @@ async def test_no_passing_branch_aborts(monkeypatch, fork_env):
     assert report.winner_branch_id is None
     assert report.any_viable is False
     assert report.winner_dir is None
+    assert report.selection_path is None  # 4.5 provenance: no winner, no path
 
 
 async def test_save_winner_dir_copies_on_deterministic_win(monkeypatch, fork_env, tmp_path):
@@ -178,17 +180,28 @@ async def test_save_winner_dir_copies_on_deterministic_win(monkeypatch, fork_env
 
 # ----------------------------- fallback path -------------------------------
 
-async def test_selection_exception_falls_back_to_judge(monkeypatch, fork_env):
-    """An exception in deterministic selection silently falls back to the judge
-    resolve (v1 behavior; 4.5 makes it observable, the policy itself is 6.2)."""
+async def test_selection_exception_falls_back_to_judge(monkeypatch, fork_env, caplog):
+    """An exception in deterministic selection falls back to the judge resolve
+    (v1 behavior; the policy itself is ADR 6.2's). Phase 4.5 made the path
+    observable: selection_path records it and the swallowed exception is
+    logged as a warning with traceback."""
+    import logging
+
     coord = FakeCoordinator(outcomes_error=RuntimeError("API drift"),
                             resolve_winner="bx")
     _install(monkeypatch, coord)
-    report = await forking.run_forked_viability("task")
+    with caplog.at_level(logging.WARNING, logger="eval_optimizer.forking"):
+        report = await forking.run_forked_viability("task")
     assert ("resolve", "auto") in coord.calls
     assert report.winner_branch_id == "bx"
     assert report.any_viable is True
+    assert report.selection_path == "judge_fallback"  # 4.5 provenance
     assert report.branches == []  # outcomes never materialized on this path
+    fallback_logs = [r for r in caplog.records
+                     if "falling back to judge resolve" in r.message]
+    assert fallback_logs, "4.5: the swallowed selection exception must be logged"
+    assert fallback_logs[0].exc_info is not None  # traceback attached
+    assert "API drift" in str(fallback_logs[0].exc_info[1])
 
 
 async def test_save_winner_dir_copies_on_fallback(monkeypatch, fork_env, tmp_path):

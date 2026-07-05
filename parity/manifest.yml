@@ -54,9 +54,20 @@ findings:
     step: "6.1a"
     matrix_rows: ["B:any_viable"]
   crit-silent-judge-fallback:
-    status: identical            # Phase 4.5 instruments; policy is 6.2
+    status: changed              # Phase 4.5 — provenance field + fallback logging (policy is 6.2)
     step: "4.5"
     matrix_rows: ["B:selection_path", "E:errors"]
+    tests:
+      - "projects/eval-optimizer/tests/test_forking.py::test_selection_exception_falls_back_to_judge"
+      - "projects/eval-optimizer/tests/test_forking.py::test_deterministic_pick_merges_partial_pass_branch"
+    note: >-
+      ADDITIVE: HarnessForkReport.selection_path
+      (Literal['deterministic','judge_fallback'] | None; None = no winner)
+      records which path picked the winner, and the previously-swallowed
+      selection exception is logged (warning + traceback) when the judge
+      fallback fires — the Matrix E declared warning event. The fallback
+      POLICY is unchanged; ADR 6.2 decides it with this data in hand.
+      Matrix B additive-only tests pass unchanged (v1 fields untouched).
   crit-no-branch-cancel:
     status: identical            # Phase 4.6
     step: "4.6"

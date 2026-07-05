@@ -8,6 +8,8 @@ of these through its nodes; the agents (agents.py, Workstream C) produce them.
 """
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 # Critic dimensions, in scoring order. Weights used by the Rank step.
@@ -139,3 +141,7 @@ class HarnessForkReport(BaseModel):
     winner_branch_id: str | None = None
     any_viable: bool = False               # a branch's tests passed and it was merged
     winner_dir: str | None = None          # where the winning tree was materialized (if saved)
+    # Phase 4.5 (crit-silent-judge-fallback), ADDITIVE: which selection path
+    # produced the winner. None = no winner (abort / failed fallback). Makes
+    # the silent judge fallback observable; the fallback POLICY is ADR 6.2's.
+    selection_path: Literal["deterministic", "judge_fallback"] | None = None
