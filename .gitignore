@@ -12,6 +12,9 @@ projects/agent-web/frontend/dist/
 
 # per-thread agent workspaces & harness runtime state
 projects/agent-web/workspaces/
+# server-only state tree (Phase 5.1): authoritative histories — runtime
+# data, never committed
+projects/agent-web/state/
 .pydantic-deep/
 
 # local config: commit .env.example, never .env
