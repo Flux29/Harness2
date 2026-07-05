@@ -129,9 +129,20 @@ findings:
       SILENT empty OpenRouter key. check_connection.py re-entered the pyright
       scope (ISSUE-3 partially closed) with its type debt fixed.
   crit-toolset-frozen:
-    status: identical            # Phase 4.7
+    status: changed              # Phase 4.7 — honest snapshot reporting (minimal-change option)
     step: "4.7"
     matrix_rows: ["D:debug-mcp-keys", "D:healthz-keys"]
+    tests:
+      - "projects/agent-web/tests/test_e2e_agui.py::test_debug_mcp_snapshot_matches_agent_toolsets"
+      - "projects/agent-web/tests/test_e2e_agui.py::test_healthz_and_mcp_debug"
+    note: >-
+      The plan's honest-reporting option: /debug/mcp rows gain in_agent (the
+      agent's startup toolset snapshot, recorded in lifespan where the
+      toolsets are built) next to live registry status; /healthz gains
+      frontend_mounted (the mount decision actually taken at app creation)
+      next to the live frontend_built. Both additive-only — Matrix D key
+      tests pass against the v1 baselines. Contract: no endpoint may report
+      a state the agent doesn't have.
 
   # ============================ Moderate ============================
   crit-stale-model-facts:
@@ -234,10 +245,21 @@ findings:
   # Not in HarnessCritique.md §8 — surfaced during Phase 0.2 baseline capture.
   # `source` marks it so Gate 2 lint one accepts it outside the catalog.
   disc-mcp-config-cwd-relative:
-    status: identical
+    status: changed              # Phase 4.7 — MCP_CONFIG anchors to the project root
     source: phase-0-baseline-capture
-    step: "4.7"                  # later-phase decision, NOT a Phase 0 fix
-    matrix_rows: ["D:deployment-config"]
+    step: "4.7"
+    matrix_rows: ["D:deployment-config", "A:mcp_config"]
+    tests:
+      - "projects/agent-web/tests/test_settings_flags.py::test_mcp_config_default_is_cwd_independent"
+      - "projects/agent-web/tests/test_settings_flags.py::test_mcp_config_relative_env_anchors_to_project"
+      - "projects/agent-web/tests/test_settings_flags.py::test_mcp_config_absolute_env_taken_as_is"
+    resolution: >-
+      Decided in 4.7: a relative MCP_CONFIG (incl. the default mcp.json)
+      resolves against the project root, absolute paths taken as-is. Under
+      the deployed launch (CWD = projects/agent-web) this is the SAME file
+      as v1 — the deployed roster baseline is unchanged; from any other CWD
+      the roster no longer silently shrinks. Matrix A mcp_config row flipped
+      with the 4.7 citation (v1 witness kept).
     note: >-
       Settings.mcp_config defaults to the RELATIVE path "mcp.json", so which
       servers register depends on the process CWD. The deployment launches with

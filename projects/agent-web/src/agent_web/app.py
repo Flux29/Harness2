@@ -41,8 +41,13 @@ def create_app(
     async def lifespan(app: FastAPI):
         registry = build_registry(settings.mcp_config, settings.mcp_enable)
         app.state.registry = registry
+        toolsets, mcp_snapshot = build_toolsets(registry)
+        # Phase 4.7 (crit-toolset-frozen): the agent's toolsets are built once,
+        # here; record exactly which servers made it in so /debug/mcp can
+        # report the snapshot alongside live registry status.
+        app.state.agent_mcp_servers = mcp_snapshot
         app.state.agent = build_agent(
-            settings, model=model, mcp_toolsets=build_toolsets(registry),
+            settings, model=model, mcp_toolsets=toolsets,
             extra_tools=extra_tools,
         )
         yield
@@ -95,6 +100,12 @@ def create_app(
 
         return adapter.streaming_response(locked_events())
 
+    # The static mount is decided ONCE, here at app creation; healthz reports
+    # this decision (frontend_mounted) next to the live on-disk state
+    # (frontend_built) so the two can't silently contradict (Phase 4.7: a dist
+    # built after startup is visible as built=<time> + mounted=false).
+    startup_dist = _frontend_dist()
+
     @app.get("/healthz")
     async def healthz() -> dict[str, str]:
         import pydantic_deep
@@ -108,17 +119,24 @@ def create_app(
             "status": "ok",
             "harness": getattr(pydantic_deep, "__version__", "?"),
             "frontend_built": built,
+            "frontend_mounted": "true" if startup_dist else "false",
         }
 
     @app.get("/debug/mcp")
     async def debug_mcp() -> list[dict[str, Any]]:
-        return status(app.state.registry)
+        # Phase 4.7 (crit-toolset-frozen): live registry status PLUS the
+        # agent's startup snapshot. A server that turns ready after startup
+        # shows status=ready, in_agent=false — honest, not silently diverging.
+        snapshot = set(getattr(app.state, "agent_mcp_servers", ()))
+        rows = status(app.state.registry)
+        for row in rows:
+            row["in_agent"] = row["name"] in snapshot
+        return rows
 
-    dist = _frontend_dist()
-    if dist:
+    if startup_dist:
         from starlette.staticfiles import StaticFiles
 
-        app.mount("/", StaticFiles(directory=str(dist), html=True), name="frontend")
+        app.mount("/", StaticFiles(directory=str(startup_dist), html=True), name="frontend")
 
     return app
 

@@ -11,8 +11,9 @@ def test_toolsets_are_prefixed_and_resilient():
     registry = MCPRegistry(parse_mcp_servers(
         {"hosted-http": {"url": "https://example.com/mcp", "type": "http"}}, enabled=True,
     ))
-    toolsets = build_toolsets(registry)
+    toolsets, names = build_toolsets(registry)
     assert len(toolsets) == 1
+    assert names == ("hosted-http",)  # the startup snapshot (Phase 4.7)
     resilient = toolsets[0]
     inner = getattr(resilient, "wrapped", None)
     assert type(inner).__name__ == "PrefixedToolset", type(inner)

@@ -35,13 +35,28 @@ def _flag(name: str, default: bool) -> bool:
     return default
 
 
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]  # projects/agent-web
+
+
+def _mcp_config_path() -> Path:
+    """Resolve MCP_CONFIG CWD-independently (Phase 4.7, disc-mcp-config-cwd-
+    relative). A relative path — including the default ``mcp.json`` — anchors
+    to the project root (where the deployed mcp.json lives), so which MCP
+    servers register no longer depends on the process CWD. Under the deployed
+    launch (CWD = projects/agent-web) this resolves to the same file as
+    before; launched from anywhere else it now finds that file instead of
+    silently dropping mcp.json's servers. Absolute paths are taken as-is."""
+    p = Path(os.getenv("MCP_CONFIG", "mcp.json"))
+    return p if p.is_absolute() else _PROJECT_ROOT / p
+
+
 @dataclass(frozen=True)
 class Settings:
     model: str = os.getenv("AGENT_MODEL", "openrouter:z-ai/glm-5.2")
     # Auto-retry on another model if the primary errors (rate limits, outages).
     fallback_model: str | None = os.getenv("FALLBACK_MODEL") or None
     workspaces_dir: Path = Path(os.getenv("WORKSPACES_DIR", "workspaces"))
-    mcp_config: Path = Path(os.getenv("MCP_CONFIG", "mcp.json"))
+    mcp_config: Path = _mcp_config_path()
     # Comma-separated server names to enable (builtins and/or mcp.json entries).
     # 3.4a decision: the CODE default stays secret-free (context7,deepwiki). The
     # deployed roster (context7,deepwiki,github,logfire) needs a PAT + read token,

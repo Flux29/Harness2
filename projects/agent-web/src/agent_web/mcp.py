@@ -23,12 +23,17 @@ def build_registry(mcp_config: Path, enable: tuple[str, ...]) -> MCPRegistry:
     return registry
 
 
-def build_toolsets(registry: MCPRegistry) -> list[Any]:
+def build_toolsets(registry: MCPRegistry) -> tuple[list[Any], tuple[str, ...]]:
     """Build ready servers, each namespaced then made resilient.
 
     PrefixedToolset renames every tool to `<server>_<tool>` — without it, MCP
     tools collide with harness tools (e.g. github's `delete_file` vs the
     forking toolset's) and pydantic-ai refuses to start the run.
+
+    Returns ``(toolsets, names)``: names are the servers actually built into
+    the agent — the startup snapshot that /debug/mcp reports next to live
+    registry status (Phase 4.7, crit-toolset-frozen), so the one readiness
+    decision has one owner and the two views cannot silently disagree.
     """
     from pydantic_ai.toolsets import PrefixedToolset
     from pydantic_deep.mcp import make_resilient
@@ -37,12 +42,14 @@ def build_toolsets(registry: MCPRegistry) -> list[Any]:
         log.warning("MCP server %r degraded: %s", name, reason)
 
     out: list[Any] = []
+    names: list[str] = []
     for config in registry.list_servers():
         if registry.status(config) != "ready":
             continue
         toolset = PrefixedToolset(registry.build(config), config.name.replace("-", "_"))
         out.append(make_resilient(toolset, config.name, on_degraded))
-    return out
+        names.append(config.name)
+    return out, tuple(names)
 
 
 def status(registry: MCPRegistry) -> list[dict[str, Any]]:

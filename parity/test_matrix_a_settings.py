@@ -33,8 +33,19 @@ def test_settings_code_defaults_match_baseline(code_default_settings, baseline):
     assert b["model"] == "openrouter:z-ai/glm-4.6"  # v1 witness unchanged
     assert got["model"] == "openrouter:z-ai/glm-5.2", "Matrix A[model]: default must be glm-5.2 after 3.4"
 
+    # --- Row: mcp_config. FLIPPED by step 4.7 (disc-mcp-config-cwd-relative).
+    # The v1 witness stays the bare relative 'mcp.json' (CWD-dependent); the
+    # default now anchors to the project root, so it resolves to the SAME file
+    # the deployed launch (CWD = projects/agent-web) always used, from any CWD. ---
+    assert b["mcp_config"] == "mcp.json"  # v1 witness unchanged
+    from pathlib import Path
+
+    p = Path(got["mcp_config"])
+    assert p.is_absolute() and p.name == "mcp.json" and p.parent.name == "agent-web", (
+        "Matrix A[mcp_config]: default must be the project-root mcp.json after 4.7")
+
     # --- Rows that are identical throughout Phases 0-3 ---
-    for row in ("fallback_model", "workspaces_dir", "mcp_config", "mcp_enable",
+    for row in ("fallback_model", "workspaces_dir", "mcp_enable",
                 "cors_origins", "cost_budget_usd", "skills_dir"):
         assert got[row] == b[row], f"Matrix A[{row}]: drifted from v1 baseline"
 

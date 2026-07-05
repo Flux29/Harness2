@@ -110,3 +110,36 @@ async def test_healthz_and_mcp_debug(app):
     names = {s["name"] for s in servers}
     assert {"github", "context7", "deepwiki"} <= names
     assert all(s["status"] != "active" for s in servers)  # nothing enabled in tests
+    # Phase 4.7: /healthz reports the mount decision actually taken at startup.
+    mounted = any(getattr(r, "name", None) == "frontend" for r in app.routes)
+    assert health["frontend_mounted"] == ("true" if mounted else "false")
+    # Phase 4.7: every row carries the agent's startup snapshot; nothing was
+    # ready here, so nothing can claim to be in the agent.
+    assert all(s["in_agent"] is False for s in servers)
+
+
+async def test_debug_mcp_snapshot_matches_agent_toolsets(tmp_path):
+    """Phase 4.7 (crit-toolset-frozen): /debug/mcp's in_agent reflects exactly
+    the servers whose toolsets were built into the agent at startup — a ready
+    server is in, everything else out."""
+    import httpx
+
+    (tmp_path / "mcp.json").write_text(json.dumps({"mcpServers": {
+        "hosted-http": {"url": "https://example.com/mcp", "type": "http"},
+    }}))
+    from dataclasses import replace
+
+    settings = replace(make_settings(tmp_path),
+                       mcp_config=tmp_path / "mcp.json",
+                       mcp_enable=("hosted-http",))
+    app = create_app(settings=settings, model=TestModel(call_tools=[]))
+    async with app.router.lifespan_context(app):
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            rows = (await client.get("/debug/mcp")).json()
+        assert app.state.agent_mcp_servers == ("hosted-http",)
+    by_name = {r["name"]: r for r in rows}
+    assert by_name["hosted-http"]["in_agent"] is True
+    assert all(r["in_agent"] is False
+               for n, r in by_name.items() if n != "hosted-http")
