@@ -24,9 +24,9 @@ PydanticAI-natively and rendered by CopilotKit. Home: `projects/agent-web/`.
 | Frontend | CopilotKit React (`npx copilotkit@latest create`, framework: Pydantic AI; skill via `npx copilotkit@latest skills onboard`) | 0013 |
 | Protocol | AG-UI (`ag-ui-protocol` types + encoder) over SSE | 0012 |
 | Backend | FastAPI (Starlette-based, ASGI) — one route: `AGUIAdapter.dispatch_request(request, agent=…, deps=…)` from `pydantic-ai-slim[ag-ui]` | 0012 |
-| Agent | one `create_deep_agent(...)` — full feature set enabled (forking, checkpoints, skills, sandbox execute, memory, cost budget); returns a plain `pydantic_ai.Agent`, so the adapter needs no bridge code | 0015 |
+| Agent | one `create_deep_agent(...)` — full feature set (checkpoints, skills, memory, cost budget); host-executing surfaces are explicitly gated: execute approval-gated, forking `FORKING=1` opt-in (Phase 5.2); returns a plain `pydantic_ai.Agent`, so the adapter needs no bridge code | 0015 |
 | Tools | MCP servers via harness-native `pydantic_deep.mcp` registry (`mcp.json` + builtins: github, context7, deepwiki, figma; plus logfire, postgres) | 0014 |
-| Sessions | per-request `DeepAgentDeps` with per-user backend; server-owned message history keyed by AG-UI thread id | 0012 |
+| Sessions | per-request `DeepAgentDeps` with per-user backend; server-owned message history keyed by AG-UI thread id, stored in a server-only `state/` tree outside agent-writable roots (Phase 5.1) | 0012 |
 | Approvals | AG-UI interrupts (`requires_approval=True` → resume flow) | 0012 |
 
 Vendor install shifts from `.[cli]` to `.[web,mcp,yaml]` (+`sandbox` when execute is
@@ -49,9 +49,9 @@ copy the tree to a normal directory, `git init` there, and push; `.gitignore`
 | `projects/agent-web/src/agent_web/main.py` | FastAPI app: `POST /agent` (AG-UI SSE), `/healthz`, `/debug/mcp` |
 | `projects/agent-web/src/agent_web/agent.py` | the one `create_deep_agent(...)` call (ADR-0015 flags, `output_type=[str, DeferredToolRequests]`) |
 | `projects/agent-web/src/agent_web/deps.py` | per-thread `WebDeps` factory: `LocalBackend` workspace + checkpoint store + AG-UI `state` |
-| `projects/agent-web/src/agent_web/history.py` | server-owned message history per thread (trust model) |
+| `projects/agent-web/src/agent_web/history.py` | server-owned message history per thread (trust model); authoritative copy under `STATE_DIR/history/` — agent file tools cannot reach it; `HISTORY_DUAL_WRITE=1` = 5.1 migration window |
 | `projects/agent-web/src/agent_web/mcp.py` | ADR-0014 registry wiring (builtins + `mcp.json`, resilient build) |
-| `projects/agent-web/tests/` | 13 tests (7 E2E over the real ASGI app, 6 unit) — SSE shape, isolation, history, interrupts + resume, checkpoints, MCP prefixing |
+| `projects/agent-web/tests/` | 43 tests (E2E over the real ASGI app + unit) — SSE shape, isolation, server-side history + dual-write window, per-thread run lock, endpoint honesty, fork gate, interrupts + resume, checkpoints, MCP prefixing |
 | `projects/agent-web/frontend/` | CopilotKit v2 + `@ag-ui/client` React app (OSS-only, ADR-0016) |
 | `vendor/patches/`, `vendor/VENDOR.txt`, `vendor/revendor_check.py` | vendor hygiene (IMPROVEMENTS 1–8 enacted) |
 

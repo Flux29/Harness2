@@ -45,5 +45,11 @@ Secrets are Windows USER environment variables (see `.env.example` files);
   `skills/external-services` skill teaches it to.
 - `execute` (shell) is approval-gated through AG-UI interrupts; browser
   automation is not — leave `BROWSER_AUTOMATION=0` unless a task needs it.
+  Live Run Forking runs LLM-generated code + its tests on the host, so it is
+  likewise opt-in: `FORKING=0` by default (Phase 5.2); eval-optimizer's
+  headless fork path additionally requires `EVALOPT_ALLOW_HOST_EXEC=1`.
+- Authoritative chat history lives in a server-only `state/` tree that agent
+  file tools cannot reach (Phase 5.1); upgrading v1 deployments migrate via
+  the `HISTORY_DUAL_WRITE=1` parallel-run window, not a hard cutover.
 - Telemetry is the impartial witness: every claim in the ADRs' resolution
   logs is backed by a Logfire trace.

@@ -33,7 +33,8 @@ Env (all optional; `.env` supported): `AGENT_MODEL` (default
 `openrouter:z-ai/glm-5.2` — needs `OPENROUTER_API_KEY`), `FALLBACK_MODEL`
 (auto-retry model), `WORKSPACES_DIR`, `MCP_CONFIG`, `MCP_ENABLE` (default
 `context7,deepwiki`), `CORS_ORIGINS`, `COST_BUDGET_USD`, `SKILLS_DIR`,
-`WEB_TOOLS=0` (required for TestModel), `TRACING=0`.
+`WEB_TOOLS=0` (required for TestModel), `TRACING=0`, `STATE_DIR` (server-only
+state tree, default `state`), `HISTORY_DUAL_WRITE` (5.1 migration window).
 
 Feature switches (ADR-0015), all OFF by default — flip in `.env`, restart:
 
@@ -66,8 +67,9 @@ coding-agent skills + agent-assisted onboarding (account-free per CLI docs).
 ## Tests (all E2E, no mocks of our code)
 
 ```powershell
-uv run pytest      # 10 tests: SSE shape, 422, history persistence, thread
-                   # isolation, healthz/mcp, approval interrupt (tool NOT run)
+uv run pytest      # 43 tests: SSE shape, 422, server-side history (+ the 5.1
+                   # dual-write window), thread isolation, per-thread run lock,
+                   # healthz/mcp honesty, fork gate, approval interrupt + resume
 uv run python ..\..\vendor\verify_core.py   # harness+patch+AG-UI+MCP gate
 ```
 
@@ -75,7 +77,10 @@ uv run python ..\..\vendor\verify_core.py   # harness+patch+AG-UI+MCP gate
 - Per-thread isolation = per-request `WebDeps` with `LocalBackend` under
   `workspaces/<thread>/` (`deps.py`, unit-tested).
 - Server-owned history (`history.py`) keyed by AG-UI `threadId` — client
-  history is untrusted (adapter trust model).
+  history is untrusted (adapter trust model). Since Phase 5.1 the
+  authoritative copy lives at `STATE_DIR/history/<slug>.json`, OUTSIDE every
+  agent-writable workspace; `HISTORY_DUAL_WRITE=1` opens the parallel-run
+  migration window for upgraded v1 deployments (see `.env.example`).
 - Approvals: `requires_approval=True` tools pause into AG-UI interrupts
   (`output_type=[str, DeferredToolRequests]` — supported natively by
   `create_deep_agent`, ADR-0012 risk 1 resolved).
