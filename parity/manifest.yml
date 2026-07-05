@@ -66,14 +66,22 @@ findings:
     step: "4.4"
     matrix_rows: []
   crit-thread-slug-collision:
-    status: identical            # 3.6 pins red tests (xfail); behavior fix lands in 4.3
+    status: changed              # Phase 4.3 — content-hash suffix for the collision class
     step: "4.3"
     matrix_rows: ["D:workspace-layout"]
+    tests:
+      - "projects/agent-web/tests/test_deps_factory.py::test_slug_distinguishes_slash_from_underscore"
+      - "projects/agent-web/tests/test_deps_factory.py::test_slug_distinguishes_long_prefix_twins"
+      - "projects/agent-web/tests/test_deps_factory.py::test_slug_sanitizes"
     note: >-
-      Red tests committed in 3.6 pin the defect without changing behavior:
-      projects/agent-web/tests/test_deps_factory.py::test_slug_distinguishes_slash_from_underscore
-      and ::test_slug_distinguishes_long_prefix_twins (xfail strict). 4.3 flips
-      this to changed, adds the content hash, and removes the xfail markers.
+      3.6's strict-xfail red tests flipped green; markers removed in the 4.3
+      commit as required. Slug rule: ids the sanitizer leaves untouched
+      (<=64 chars) — the only ids a pure function can prove collision-free —
+      keep their exact v1 directory; altered/truncated ids (the collision
+      class) relocate once to sanitized[:48] + '-' + sha256(id)[:12]. Matrix D
+      workspace-layout row re-pinned against the v1 baseline accordingly.
+      Migration: Harness1 threads with exotic ids will not resume their old
+      workspaces (accepted for the fork; clean/UUID-style ids unaffected).
   crit-nvidia-coupling:
     status: changed              # Phase 4.1 — lazy per-provider credential validation
     step: "4.1"

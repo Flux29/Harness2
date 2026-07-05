@@ -85,15 +85,33 @@ def test_debug_mcp_deployed_roster_reflects_v1_reality(baseline):
 
 # ------------------ Matrix D: workspace layout / slug ---------------------
 def test_workspace_layout_noncolliding_stable(baseline):
-    """Previously-non-colliding ids must map to the SAME directory. The slug fn
-    changes in 4.3 for COLLIDING ids only; this pins the non-colliding cases."""
+    """Matrix D[workspace-layout] — ROW FLIPPED by step 4.3 (crit-thread-slug-
+    collision). Non-colliding ids keep their exact v1 directory; a pure
+    function can only know an id is collision-FREE when sanitization leaves it
+    untouched (distinct clean ids stay distinct), so that is the stable class.
+    Every id the v1 sanitizer altered or truncated is in a collision class by
+    construction ('a/b' folded onto clean 'a_b'; 64-char-prefix twins folded
+    together) and relocates ONCE, deterministically, to
+    sanitized[:48] + '-' + sha256(id)[:12]."""
+    import re as _re
+
     b = baseline("schemas-v1/workspace-layout.json")["cases"]
-    for tid, expected_slug in b.items():
-        # 'a/b' vs 'a_b' collide in v1 (both -> 'a_b'); that pair is the 4.3
-        # target and is exercised by the red tests, not asserted stable here.
-        if tid in ("a/b", "a_b"):
-            continue
-        assert thread_slug(tid) == expected_slug, f"Matrix D[workspace]: slug({tid!r}) drifted"
+    new_slugs: dict[str, str] = {}
+    for tid, v1_slug in b.items():
+        got = thread_slug(tid)
+        new_slugs[tid] = got
+        if tid == "" or _re.fullmatch(r"[A-Za-z0-9_-]{1,64}", tid):
+            assert got == v1_slug, f"Matrix D[workspace]: clean id {tid!r} drifted"
+        else:
+            # Relocated collision class: v1 prefix preserved, 12-hex suffix.
+            assert got == f"{v1_slug[:48]}-{got[-12:]}", (
+                f"Matrix D[workspace]: {tid!r} lost its sanitized v1 prefix")
+            assert _re.fullmatch(r"[0-9a-f]{12}", got[-12:]), (
+                f"Matrix D[workspace]: {tid!r} suffix is not a content hash")
+            assert got == thread_slug(tid), "slug must be deterministic"
+    # The 4.3 point: the baseline's colliding pair no longer shares a directory.
+    assert new_slugs["a/b"] != new_slugs["a_b"]
+    assert len(set(new_slugs.values())) == len(set(b.values())) + 1  # pair split
 
 
 def test_history_schema_stable(baseline):
