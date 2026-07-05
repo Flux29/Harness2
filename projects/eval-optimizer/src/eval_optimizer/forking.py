@@ -10,7 +10,9 @@ Live Run Forking:
      losers are discarded automatically. Per-branch + aggregate budgets cap cost.
 
 Trade-offs (ADR-0011): tests run on the host via `LocalBackend` (not our Docker
-sandbox); selection is by test-pass ratio, not the LLM judge (with a judge fallback).
+sandbox); selection is by test-pass ratio, not the LLM judge. Selection failures
+abort the fork and re-raise (ADR-0017) — the v1 judge fallback is retired from
+this programmatic path.
 
 Phase 5.2 (crit-fork-exec-gate): host execution of LLM-generated code is an
 EXPLICIT CONFIGURATION, not a docstring disclosure — `run_forked_viability`
@@ -19,8 +21,9 @@ machine you trust with generated code (fork_check's "machine you trust" note,
 promoted to a required acknowledgment).
 
 RUNTIME-VERIFY: the fork→wait→select sequence and the per-branch outcome read
-(`branch_outcomes`, the public vendor-patch accessor) run here; if the API differs, the
-`resolve(auto)` fallback still selects a winner.
+(`branch_outcomes`, the public vendor-patch accessor) run here; if the API drifts,
+the run fails loud with the real exception (ADR-0017) instead of limping to a
+judge answer — that silence is how disc-abort-action-unsupported hid.
 """
 from __future__ import annotations
 
@@ -38,7 +41,6 @@ from pydantic_deep import (
     InMemoryCheckpointStore,
     LiveForkCapability,
     LocalBackend,
-    MergeStrategy,
     create_deep_agent,
 )
 
@@ -159,7 +161,8 @@ async def run_forked_viability(
         )
         await _wait_for_branches(coordinator)
 
-        # Deterministic selection by test-pass ratio; judge fallback if the API differs.
+        # Deterministic selection by test-pass ratio (ADR-0011); failures
+        # abort loud (ADR-0017), never fall back to the judge.
         branches: list[HarnessBranchResult] = []
         winner_id: str | None = None
         selection_path: Literal["deterministic", "judge_fallback"] | None = None
@@ -192,17 +195,22 @@ async def run_forked_viability(
                 # is the real abort API: discard all branches, merge nothing.
                 await coordinator.abort_fork()
         except Exception:
-            # Phase 4.5 (crit-silent-judge-fallback): the swallowed exception is
-            # now logged; whether this path should exist at all is ADR 6.2's.
+            # ADR-0017 (6.2): a selection failure is an infrastructure or
+            # programming error, never evidence about the plan. Log it, abort
+            # the fork (cancel branches, merge nothing), re-raise. The v1
+            # judge fallback here silently violated ADR-0011's deterministic
+            # mandate and masked exactly this bug class
+            # (disc-abort-action-unsupported).
             log.warning(
-                "deterministic fork selection failed; falling back to judge resolve",
+                "deterministic fork selection failed; aborting fork (ADR-0017)",
                 exc_info=True,
             )
-            outcome = await coordinator.resolve(strategy=MergeStrategy(kind="auto"))
-            if outcome.merge_result is not None:
-                winner_id = outcome.merge_result.winner_branch_id
-                if winner_id is not None:
-                    selection_path = "judge_fallback"
+            try:
+                await coordinator.abort_fork()
+            except Exception:
+                log.warning("abort_fork after selection failure also failed",
+                            exc_info=True)
+            raise
 
         any_viable = winner_id is not None
         winner_dir = None

@@ -142,6 +142,7 @@ class HarnessForkReport(BaseModel):
     any_viable: bool = False               # a branch's tests passed and it was merged
     winner_dir: str | None = None          # where the winning tree was materialized (if saved)
     # Phase 4.5 (crit-silent-judge-fallback), ADDITIVE: which selection path
-    # produced the winner. None = no winner (abort / failed fallback). Makes
-    # the silent judge fallback observable; the fallback POLICY is ADR 6.2's.
+    # produced the winner. None = no winner (abort). "judge_fallback" is
+    # HISTORICAL: ADR-0017 retired that path (selection failures now abort
+    # loud and re-raise); the literal stays for schema stability.
     selection_path: Literal["deterministic", "judge_fallback"] | None = None

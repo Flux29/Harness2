@@ -9,7 +9,8 @@ machinery (the exit-gate-4 Matrix B field-compare).
 
 Tests marked "V1 PIN — flipped by 4.6" document the defects 4.6 fixes, red-test-
 first: they assert the *buggy* current behavior and are rewritten in the 4.6
-commit to assert the fix.
+commit to assert the fix. The selection-failure tests assert ADR-0017 semantics
+(abort loud, judge never consulted) since that ADR's acceptance.
 """
 from __future__ import annotations
 
@@ -210,44 +211,40 @@ async def test_save_winner_dir_copies_on_deterministic_win(monkeypatch, fork_env
     assert dst.is_dir()
 
 
-# ----------------------------- fallback path -------------------------------
+# -------------------- selection-failure path (ADR-0017) --------------------
 
-async def test_selection_exception_falls_back_to_judge(monkeypatch, fork_env, caplog):
-    """An exception in deterministic selection falls back to the judge resolve
-    (v1 behavior; the policy itself is ADR 6.2's). Phase 4.5 made the path
-    observable: selection_path records it and the swallowed exception is
-    logged as a warning with traceback."""
+async def test_selection_exception_aborts_loud(monkeypatch, fork_env, caplog):
+    """ADR-0017 (plan 6.2): an exception in deterministic selection ABORTS the
+    fork fail-loud — logged with traceback, branches cancelled via
+    abort_fork(), original exception re-raised. The judge is never consulted
+    (v1's silent fallback violated ADR-0011's mandate and masked
+    disc-abort-action-unsupported for the repo's entire life)."""
     import logging
 
     coord = FakeCoordinator(outcomes_error=RuntimeError("API drift"),
-                            resolve_winner="bx")
+                            resolve_winner="should-never-be-consulted")
     _install(monkeypatch, coord)
     with caplog.at_level(logging.WARNING, logger="eval_optimizer.forking"):
-        report = await forking.run_forked_viability("task")
-    assert ("resolve", "auto") in coord.calls
-    assert report.winner_branch_id == "bx"
-    assert report.any_viable is True
-    assert report.selection_path == "judge_fallback"  # 4.5 provenance
-    assert report.branches == []  # outcomes never materialized on this path
-    fallback_logs = [r for r in caplog.records
-                     if "falling back to judge resolve" in r.message]
-    assert fallback_logs, "4.5: the swallowed selection exception must be logged"
-    assert fallback_logs[0].exc_info is not None  # traceback attached
-    assert "API drift" in str(fallback_logs[0].exc_info[1])
+        with pytest.raises(RuntimeError, match="API drift"):
+            await forking.run_forked_viability("task")
+    assert ("abort_fork", None) in coord.calls   # branches cancelled first
+    assert not any(name == "resolve" for name, _ in coord.calls)
+    assert ("aclose", None) in coord.calls       # finally cleanup still ran
+    logs = [r for r in caplog.records if "aborting fork" in r.message]
+    assert logs, "ADR-0017: the selection failure must be logged"
+    assert logs[0].exc_info is not None          # traceback attached
+    assert "API drift" in str(logs[0].exc_info[1])
 
 
-async def test_save_winner_dir_not_copied_on_fallback(monkeypatch, fork_env, tmp_path):
-    """4.6 FLIP of the 4.0 v1 pin: the fallback path never proved a flushed
-    winner, so save_winner_dir must NOT materialize a 'winner dir' from it.
-    Only the deterministic merge path copies."""
-    coord = FakeCoordinator(outcomes_error=RuntimeError("API drift"),
-                            resolve_winner="bx")
+async def test_selection_exception_never_materializes_winner_dir(
+        monkeypatch, fork_env, tmp_path):
+    """ADR-0017 + 4.6: a failed selection can never mint a winner dir — the
+    exception propagates before any copy could happen."""
+    coord = FakeCoordinator(outcomes_error=RuntimeError("API drift"))
     _install(monkeypatch, coord)
     dst = tmp_path / "winner"
-    report = await forking.run_forked_viability("task", save_winner_dir=str(dst))
-    assert report.winner_branch_id == "bx"          # fallback still selects...
-    assert report.selection_path == "judge_fallback"
-    assert report.winner_dir is None                # ...but never materializes
+    with pytest.raises(RuntimeError, match="API drift"):
+        await forking.run_forked_viability("task", save_winner_dir=str(dst))
     assert not dst.exists()
 
 

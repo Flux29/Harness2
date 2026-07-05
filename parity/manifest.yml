@@ -85,27 +85,28 @@ findings:
     step: "6.1a"
     matrix_rows: ["B:any_viable"]
   crit-silent-judge-fallback:
-    status: changed              # Phase 4.5 — provenance field + fallback logging (policy is 6.2)
+    status: changed              # 4.5 instrumented; policy RESOLVED by ADR-0017 (plan 6.2)
     step: "4.5"
     matrix_rows: ["B:selection_path", "E:errors"]
     tests:
-      - "projects/eval-optimizer/tests/test_forking.py::test_selection_exception_falls_back_to_judge"
+      - "projects/eval-optimizer/tests/test_forking.py::test_selection_exception_aborts_loud"
+      - "projects/eval-optimizer/tests/test_forking.py::test_selection_exception_never_materializes_winner_dir"
       - "projects/eval-optimizer/tests/test_forking.py::test_deterministic_pick_merges_partial_pass_branch"
     note: >-
-      ADDITIVE: HarnessForkReport.selection_path
-      (Literal['deterministic','judge_fallback'] | None; None = no winner)
-      records which path picked the winner, and the previously-swallowed
-      selection exception is logged (warning + traceback) when the judge
-      fallback fires — the Matrix E declared warning event. The fallback
-      POLICY is unchanged; ADR 6.2 decides it with this data in hand.
-      Matrix B additive-only tests pass unchanged (v1 fields untouched).
+      Phase 4.5 added selection_path + logging of the swallowed exception;
+      ADR-0017 (Accepted 2026-07-05) then RETIRED the judge fallback from the
+      programmatic path: a selection failure logs with traceback, aborts the
+      fork (abort_fork — cancel branches, merge nothing), and RE-RAISES.
+      selection_path keeps the 'judge_fallback' literal for schema stability
+      (Matrix B additive-only); the value is historical and unreachable.
+      Matrix E: failure paths emit the declared warning and no judge spans.
   crit-no-branch-cancel:
     status: changed              # Phase 4.6 — timeout cancels branches; winner-copy correctness
     step: "4.6"
     matrix_rows: ["B:winner_dir"]
     tests:
       - "projects/eval-optimizer/tests/test_forking.py::test_wait_timeout_cancels_outstanding_branches"
-      - "projects/eval-optimizer/tests/test_forking.py::test_save_winner_dir_not_copied_on_fallback"
+      - "projects/eval-optimizer/tests/test_forking.py::test_selection_exception_never_materializes_winner_dir"
       - "projects/eval-optimizer/tests/test_forking.py::test_save_winner_dir_copies_on_deterministic_win"
     note: >-
       Both 4.0 red-side pins flipped in this commit: (1) _wait_for_branches

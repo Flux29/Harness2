@@ -1,6 +1,6 @@
 # ADR-0017 — Selection failures abort the fork, fail-loud (judge fallback retired from the programmatic path)
 
-**Status:** Proposed · 2026-07-05 · resolves plan step **6.2** (`crit-silent-judge-fallback`
+**Status:** Accepted · 2026-07-05 · resolves plan step **6.2** (`crit-silent-judge-fallback`
 policy half; the observability half landed in Phase 4.5) · refines **ADR-0011**
 (deterministic-selection mandate); informed by Phase 4 evidence (4.0, 4.5, 4.6,
 `disc-abort-action-unsupported`).
