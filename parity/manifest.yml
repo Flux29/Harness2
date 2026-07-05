@@ -50,9 +50,23 @@ findings:
       relocation — the window migrates active threads (each save writes the
       full message list); dormant threads restart fresh after cutover.
   crit-fork-exec-gate:
-    status: identical            # Phase 5.2
+    status: changed              # Phase 5.2 — both host-exec paths now explicitly gated
     step: "5.2"
     matrix_rows: []
+    tests:
+      - "projects/agent-web/tests/test_agent_build.py::test_fork_disabled_by_default_no_fork_toolset"
+      - "projects/agent-web/tests/test_agent_build.py::test_fork_flag_enables_fork_toolset"
+      - "projects/eval-optimizer/tests/test_forking.py::test_host_exec_requires_env_acknowledgment"
+    note: >-
+      The contract: LLM-generated code does not execute on the host without
+      explicit approval or explicit configuration. agent-web: forking is now
+      env-gated like its siblings (FORKING=1, default OFF — the harness offers
+      no interrupt hook for test_command, so the honest gate is the flag + a
+      README warning symmetrical to the browser one); with the flag off the
+      agent's toolset carries no fork tools. eval-optimizer: the headless path
+      keeps host execution but requires EVALOPT_ALLOW_HOST_EXEC=1 — the
+      docstring disclosure promoted to a required acknowledgment. The v1
+      asymmetry (shell approval-gated, pytest-on-host ungated) is removed.
   crit-fork-selection-metric:
     status: identical            # ADR decision, Phase 6.1
     step: "6.1"

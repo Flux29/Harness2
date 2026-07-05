@@ -12,6 +12,12 @@ Live Run Forking:
 Trade-offs (ADR-0011): tests run on the host via `LocalBackend` (not our Docker
 sandbox); selection is by test-pass ratio, not the LLM judge (with a judge fallback).
 
+Phase 5.2 (crit-fork-exec-gate): host execution of LLM-generated code is an
+EXPLICIT CONFIGURATION, not a docstring disclosure — `run_forked_viability`
+refuses to run unless ``EVALOPT_ALLOW_HOST_EXEC=1`` is set. Set it only on a
+machine you trust with generated code (fork_check's "machine you trust" note,
+promoted to a required acknowledgment).
+
 RUNTIME-VERIFY: the fork→wait→select sequence and the per-branch outcome read
 (`branch_outcomes`, the public vendor-patch accessor) run here; if the API differs, the
 `resolve(auto)` fallback still selects a winner.
@@ -20,6 +26,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import shutil
 import tempfile
 from typing import Literal
@@ -103,6 +110,15 @@ async def run_forked_viability(
     per_branch_budget_usd: float | None = None,
     aggregate_budget_usd: float | None = None,
 ) -> HarnessForkReport:
+    # Phase 5.2 (crit-fork-exec-gate): required env acknowledgment — branches
+    # write LLM-generated code and run its pytest suite ON THIS HOST.
+    if os.environ.get("EVALOPT_ALLOW_HOST_EXEC", "").strip() != "1":
+        raise RuntimeError(
+            "EVALOPT_ALLOW_HOST_EXEC=1 is required: fork branches execute "
+            "LLM-generated code and its test suite on this host (LocalBackend, "
+            "ADR-0011 trade-off). Set it only on a machine you trust with "
+            "generated code."
+        )
     setup_observability()
     # Fork budgets come from the single declared config (Phase 3.5); explicit
     # args still override. Defaults are unchanged (0.75 / 2.5).

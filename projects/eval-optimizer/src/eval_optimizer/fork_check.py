@@ -1,8 +1,10 @@
 """C5 POC (harness-native, ADR-0011): fork a builder agent across approaches,
 let the harness run each branch's tests, and report which branch is viable.
 
-Prereqs: OpenRouter key in .env; `pytest` available (dev dep). Tests run on the
-host (LocalBackend), so run on a machine you trust with the generated code.
+Prereqs: OpenRouter key in the USER env; `pytest` available (dev dep); and —
+Phase 5.2 — `EVALOPT_ALLOW_HOST_EXEC=1`. Tests run on the host (LocalBackend),
+so that acknowledgment is a required configuration on a machine you trust with
+the generated code, not just this docstring's advice.
 
 Run:  uv run python -m eval_optimizer.fork_check          (discards all files)
       uv run python -m eval_optimizer.fork_check --save   (keeps the winner in cache/fork-winner)

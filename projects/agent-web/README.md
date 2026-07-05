@@ -43,6 +43,7 @@ Feature switches (ADR-0015), all OFF by default — flip in `.env`, restart:
 | `TOOL_SEARCH=1` | search-on-demand tool schemas (token saver) | none; flip when MCP roster grows |
 | `EXECUTE=1` | shell execute tool, **approval-gated** (AG-UI interrupt) | `uv sync --extra full` for Docker sandbox backend |
 | `BROWSER_AUTOMATION=1` | Playwright browser automation | `--extra full` + `playwright install chromium` |
+| `FORKING=1` | Live Run Forking — branches **run LLM-generated code + its pytest suite on the host** (no approval interrupt exists for `test_command`); enable only if you accept that | none |
 | `LITEPARSE=1` | PDF/DOCX/XLSX parsing | `--extra full` + Node ≥ 18 |
 
 Offline (no keys): `uv run python scripts\dev_server_testmodel.py`

@@ -21,6 +21,7 @@ def make_settings(tmp_path) -> Settings:
         # Pin ALL feature flags: ambient env must never shape a test
         # (BROWSER is a standard OS env var and burned us once already).
         teams=False, liteparse=False, execute=False, browser=False, tool_search=False, improve=False,
+        forking=False,  # 5.2 code default, pinned like the other gated features
     )
 
 

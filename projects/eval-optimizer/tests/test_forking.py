@@ -136,11 +136,26 @@ class FakeAgent:
 @pytest.fixture
 def fork_env(monkeypatch, tmp_path):
     """Isolate run_forked_viability from the host env: dummy provider key
-    (Settings.from_env), scratch TMPDIR for the parent work tree."""
+    (Settings.from_env), scratch TMPDIR for the parent work tree, and the 5.2
+    host-exec acknowledgment (these tests stub or sandbox all execution)."""
     monkeypatch.setenv("NVIDIA_API_KEY", "nvapi-test")
+    monkeypatch.setenv("EVALOPT_ALLOW_HOST_EXEC", "1")
     monkeypatch.setenv("TMPDIR", str(tmp_path))
     monkeypatch.setenv("TMP", str(tmp_path))
     monkeypatch.setenv("TEMP", str(tmp_path))
+
+
+async def test_host_exec_requires_env_acknowledgment(monkeypatch):
+    """Phase 5.2 negative test (exit gate 5): without EVALOPT_ALLOW_HOST_EXEC=1
+    the fork engine refuses to run — host execution of generated code is an
+    explicit configuration, not a docstring disclosure."""
+    monkeypatch.delenv("EVALOPT_ALLOW_HOST_EXEC", raising=False)
+    monkeypatch.setenv("NVIDIA_API_KEY", "nvapi-test")
+    coord = FakeCoordinator()
+    _install(monkeypatch, coord)
+    with pytest.raises(RuntimeError, match="EVALOPT_ALLOW_HOST_EXEC"):
+        await forking.run_forked_viability("task")
+    assert coord.calls == []  # refused before ANY fork work started
 
 
 def _install(monkeypatch, coordinator: FakeCoordinator) -> None:
@@ -268,6 +283,7 @@ async def test_e2e_fork_timeout_cancels_real_branches(monkeypatch, tmp_path):
     from pydantic_deep import LiveForkCapability, create_deep_agent
 
     monkeypatch.setenv("NVIDIA_API_KEY", "nvapi-test")
+    monkeypatch.setenv("EVALOPT_ALLOW_HOST_EXEC", "1")
     monkeypatch.setenv("TMPDIR", str(tmp_path))
     monkeypatch.setenv("TMP", str(tmp_path))
     monkeypatch.setenv("TEMP", str(tmp_path))
@@ -340,6 +356,7 @@ async def test_full_testmodel_fork_run_matches_matrix_b(monkeypatch, tmp_path):
     from pydantic_deep import LiveForkCapability, create_deep_agent
 
     monkeypatch.setenv("NVIDIA_API_KEY", "nvapi-test")
+    monkeypatch.setenv("EVALOPT_ALLOW_HOST_EXEC", "1")
     monkeypatch.setenv("TMPDIR", str(tmp_path))
     monkeypatch.setenv("TMP", str(tmp_path))
     monkeypatch.setenv("TEMP", str(tmp_path))

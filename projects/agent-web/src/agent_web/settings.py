@@ -94,6 +94,12 @@ class Settings:
     browser: bool = _flag("BROWSER_AUTOMATION", False)  # Playwright browser automation (extra + browsers)
     # search-on-demand tool schemas instead of flat lists (token saver as MCP roster grows)
     tool_search: bool = _flag("TOOL_SEARCH", False)
+    # Phase 5.2 (crit-fork-exec-gate): Live Run Forking runs LLM-generated code
+    # AND its pytest suite ON THE HOST (LocalBackend, no interrupt hook in the
+    # harness for test_command). v1 had it always-on while shell execute was
+    # approval-gated — that asymmetry was the defect. Now env-gated like its
+    # siblings: FORKING=1 opts in, documented next to the browser warning.
+    forking: bool = _flag("FORKING", False)
     # /improve: analyzes past sessions, proposes updates to MEMORY.md/SOUL.md/AGENTS.md
     improve: bool = _flag("IMPROVE", False)
     # --- Fork configuration (ADR-0011), centralized here (Phase 3.5). Defaults
