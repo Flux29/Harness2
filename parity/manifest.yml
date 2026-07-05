@@ -192,6 +192,21 @@ findings:
       require an absolute MCP_CONFIG) is a later-phase decision (4.7), not a Phase
       0 fix. Baseline: baseline/endpoints-v1/debug-mcp.deployed.json.
 
+  disc-typecheck-gate-miscalibrated:
+    status: changed
+    source: phase-3-ci
+    step: "0.3"                  # CI gate, miscalibrated since Phase 0; corrected in Phase 3
+    matrix_rows: []
+    verified_by: >-
+      The typecheck gate ran `uvx pyright src` with no venv, so it reported every
+      third-party import missing (red since Phase 0 — the gate never actually
+      type-checked). Fixed by [tool.pyright] venvPath/venv in both pyprojects.
+      agent-web is fully clean (0 errors). eval-optimizer surfaced 29 pre-existing
+      type errors, now scoped: legacy strata (loop.py, graph.py) excluded and
+      owned by ADR 6.5 (ISSUE-2, delete-on-6.5 expiry); memory_pg.py +
+      check_connection.py excluded as genuine deferred debt owned by Phase 4.2 /
+      4.1 (ISSUE-3). Excludes are declared, owned, and monotonic.
+
 # relocations — populated only if ADR 6.5 chooses relocation over deletion.
 # Each entry: <old dotted path>: <new dotted path>. Gate 2 lint one verifies the
 # old path no longer resolves and the new path does; Gate 1 AST-matches each.

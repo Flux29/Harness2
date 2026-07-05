@@ -38,10 +38,29 @@ line-length = 100
 
 # Point pyright at the uv-managed venv so `uvx pyright src` (CI typecheck job)
 # resolves third-party imports instead of reporting them all missing.
+#
+# Scoped excludes (Phase 3): the typecheck gate never resolved imports (red since
+# Phase 0); wiring the venv surfaced pre-existing type debt. Each exclude is
+# DECLARED + OWNED and MONOTONIC — no exclusion survives without a living owner,
+# and the legacy ones must be DELETED when their owning ADR removes the code
+# (same principle as the dup-allowlist). See docs/ISSUES.md ISSUE-2/ISSUE-3 and
+# manifest disc-typecheck-gate-miscalibrated.
 [tool.pyright]
 venvPath = "."
 venv = ".venv"
 include = ["src"]
+exclude = [
+    # excluded: legacy strata, resolved by ADR 6.5. DELETE these two lines when
+    # 6.5 removes/relocates the code (owner: ADR 6.5 / ISSUE-2).
+    "src/eval_optimizer/loop.py",
+    "src/eval_optimizer/graph.py",
+    # excluded: ADR-0004 memory infrastructure (psycopg typing) — genuine deferred
+    # debt, NOT a deletion candidate. Owner: Phase 4.2 (ISSUE-3).
+    "src/eval_optimizer/memory_pg.py",
+    # excluded: live provider connection check — deferred type debt.
+    # Owner: Phase 4.1 (ISSUE-3).
+    "src/eval_optimizer/check_connection.py",
+]
 
 [build-system]
 requires = ["hatchling"]

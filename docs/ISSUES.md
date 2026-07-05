@@ -25,6 +25,38 @@ The parity impact differs (A adds files to Matrix D; B changes only prose), so
 the ADR lands before any code. Recorded here so the known-false claim is not lost
 between now and Phase 6.
 
+## ISSUE-2 — Legacy-strata type errors excluded from pyright (owner: ADR 6.5)
+
+**Status:** open · owner **ADR 6.5** · manifest: `disc-typecheck-gate-miscalibrated`.
+
+`src/eval_optimizer/loop.py` (15 errs) and `graph.py` (2 errs) are excluded from
+the eval-optimizer pyright scope (`[tool.pyright] exclude` in `pyproject.toml`).
+These are the superseded generations ADR 6.5 will delete or relocate — type-
+checking code slated for removal is wasted effort.
+
+**Expiry (monotonic, like the dup-allowlist):** when ADR 6.5 lands, the two
+`exclude` lines MUST be deleted — either the files are gone (delete → nothing to
+exclude) or the ADR explicitly re-owns them (e.g. moved to `legacy/` and kept
+out of the typed live path). No exclusion survives 6.5 without a living owner.
+
+## ISSUE-3 — Non-legacy deferred type debt (owners: Phase 4.1 / 4.2)
+
+**Status:** open · manifest: `disc-typecheck-gate-miscalibrated`.
+
+Genuine deferred type debt (NOT deletion candidates), excluded from pyright now
+so the gate is green, each owned by the phase that already touches the file:
+
+- `src/eval_optimizer/memory_pg.py` (9 errs — psycopg SQL/optional typing).
+  ADR-0004 durable-memory infrastructure. **Owner: Phase 4.2**, which already
+  rewires `memory_pg`'s embedding client onto the shared retrying transport —
+  fold the type-cleanup into that change and drop the exclude.
+- `src/eval_optimizer/check_connection.py` (3 errs — optional access). Live
+  provider connection check. **Owner: Phase 4.1** (provider-credential
+  decoupling touches this path) — fix the types there and drop the exclude.
+
+When each owner phase lands, remove that file's `exclude` line and let pyright
+cover it.
+
 ## Pointer — other deferred findings
 
 Every other deferred finding lives in `parity/findings-catalog.yml` +
