@@ -62,6 +62,18 @@ def _openai_compatible(model_id: str, base_url: str, api_key: str) -> Any:
     return _chat_model_cls()(model_id, provider=provider)
 
 
+def _require_key(key: str, env_var: str, provider: str, model_id: str) -> str:
+    """Lazy per-provider credential validation (Phase 4.1, ADR-0003): the error
+    names the missing key for the provider actually selected."""
+    if not key.strip():
+        raise RuntimeError(
+            f"{env_var} is not set, but model {model_id!r} resolves to the "
+            f"{provider} provider. Set {env_var} in the environment (USER env "
+            f"vars for secrets), or select a model on another provider."
+        )
+    return key
+
+
 def _openrouter_model(model_id: str, settings: Settings) -> Any:
     """Native OpenRouter MODEL (not the generic OpenAI parser): handles
     OpenRouter's response shape incl. non-OpenAI finish_reasons (e.g. 'error'),
@@ -69,14 +81,15 @@ def _openrouter_model(model_id: str, settings: Settings) -> Any:
     from pydantic_ai.models.openrouter import OpenRouterModel
     from pydantic_ai.providers.openrouter import OpenRouterProvider
 
-    provider = OpenRouterProvider(
-        api_key=settings.openrouter_api_key, http_client=_retrying_http_client()
-    )
+    key = _require_key(settings.openrouter_api_key, "OPENROUTER_API_KEY",
+                       "OpenRouter", f"openrouter:{model_id}")
+    provider = OpenRouterProvider(api_key=key, http_client=_retrying_http_client())
     return OpenRouterModel(model_id, provider=provider)
 
 
 def _nvidia_model(model_id: str, settings: Settings) -> Any:
-    return _openai_compatible(model_id, settings.nvidia_base_url, settings.nvidia_api_key)
+    key = _require_key(settings.nvidia_api_key, "NVIDIA_API_KEY", "NVIDIA", model_id)
+    return _openai_compatible(model_id, settings.nvidia_base_url, key)
 
 
 def build_glm_model(settings: Settings | None = None) -> Any:

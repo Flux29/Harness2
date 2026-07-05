@@ -57,9 +57,6 @@ exclude = [
     # excluded: ADR-0004 memory infrastructure (psycopg typing) — genuine deferred
     # debt, NOT a deletion candidate. Owner: Phase 4.2 (ISSUE-3).
     "src/eval_optimizer/memory_pg.py",
-    # excluded: live provider connection check — deferred type debt.
-    # Owner: Phase 4.1 (ISSUE-3).
-    "src/eval_optimizer/check_connection.py",
 ]
 
 [build-system]

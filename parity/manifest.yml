@@ -75,9 +75,20 @@ findings:
       and ::test_slug_distinguishes_long_prefix_twins (xfail strict). 4.3 flips
       this to changed, adds the content hash, and removes the xfail markers.
   crit-nvidia-coupling:
-    status: identical            # Phase 4.1
+    status: changed              # Phase 4.1 — lazy per-provider credential validation
     step: "4.1"
     matrix_rows: []
+    tests:
+      - "projects/eval-optimizer/tests/test_models.py::test_openrouter_only_env_constructs_settings_and_model"
+      - "projects/eval-optimizer/tests/test_models.py::test_missing_openrouter_key_raises_naming_provider"
+      - "projects/eval-optimizer/tests/test_models.py::test_missing_nvidia_key_raises_naming_provider"
+      - "projects/eval-optimizer/tests/test_smoke.py::test_settings_constructs_without_provider_keys"
+    note: >-
+      Settings.from_env() no longer hard-fails on a missing NVIDIA key;
+      build_model() raises a clear error naming the missing key for the
+      provider the resolved model actually selects — including the previously
+      SILENT empty OpenRouter key. check_connection.py re-entered the pyright
+      scope (ISSUE-3 partially closed) with its type debt fixed.
   crit-toolset-frozen:
     status: identical            # Phase 4.7
     step: "4.7"

@@ -18,12 +18,16 @@ def test_verdict_score_bounds() -> None:
         Verdict(passed=True, score=101)
 
 
-def test_settings_requires_key(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_settings_constructs_without_provider_keys(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Phase 4.1: from_env() no longer hard-requires the NVIDIA key; credential
+    validation moved to build_model(), per selected provider (test_models.py)."""
     monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
     from eval_optimizer.config import Settings
 
-    with pytest.raises(RuntimeError):
-        Settings.from_env()
+    s = Settings.from_env()
+    assert s.nvidia_api_key == ""
+    assert s.openrouter_api_key == ""
 
 
 def test_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:

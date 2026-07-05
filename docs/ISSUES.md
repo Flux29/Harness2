@@ -50,9 +50,9 @@ so the gate is green, each owned by the phase that already touches the file:
   ADR-0004 durable-memory infrastructure. **Owner: Phase 4.2**, which already
   rewires `memory_pg`'s embedding client onto the shared retrying transport —
   fold the type-cleanup into that change and drop the exclude.
-- `src/eval_optimizer/check_connection.py` (3 errs — optional access). Live
-  provider connection check. **Owner: Phase 4.1** (provider-credential
-  decoupling touches this path) — fix the types there and drop the exclude.
+- ~~`src/eval_optimizer/check_connection.py` (3 errs — optional access)~~
+  **RESOLVED in Phase 4.1:** types fixed (typed tools list, discriminated
+  tool-call narrow), exclude dropped, pyright covers the file.
 
 When each owner phase lands, remove that file's `exclude` line and let pyright
 cover it.
