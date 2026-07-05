@@ -18,8 +18,10 @@ from typing import Any
 
 import psycopg
 from openai import OpenAI
+from psycopg import sql
 
 from .config import Settings
+from .models import _retrying_sync_http_client
 
 # Agents that have a `memory_<name>` schema (see infra/initdb/01_init.sql).
 # Whitelisted because the name is interpolated into a SQL identifier.
@@ -44,9 +46,12 @@ class Memory:
     def __init__(self, settings: Settings | None = None) -> None:
         self.settings = settings or Settings.from_env()
         # Ollama exposes an OpenAI-compatible API at <base>/v1; api_key is ignored.
+        # Phase 4.2 (crit-retry-coverage): embeddings ride the same shared
+        # retrying transport as every other OpenAI-compatible call (ADR-0008).
         self._embed_client = OpenAI(
             base_url=self.settings.ollama_base_url.rstrip("/") + "/v1",
             api_key="ollama",
+            http_client=_retrying_sync_http_client(),
         )
 
     # --- embeddings -------------------------------------------------------
@@ -69,7 +74,9 @@ class Memory:
     def ping(self) -> bool:
         with self._connect() as conn, conn.cursor() as cur:
             cur.execute("SELECT 1;")
-            return cur.fetchone()[0] == 1
+            row = cur.fetchone()
+            assert row is not None  # SELECT 1 always yields a row
+            return row[0] == 1
 
     # --- per-agent semantic memory ---------------------------------------
     def store_memory(self, agent: str, content: str, metadata: dict[str, Any] | None = None) -> int:
@@ -78,40 +85,47 @@ class Memory:
         If identical content already exists, returns the existing id without
         re-embedding (saves an Ollama call) or inserting a duplicate row.
         """
-        schema = _schema_for(agent)
+        # Identifier-composed SQL (psycopg.sql) on top of the KNOWN_AGENTS
+        # whitelist — same queries, now well-typed (Phase 4.2 / ISSUE-3).
+        memories = sql.Identifier(_schema_for(agent), "memories")
+        select_by_sha = sql.SQL(
+            "SELECT id FROM {} WHERE content_sha256 = %s;"
+        ).format(memories)
         sha = hashlib.sha256(content.encode("utf-8")).hexdigest()
         with self._connect() as conn, conn.cursor() as cur:
             # de-dup check first — skip embedding entirely if it already exists
-            cur.execute(
-                f"SELECT id FROM {schema}.memories WHERE content_sha256 = %s;", (sha,)
-            )
+            cur.execute(select_by_sha, (sha,))
             existing = cur.fetchone()
             if existing:
                 return existing[0]
 
             emb = self._vec_literal(self.embed(content)) if content else None
             cur.execute(
-                f"INSERT INTO {schema}.memories (content, content_sha256, metadata, embedding) "
-                f"VALUES (%s, %s, %s::jsonb, %s::vector) "
-                f"ON CONFLICT (content_sha256) DO NOTHING RETURNING id;",
+                sql.SQL(
+                    "INSERT INTO {} (content, content_sha256, metadata, embedding) "
+                    "VALUES (%s, %s, %s::jsonb, %s::vector) "
+                    "ON CONFLICT (content_sha256) DO NOTHING RETURNING id;"
+                ).format(memories),
                 (content, sha, json.dumps(metadata or {}), emb),
             )
             row = cur.fetchone()
             if row:
                 return row[0]
             # lost a race: another writer inserted the same content — fetch it
-            cur.execute(
-                f"SELECT id FROM {schema}.memories WHERE content_sha256 = %s;", (sha,)
-            )
-            return cur.fetchone()[0]
+            cur.execute(select_by_sha, (sha,))
+            row = cur.fetchone()
+            assert row is not None  # ON CONFLICT loser: the winner's row exists
+            return row[0]
 
     def search_memory(self, agent: str, query: str, k: int = 5) -> list[dict[str, Any]]:
-        schema = _schema_for(agent)
+        memories = sql.Identifier(_schema_for(agent), "memories")
         qvec = self._vec_literal(self.embed(query))
         with self._connect() as conn, conn.cursor() as cur:
             cur.execute(
-                f"SELECT id, content, metadata, embedding <=> %s::vector AS distance "
-                f"FROM {schema}.memories ORDER BY distance ASC LIMIT %s;",
+                sql.SQL(
+                    "SELECT id, content, metadata, embedding <=> %s::vector AS distance "
+                    "FROM {} ORDER BY distance ASC LIMIT %s;"
+                ).format(memories),
                 (qvec, k),
             )
             rows = cur.fetchall()
@@ -121,10 +135,12 @@ class Memory:
         ]
 
     def count_memories(self, agent: str) -> int:
-        schema = _schema_for(agent)
+        memories = sql.Identifier(_schema_for(agent), "memories")
         with self._connect() as conn, conn.cursor() as cur:
-            cur.execute(f"SELECT count(*) FROM {schema}.memories;")
-            return cur.fetchone()[0]
+            cur.execute(sql.SQL("SELECT count(*) FROM {};").format(memories))
+            row = cur.fetchone()
+            assert row is not None  # count(*) always yields a row
+            return row[0]
 
     # --- shared orchestration state (memory_common.agent_state) -----------
     def save_state(self, state_id: str, agent: str, kind: str, data: dict[str, Any]) -> None:

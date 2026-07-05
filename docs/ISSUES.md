@@ -41,15 +41,15 @@ out of the typed live path). No exclusion survives 6.5 without a living owner.
 
 ## ISSUE-3 — Non-legacy deferred type debt (owners: Phase 4.1 / 4.2)
 
-**Status:** open · manifest: `disc-typecheck-gate-miscalibrated`.
+**Status: CLOSED (Phase 4.1 + 4.2)** · manifest: `disc-typecheck-gate-miscalibrated`.
 
 Genuine deferred type debt (NOT deletion candidates), excluded from pyright now
 so the gate is green, each owned by the phase that already touches the file:
 
-- `src/eval_optimizer/memory_pg.py` (9 errs — psycopg SQL/optional typing).
-  ADR-0004 durable-memory infrastructure. **Owner: Phase 4.2**, which already
-  rewires `memory_pg`'s embedding client onto the shared retrying transport —
-  fold the type-cleanup into that change and drop the exclude.
+- ~~`src/eval_optimizer/memory_pg.py` (9 errs — psycopg SQL/optional typing)~~
+  **RESOLVED in Phase 4.2:** queries recomposed with `psycopg.sql.Identifier`
+  (on top of the KNOWN_AGENTS whitelist), `fetchone()` None-guards added,
+  exclude dropped, pyright covers the file.
 - ~~`src/eval_optimizer/check_connection.py` (3 errs — optional access)~~
   **RESOLVED in Phase 4.1:** types fixed (typed tools list, discriminated
   tool-call narrow), exclude dropped, pyright covers the file.

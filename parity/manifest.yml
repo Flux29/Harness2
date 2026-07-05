@@ -133,9 +133,20 @@ findings:
     tests:
       - "projects/agent-web/tests/test_e2e_agui.py::test_422_body_is_json_object"
   crit-retry-coverage:
-    status: identical            # Phase 4.2
+    status: changed              # Phase 4.2 — embeddings on the shared retrying transport
     step: "4.2"
     matrix_rows: []
+    tests:
+      - "projects/eval-optimizer/tests/test_retry_transport.py::test_memory_embed_client_rides_retrying_transport"
+      - "projects/eval-optimizer/tests/test_retry_transport.py::test_sync_retrying_client_uses_tenacity_transport"
+    note: >-
+      memory_pg's embedding client now uses a sync twin of the shared
+      tenacity-retrying httpx transport (same 429/5xx/Retry-After policy).
+      The provider:model pass-through branch keeps pydantic-ai's own
+      transport; the models.py docstring claim was NARROWED to say so
+      (the plan allowed either resolution — the lie is what was banned).
+      memory_pg re-entered pyright scope with its 9 type errors fixed
+      (psycopg sql.Identifier composition + fetchone guards); ISSUE-3 closed.
   crit-fork-config-scatter:
     status: changed              # Phase 3.5 — fork knobs centralized per project (values unchanged)
     step: "3.5"

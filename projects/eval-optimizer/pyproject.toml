@@ -54,9 +54,6 @@ exclude = [
     # 6.5 removes/relocates the code (owner: ADR 6.5 / ISSUE-2).
     "src/eval_optimizer/loop.py",
     "src/eval_optimizer/graph.py",
-    # excluded: ADR-0004 memory infrastructure (psycopg typing) — genuine deferred
-    # debt, NOT a deletion candidate. Owner: Phase 4.2 (ISSUE-3).
-    "src/eval_optimizer/memory_pg.py",
 ]
 
 [build-system]

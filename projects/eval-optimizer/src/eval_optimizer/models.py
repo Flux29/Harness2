@@ -1,7 +1,12 @@
 """Model wiring. Per-role, provider-flexible, with transport-level retry.
 
-- 429 / 5xx / network retries (honoring Retry-After) live in a shared httpx
-  client at the transport layer (ADR-0008) — covers every call incl. embeddings.
+- 429 / 5xx / network retries (honoring Retry-After) live in shared httpx
+  clients at the transport layer (ADR-0008) — covering every OpenAI-compatible
+  client this project constructs: NVIDIA, OpenRouter, Ollama chat, and the
+  Ollama embeddings client in memory_pg (sync). Scope note (Phase 4.2): the
+  `provider:model` pass-through branch returns a string that pydantic-ai
+  resolves internally with its own default transport — those calls are NOT
+  covered by this retry layer.
 - `build_model()` resolves: ollama: -> local; openrouter: -> native OpenRouter
   provider (so genai-prices can resolve cost); other provider:model -> pydantic-ai
   inference; bare id -> NVIDIA endpoint.
@@ -43,6 +48,34 @@ def _retrying_http_client() -> Any:
         validate_response=_validate,
     )
     return AsyncClient(transport=transport)
+
+
+@lru_cache(maxsize=1)
+def _retrying_sync_http_client() -> Any:
+    """Sync twin of `_retrying_http_client()` — same retry policy on the sync
+    `httpx.Client`, for sync SDK callers (the memory_pg embeddings client)."""
+    from httpx import Client, HTTPStatusError
+    from tenacity import retry_if_exception_type, stop_after_attempt, wait_exponential
+
+    from pydantic_ai.retries import RetryConfig, TenacityTransport, wait_retry_after
+
+    def _validate(response: Any) -> None:
+        if response.status_code in (429, 500, 502, 503, 504):
+            response.raise_for_status()
+
+    transport = TenacityTransport(
+        config=RetryConfig(
+            retry=retry_if_exception_type(HTTPStatusError),
+            wait=wait_retry_after(
+                fallback_strategy=wait_exponential(multiplier=1, max=60),
+                max_wait=300,
+            ),
+            stop=stop_after_attempt(6),
+            reraise=True,
+        ),
+        validate_response=_validate,
+    )
+    return Client(transport=transport)
 
 
 def _chat_model_cls() -> Any:
