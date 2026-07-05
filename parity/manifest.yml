@@ -69,9 +69,21 @@ findings:
       POLICY is unchanged; ADR 6.2 decides it with this data in hand.
       Matrix B additive-only tests pass unchanged (v1 fields untouched).
   crit-no-branch-cancel:
-    status: identical            # Phase 4.6
+    status: changed              # Phase 4.6 — timeout cancels branches; winner-copy correctness
     step: "4.6"
     matrix_rows: ["B:winner_dir"]
+    tests:
+      - "projects/eval-optimizer/tests/test_forking.py::test_wait_timeout_cancels_outstanding_branches"
+      - "projects/eval-optimizer/tests/test_forking.py::test_save_winner_dir_not_copied_on_fallback"
+      - "projects/eval-optimizer/tests/test_forking.py::test_save_winner_dir_copies_on_deterministic_win"
+    note: >-
+      Both 4.0 red-side pins flipped in this commit: (1) _wait_for_branches
+      now explicitly terminates every still-running branch on timeout (vendor
+      ForkCoordinator.terminate_branch, public method — no vendor edit) before
+      returning for selection; (2) save_winner_dir copies ONLY when the
+      deterministic merge path flushed the winner — never on the
+      judge-fallback or abort paths. Matrix B winner_dir field SHAPE is
+      identical (str | None); only the copy condition changed.
   crit-concurrent-history-clobber:
     status: changed              # Phase 4.4 — per-thread asyncio.Lock serializes load->run->save
     step: "4.4"

@@ -82,6 +82,16 @@ async def _wait_for_branches(coordinator, poll_s: float = 2.0, timeout_s: float 
             return statuses
         await asyncio.sleep(poll_s)
         waited += poll_s
+    # Timeout (Phase 4.6, crit-no-branch-cancel): explicitly terminate the
+    # outstanding branches BEFORE selection. v1 returned here with branches
+    # still live, racing the merge against still-writing tasks.
+    for s in coordinator.inspect_branches():
+        if str(s.state).lower() in _RUNNING_STATES:
+            try:
+                await coordinator.terminate_branch(s.id, reason="timeout")
+            except Exception:
+                log.warning("failed to terminate branch %s after timeout",
+                            s.id, exc_info=True)
     return coordinator.inspect_branches()
 
 
@@ -174,7 +184,11 @@ async def run_forked_viability(
 
         any_viable = winner_id is not None
         winner_dir = None
-        if any_viable and save_winner_dir:
+        # Phase 4.6 (crit-no-branch-cancel): copy ONLY when the deterministic
+        # merge path actually flushed the winner into the work tree. v1 also
+        # copied on the judge-fallback path, materializing a "winner dir" that
+        # was never proven to contain the winner's files; abort never copies.
+        if selection_path == "deterministic" and save_winner_dir:
             shutil.copytree(work, save_winner_dir, dirs_exist_ok=True)
             winner_dir = save_winner_dir
 

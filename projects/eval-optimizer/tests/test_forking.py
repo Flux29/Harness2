@@ -44,7 +44,8 @@ class FakeOutcome:
 
 
 class FakeStatus:
-    def __init__(self, state: str) -> None:
+    def __init__(self, branch_id: str, state: str) -> None:
+        self.id = branch_id
         self.state = state
 
 
@@ -68,7 +69,7 @@ class FakeCoordinator:
                  resolve_winner: str | None = None) -> None:
         self._outcomes = outcomes or []
         self._outcomes_error = outcomes_error
-        self._states = states
+        self._statuses = [FakeStatus(f"b{i}", s) for i, s in enumerate(states)]
         self._resolve_winner = resolve_winner
         self.calls: list[tuple[str, object]] = []
         self.terminated: list[str] = []
@@ -78,7 +79,7 @@ class FakeCoordinator:
         self.calls.append(("fork", len(specs)))
 
     def inspect_branches(self):
-        return [FakeStatus(s) for s in self._states]
+        return list(self._statuses)
 
     async def branch_outcomes(self):
         if self._outcomes_error is not None:
@@ -99,6 +100,9 @@ class FakeCoordinator:
 
     async def terminate_branch(self, branch_id: str, *, reason: str | None = None):
         self.terminated.append(branch_id)
+        for s in self._statuses:
+            if s.id == branch_id:
+                s.state = "terminated"
 
     async def aclose(self):
         self.calls.append(("aclose", None))
@@ -204,29 +208,31 @@ async def test_selection_exception_falls_back_to_judge(monkeypatch, fork_env, ca
     assert "API drift" in str(fallback_logs[0].exc_info[1])
 
 
-async def test_save_winner_dir_copies_on_fallback(monkeypatch, fork_env, tmp_path):
-    """V1 PIN — flipped by 4.6: save_winner_dir copies the work tree even when
-    the winner came from the judge fallback (no deterministic merge flushed),
-    so the 'winner dir' may not contain the winner's files."""
+async def test_save_winner_dir_not_copied_on_fallback(monkeypatch, fork_env, tmp_path):
+    """4.6 FLIP of the 4.0 v1 pin: the fallback path never proved a flushed
+    winner, so save_winner_dir must NOT materialize a 'winner dir' from it.
+    Only the deterministic merge path copies."""
     coord = FakeCoordinator(outcomes_error=RuntimeError("API drift"),
                             resolve_winner="bx")
     _install(monkeypatch, coord)
     dst = tmp_path / "winner"
     report = await forking.run_forked_viability("task", save_winner_dir=str(dst))
-    assert report.winner_dir == str(dst)  # v1 defect: copied on fallback
-    assert dst.is_dir()
+    assert report.winner_branch_id == "bx"          # fallback still selects...
+    assert report.selection_path == "judge_fallback"
+    assert report.winner_dir is None                # ...but never materializes
+    assert not dst.exists()
 
 
 # ------------------------------ timeout path -------------------------------
 
-async def test_wait_timeout_returns_with_branches_still_running():
-    """V1 PIN — flipped by 4.6: on timeout _wait_for_branches returns while
-    branches are still running and cancels NOTHING; selection then proceeds
-    over live branches."""
-    coord = FakeCoordinator(states=("running", "running"))
+async def test_wait_timeout_cancels_outstanding_branches():
+    """4.6 FLIP of the 4.0 v1 pin: on timeout _wait_for_branches explicitly
+    terminates every still-running branch BEFORE returning for selection
+    (v1 returned with branches live and selected over them)."""
+    coord = FakeCoordinator(states=("running", "done", "running"))
     statuses = await forking._wait_for_branches(coord, poll_s=0.01, timeout_s=0.03)
-    assert [s.state for s in statuses] == ["running", "running"]
-    assert coord.terminated == []  # v1 defect: no cancellation on timeout
+    assert coord.terminated == ["b0", "b2"]  # only the outstanding ones
+    assert [s.state for s in statuses] == ["terminated", "done", "terminated"]
 
 
 async def test_wait_returns_when_branches_settle():
