@@ -168,7 +168,13 @@ async def run_forked_viability(
                 if winner_id is not None:
                     selection_path = "deterministic"
             else:
-                await coordinator.merge_or_select("abort")
+                # Discovered in Phase 4 (disc-abort-action-unsupported): v1
+                # called merge_or_select("abort"), an action the vendor API
+                # never supported — the ValueError fell into the bare except
+                # below and the JUDGE quietly merged a winner on a path whose
+                # stated intent was "no branch passed, abort". abort_fork()
+                # is the real abort API: discard all branches, merge nothing.
+                await coordinator.abort_fork()
         except Exception:
             # Phase 4.5 (crit-silent-judge-fallback): the swallowed exception is
             # now logged; whether this path should exist at all is ADR 6.2's.

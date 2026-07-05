@@ -275,6 +275,27 @@ findings:
       require an absolute MCP_CONFIG) is a later-phase decision (4.7), not a Phase
       0 fix. Baseline: baseline/endpoints-v1/debug-mcp.deployed.json.
 
+  disc-abort-action-unsupported:
+    status: changed
+    source: phase-4-e2e
+    step: "4.6"
+    matrix_rows: ["B:any_viable"]
+    tests:
+      - "projects/eval-optimizer/tests/test_forking.py::test_no_passing_branch_aborts"
+      - "projects/eval-optimizer/tests/test_forking.py::test_e2e_fork_timeout_cancels_real_branches"
+    note: >-
+      Surfaced by the exit-gate-4 fork-timeout E2E test (which 4.5's logging
+      made visible). v1's no-passing-branch path called
+      merge_or_select("abort") — an action the vendor API never supported
+      (only 'pick:<id>'); the ValueError fell into the bare except and the
+      JUDGE quietly merged a winner on a path whose stated intent was
+      "no branch passed, abort". Fixed to the real abort API,
+      coordinator.abort_fork(): discard all branches, merge nothing, so
+      any_viable=False now genuinely means no winner was merged. The
+      exception-driven judge fallback itself is untouched (ADR 6.2 owns it).
+      The 4.0 fake coordinator wrongly accepted 'abort'; it now mirrors the
+      real API and raises.
+
   disc-typecheck-gate-miscalibrated:
     status: changed
     source: phase-3-ci

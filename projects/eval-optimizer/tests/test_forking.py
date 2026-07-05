@@ -13,6 +13,7 @@ commit to assert the fix.
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import sys
 from pathlib import Path
@@ -88,9 +89,16 @@ class FakeCoordinator:
 
     async def merge_or_select(self, action: str):
         self.calls.append(("merge_or_select", action))
-        if action.startswith("pick:"):
-            return FakeMergeResult(action.split(":", 1)[1])
-        return FakeMergeResult(None)
+        if not action.startswith("pick:"):
+            # Mirror the real vendor API: only 'pick:<id>' is supported. The
+            # 4.0 fake wrongly accepted 'abort'; the real coordinator raises —
+            # which is how disc-abort-action-unsupported stayed hidden in v1.
+            raise ValueError(f"Unsupported merge action: {action!r}.")
+        return FakeMergeResult(action.split(":", 1)[1])
+
+    async def abort_fork(self):
+        self.calls.append(("abort_fork", None))
+        return [s.id for s in self._statuses]
 
     async def resolve(self, strategy=None):
         self.calls.append(("resolve", getattr(strategy, "kind", None)))
@@ -160,13 +168,18 @@ async def test_deterministic_pick_merges_partial_pass_branch(monkeypatch, fork_e
 
 
 async def test_no_passing_branch_aborts(monkeypatch, fork_env):
+    """disc-abort-action-unsupported: the no-passing-branch path must GENUINELY
+    abort via abort_fork(). v1 sent the unsupported 'abort' action to
+    merge_or_select, whose ValueError fell into the bare except and let the
+    judge quietly merge a winner on the abort path."""
     coord = FakeCoordinator(outcomes=[
         FakeOutcome("b1", "failing", 0.0),
         FakeOutcome("b2", "no-signal", None),
-    ])
+    ], resolve_winner="should-never-be-consulted")
     _install(monkeypatch, coord)
     report = await forking.run_forked_viability("task")
-    assert ("merge_or_select", "abort") in coord.calls
+    assert ("abort_fork", None) in coord.calls
+    assert ("resolve", "auto") not in coord.calls  # judge NOT consulted on abort
     assert report.winner_branch_id is None
     assert report.any_viable is False
     assert report.winner_dir is None
@@ -240,6 +253,67 @@ async def test_wait_returns_when_branches_settle():
     statuses = await forking._wait_for_branches(coord, poll_s=0.01, timeout_s=1.0)
     assert [s.state for s in statuses] == ["done", "failed"]
     assert coord.terminated == []
+
+
+async def test_e2e_fork_timeout_cancels_real_branches(monkeypatch, tmp_path):
+    """Exit-gate-4 'fork-timeout' E2E: REAL vendor coordinator, branch tasks
+    genuinely hung (a FunctionModel that sleeps on every post-parent call), a
+    forced short wait window. The timeout path must terminate the live branch
+    tasks and still return a clean no-winner report — v1 would have selected
+    over the still-running branches."""
+    import time
+
+    from pydantic_ai.messages import ModelResponse, TextPart
+    from pydantic_ai.models.function import AgentInfo, FunctionModel
+    from pydantic_deep import LiveForkCapability, create_deep_agent
+
+    monkeypatch.setenv("NVIDIA_API_KEY", "nvapi-test")
+    monkeypatch.setenv("TMPDIR", str(tmp_path))
+    monkeypatch.setenv("TMP", str(tmp_path))
+    monkeypatch.setenv("TEMP", str(tmp_path))
+
+    calls = {"n": 0}
+
+    async def model_fn(messages: list, info: AgentInfo) -> ModelResponse:
+        calls["n"] += 1
+        if calls["n"] > 1:  # parent plan returns instantly; branches hang
+            await asyncio.sleep(30)
+        return ModelResponse(parts=[TextPart("plan: do the thing")])
+
+    def hung_builder():
+        return create_deep_agent(
+            model=FunctionModel(model_fn),
+            forking=LiveForkCapability(
+                test_command=f'"{sys.executable}" -c "raise SystemExit(1)"',
+                test_timeout_s=30, max_branches=3, keep_artifacts=False,
+            ),
+            include_checkpoints=True,
+            web_search=False, web_fetch=False,
+            instructions="Timeout E2E pin.",
+        )
+
+    monkeypatch.setattr(forking, "_builder_agent", hung_builder)
+
+    real_wait = forking._wait_for_branches
+
+    async def short_wait(coordinator, poll_s: float = 0.05, timeout_s: float = 0.3):
+        return await real_wait(coordinator, poll_s=poll_s, timeout_s=timeout_s)
+
+    monkeypatch.setattr(forking, "_wait_for_branches", short_wait)
+
+    start = time.monotonic()
+    report = await forking.run_forked_viability(
+        "timeout pin", approaches=[("a", "steer a"), ("b", "steer b")],
+    )
+    elapsed = time.monotonic() - start
+    # Branches slept 30s; the run must NOT have waited them out — the timeout
+    # path terminated them (real asyncio.Task cancellation via the vendor's
+    # terminate_branch) and selection saw only settled branches.
+    assert elapsed < 20, f"timeout path did not cancel hung branches ({elapsed:.1f}s)"
+    assert report.winner_branch_id is None
+    assert report.any_viable is False
+    assert report.selection_path is None
+    assert report.winner_dir is None
 
 
 # ------------------- Matrix B field-compare (exit gate 4) -------------------
