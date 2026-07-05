@@ -2,7 +2,7 @@
 
 ALL refactor work is governed by docs/HarnessRefactor.md.
 Read the current phase's section before starting any task.
-**Current phase: 5** (bump this line at each exit gate).
+**Current phase: 6** (bump this line at each exit gate).
 Findings reference: docs/HarnessCritique.md.
 
 ## Commands
