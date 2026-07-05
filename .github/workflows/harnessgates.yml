@@ -159,7 +159,9 @@ jobs:
       - uses: astral-sh/setup-uv@v4
       - name: Gate 4 scan
         if: hashFiles('parity/dup_scan.py') != ''
-        run: uv run --directory projects/agent-web python ../../parity/dup_scan.py --allowlist parity/dup-allowlist.yml
+        # --today arms the expiry check: a dated allowlist entry (e.g. 5.1's
+        # dual-write) FAILS CI past its expiry — the deadline is real.
+        run: uv run --directory projects/agent-web python ../../parity/dup_scan.py --allowlist parity/dup-allowlist.yml --today "$(date -u +%F)"
       - name: Gate not yet armed
         if: hashFiles('parity/dup_scan.py') == ''
         run: echo "dup-scan arms when parity/dup_scan.py lands (Phase 0.5)"

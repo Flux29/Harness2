@@ -82,7 +82,7 @@ def create_app(
         thread_id = run_input.thread_id
 
         async def on_complete(result: Any) -> None:
-            history.save(settings.workspaces_dir, thread_id, result.all_messages())
+            history.save(settings, thread_id, result.all_messages())
 
         adapter = AGUIAdapter(agent=request.app.state.agent, run_input=run_input, accept=accept)
 
@@ -92,7 +92,7 @@ def create_app(
             async with _thread_lock(thread_id):
                 stream = adapter.run_stream(
                     deps=make_deps(settings.workspaces_dir, thread_id),
-                    message_history=history.load(settings.workspaces_dir, thread_id),
+                    message_history=history.load(settings, thread_id),
                     on_complete=on_complete,
                 )
                 async for event in stream:

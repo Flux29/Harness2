@@ -56,6 +56,17 @@ class Settings:
     # Auto-retry on another model if the primary errors (rate limits, outages).
     fallback_model: str | None = os.getenv("FALLBACK_MODEL") or None
     workspaces_dir: Path = Path(os.getenv("WORKSPACES_DIR", "workspaces"))
+    # Phase 5.1 (crit-history-agent-writable): server-only state tree, a
+    # SIBLING of workspaces_dir — never inside any LocalBackend root, so agent
+    # file tools cannot read or rewrite what lives here (history, and 6.3's
+    # checkpoint store if ADR 6.3 chooses durability).
+    state_dir: Path = Path(os.getenv("STATE_DIR", "state"))
+    # Migration window (5.1 parallel-run, NOT a hard cutover): 1 = also write
+    # the v1 workspace history copy and diff the pair on every save; READS stay
+    # on the v1 copy while the window is open. Cut over (remove the flag) after
+    # N=5 clean sessions (empty state/history/_divergences.log). The matching
+    # Gate 4 dup-allowlist entry's expiry is this window's hard deadline.
+    history_dual_write: bool = _flag("HISTORY_DUAL_WRITE", False)
     mcp_config: Path = _mcp_config_path()
     # Comma-separated server names to enable (builtins and/or mcp.json entries).
     # 3.4a decision: the CODE default stays secret-free (context7,deepwiki). The

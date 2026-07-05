@@ -12,6 +12,8 @@ from agent_web.settings import Settings
 def make_settings(tmp_path) -> Settings:
     return Settings(
         workspaces_dir=tmp_path / "workspaces",
+        state_dir=tmp_path / "state",
+        history_dual_write=False,  # post-cutover default; window tested explicitly
         mcp_config=tmp_path / "absent-mcp.json",
         mcp_enable=(),  # no network in tests
         web_tools=False,  # TestModel rejects built-in tools

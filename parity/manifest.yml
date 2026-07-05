@@ -29,9 +29,26 @@ findings:
     step: "6.3"
     matrix_rows: ["D:checkpoint-store"]
   crit-history-agent-writable:
-    status: identical            # Phase 5.1 (parallel-run relocation)
+    status: changed              # Phase 5.1 — server-only history via parallel-run
     step: "5.1"
     matrix_rows: ["D:history-location"]
+    tests:
+      - "projects/agent-web/tests/test_e2e_agui.py::test_agent_workspace_cannot_see_history"
+      - "projects/agent-web/tests/test_e2e_agui.py::test_history_persisted_server_side"
+      - "projects/agent-web/tests/test_e2e_agui.py::test_dual_write_window_writes_both_copies"
+      - "projects/agent-web/tests/test_e2e_agui.py::test_dual_write_divergence_is_loud"
+      - "projects/agent-web/tests/test_e2e_agui.py::test_dual_write_reads_stay_on_v1_copy"
+    note: >-
+      Authoritative history moved to STATE_DIR/history/<slug>.json — a sibling
+      of workspaces/, outside every LocalBackend root (D:history-location row
+      flipped; message SCHEMA row unchanged). Parallel-run, not cutover:
+      HISTORY_DUAL_WRITE=1 opens the window (write both, diff previous pair on
+      every save, divergence -> ERROR log + ledger the live parity run asserts
+      empty; reads stay on the v1 copy). Cutover = remove the flag after N=5
+      clean sessions; the Gate 4 allowlist entry 5b2b397a0757feed expires
+      2026-08-15 and CI now arms expiry (--today). Migration: no one-shot
+      relocation — the window migrates active threads (each save writes the
+      full message list); dormant threads restart fresh after cutover.
   crit-fork-exec-gate:
     status: identical            # Phase 5.2
     step: "5.2"
