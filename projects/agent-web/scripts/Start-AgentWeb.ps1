@@ -8,7 +8,10 @@ function Test-Health { try { (Invoke-WebRequest "$url/healthz" -TimeoutSec 2 -Us
 
 if (-not (Test-Health)) {
     Write-Host "Starting agent-web server..."
-    Start-Process -FilePath "uv" -ArgumentList "run","uvicorn","agent_web.main:app","--port","8801" `
+    # --host 127.0.0.1 is the STATED bind invariant (plan step 5.3): loopback
+    # only, never a LAN interface. Explicit here so the property is declared,
+    # not an accident of uvicorn's default.
+    Start-Process -FilePath "uv" -ArgumentList "run","uvicorn","agent_web.main:app","--host","127.0.0.1","--port","8801" `
         -WorkingDirectory $root -WindowStyle Hidden
     $tries = 0
     while (-not (Test-Health) -and $tries -lt 90) { Start-Sleep -Seconds 1; $tries++ }  # cold start builds the agent + MCP handshakes
