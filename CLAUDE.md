@@ -2,7 +2,9 @@
 
 ALL refactor work is governed by docs/HarnessRefactor.md.
 Read the current phase's section before starting any task.
-**Current phase: 6** (bump this line at each exit gate).
+**Current phase: 6 — exit gate 6 live session PASSED 2026-07-06** (final
+merges pending; once they land the parity harness is the permanent regression
+net and this line retires).
 Findings reference: docs/HarnessCritique.md.
 
 ## Commands

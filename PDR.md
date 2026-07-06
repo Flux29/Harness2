@@ -54,7 +54,7 @@ copy the tree to a normal directory, `git init` there, and push; `.gitignore`
 | `projects/agent-web/src/agent_web/deps.py` | per-thread `WebDeps` factory: `LocalBackend` workspace + checkpoint store + AG-UI `state` |
 | `projects/agent-web/src/agent_web/history.py` | server-owned message history per thread (trust model); authoritative copy under `STATE_DIR/history/` — agent file tools cannot reach it; `HISTORY_DUAL_WRITE=1` = 5.1 migration window |
 | `projects/agent-web/src/agent_web/mcp.py` | ADR-0014 registry wiring (builtins + `mcp.json`, resilient build) |
-| `projects/agent-web/tests/` | 43 tests (E2E over the real ASGI app + unit) — SSE shape, isolation, server-side history + dual-write window, per-thread run lock, endpoint honesty, fork gate, interrupts + resume, checkpoints, MCP prefixing |
+| `projects/agent-web/tests/` | 56 tests (E2E over the real ASGI app + unit) — SSE shape, isolation, server-side history + dual-write window, per-thread run lock, endpoint honesty, fork gate, interrupts + resume, checkpoints, MCP prefixing, request guard + 422 hardening |
 | `projects/agent-web/frontend/` | CopilotKit v2 + `@ag-ui/client` React app (OSS-only, ADR-0016) |
 | `vendor/patches/`, `vendor/VENDOR.txt`, `vendor/revendor_check.py` | vendor hygiene (IMPROVEMENTS 1–8 enacted) |
 

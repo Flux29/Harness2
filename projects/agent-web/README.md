@@ -67,9 +67,10 @@ coding-agent skills + agent-assisted onboarding (account-free per CLI docs).
 ## Tests (all E2E, no mocks of our code)
 
 ```powershell
-uv run pytest      # 43 tests: SSE shape, 422, server-side history (+ the 5.1
-                   # dual-write window), thread isolation, per-thread run lock,
-                   # healthz/mcp honesty, fork gate, approval interrupt + resume
+uv run pytest      # 56 tests: SSE shape, 422 (+ non-UTF-8 hardening), server-side
+                   # history (+ the 5.1 dual-write window), thread isolation,
+                   # per-thread run lock, healthz/mcp honesty, fork gate,
+                   # approval interrupt + resume, request guard, checkpoints
 uv run python ..\..\vendor\verify_core.py   # harness+patch+AG-UI+MCP gate
 ```
 
