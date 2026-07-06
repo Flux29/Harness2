@@ -1,0 +1,157 @@
+[
+  {
+    "parts": [
+      {
+        "content": "Reply with exactly: LIVE WIRE OK",
+        "timestamp": "2026-07-06T15:50:04.744431Z",
+        "part_kind": "user-prompt"
+      }
+    ],
+    "timestamp": "2026-07-06T15:50:11.162638Z",
+    "instructions": "Tool selection rules: 1) Your full toolbox is LARGER than the tools you can currently see — when a task involves an external service (GitHub, library docs, telemetry/Logfire, databases), FIRST call search_tools with relevant keywords to discover the right tools. 2) Prefer MCP tools (github_*, context7_*, logfire_*) over shell or browser for anything they cover — GitHub repos/issues/PRs MUST use github_* tools, never `gh`, `winget`, or browsing github.com. 3) NEVER navigate to login pages or enter credentials into any website; your credentials are provided via tools, not web forms. 4) Do not install software unless the user explicitly asks. 5) If a needed tool seems missing after searching, say so and stop instead of improvising around it.\n\n## Self-Improvement\n\nYou have access to a self-improvement system via the `improve` and `get_improvement_status` tools.\n\n### When to use `improve`:\n- When the user asks you to learn from past sessions\n- When the user says \"/improve\" or asks you to self-improve\n- After completing a long or complex task, suggest running improve\n- When you notice you're repeating mistakes or the user keeps correcting you\n\n### When to use `get_improvement_status`:\n- When the user asks when improve was last run\n- Before running improve, to check if it was run recently (avoid running   too often — once per day is usually enough)\n\n### What improve does:\n1. Analyzes recent conversation sessions (default: last 7 days)\n2. Extracts patterns, failures, user preferences, and project context\n3. Proposes changes to SOUL.md (preferences), AGENTS.md (conventions),    MEMORY.md (learnings)\n4. The user reviews and approves changes\n\n### Do NOT:\n- Run improve without the user's awareness\n- Run improve more than once per day unless explicitly asked\n- Modify SOUL.md, AGENTS.md, or MEMORY.md directly — let improve handle it\n\n\n## Task Tracking\n\nFor work spanning several steps, track it with the todo tools: keep exactly one task `in_progress`, mark each `completed` as soon as it's done, and re-check the list before picking the next step. Skip todos for trivial, one-shot tasks.\n\n## Console Tools — Hashline Edit Mode\n\nYou have access to filesystem tools (ls, read_file, write_file, hashline_edit, glob, grep) and shell execution (execute). File contents use **hashline format** — each line is tagged with a content hash. Read each tool's description for detailed usage guidance.\n\n\n## Subagents\n\nSpecialist subagents are available via the `task` tool. Delegate self-contained or parallel subtasks, giving each a complete brief — they don't share your context. Work directly for simple, sequential, or single-file work.\n\nAvailable: planner, general-purpose, research.\n\n## Web Tools\n\nYou have access to the web:\n- **web search** - search the internet for current information, news, docs\n- **web fetch** - fetch and read any URL as Markdown\n\nWhen the user asks you to look something up online, visit a website, or check current information - use these tools. Do NOT refuse.\n\nYou have access to a collection of skills containing domain-specific knowledge and capabilities.\nEach skill provides specialized instructions, resources, and scripts for specific tasks.\n\n<available_skills>\n<skill>\n<name>external-services</name>\n<description>Correct tool discovery and usage for GitHub, docs, telemetry, and other external services</description>\n</skill>\n</available_skills>\n\nWhen a task falls within a skill's domain:\n1. Use `load_skill` to read the complete skill instructions\n2. Follow the skill's guidance to complete the task\n3. Use any additional skill resources and scripts as needed\n\nUse progressive disclosure: load only what you need, when you need it.",
+    "kind": "request",
+    "run_id": "019f381f-52c8-725c-a8c4-22aa44fe6bbd",
+    "conversation_id": "gate6-chat",
+    "metadata": null,
+    "state": "complete"
+  },
+  {
+    "parts": [
+      {
+        "content": "The user wants me to reply with exactly \"LIVE WIRE OK\".",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      {
+        "content": "LIVE WIRE OK",
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "text"
+      }
+    ],
+    "usage": {
+      "input_tokens": 9862,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 22,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 14,
+        "image_tokens": 0
+      }
+    },
+    "model_name": "z-ai/glm-5.2-20260616",
+    "timestamp": "2026-07-06T15:50:15.912971Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-07-06T15:50:12Z",
+      "downstream_provider": "Novita",
+      "finish_reason": "stop",
+      "cost": 0.0140234364,
+      "upstream_inference_cost": 0.0090234364,
+      "upstream_inference_prompt_cost": 0.0089606132,
+      "upstream_inference_completions_cost": 0.0000628232,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1783353012-Y0JajVWhgyTIHc4GOSyM",
+    "finish_reason": "stop",
+    "run_id": "019f381f-52c8-725c-a8c4-22aa44fe6bbd",
+    "conversation_id": "gate6-chat",
+    "metadata": null,
+    "state": "complete"
+  },
+  {
+    "parts": [
+      {
+        "content": "Reply with exactly: LIVE WIRE OK",
+        "timestamp": "2026-07-06T16:44:05.006982Z",
+        "part_kind": "user-prompt"
+      },
+      {
+        "content": "The server was just restarted. Without me repeating it, what exact phrase did I ask you to reply with earlier in this thread? Answer with just that phrase.",
+        "timestamp": "2026-07-06T16:44:05.006982Z",
+        "part_kind": "user-prompt"
+      }
+    ],
+    "timestamp": "2026-07-06T16:44:09.093795Z",
+    "instructions": "Tool selection rules: 1) Your full toolbox is LARGER than the tools you can currently see — when a task involves an external service (GitHub, library docs, telemetry/Logfire, databases), FIRST call search_tools with relevant keywords to discover the right tools. 2) Prefer MCP tools (github_*, context7_*, logfire_*) over shell or browser for anything they cover — GitHub repos/issues/PRs MUST use github_* tools, never `gh`, `winget`, or browsing github.com. 3) NEVER navigate to login pages or enter credentials into any website; your credentials are provided via tools, not web forms. 4) Do not install software unless the user explicitly asks. 5) If a needed tool seems missing after searching, say so and stop instead of improvising around it.\n\n## Self-Improvement\n\nYou have access to a self-improvement system via the `improve` and `get_improvement_status` tools.\n\n### When to use `improve`:\n- When the user asks you to learn from past sessions\n- When the user says \"/improve\" or asks you to self-improve\n- After completing a long or complex task, suggest running improve\n- When you notice you're repeating mistakes or the user keeps correcting you\n\n### When to use `get_improvement_status`:\n- When the user asks when improve was last run\n- Before running improve, to check if it was run recently (avoid running   too often — once per day is usually enough)\n\n### What improve does:\n1. Analyzes recent conversation sessions (default: last 7 days)\n2. Extracts patterns, failures, user preferences, and project context\n3. Proposes changes to SOUL.md (preferences), AGENTS.md (conventions),    MEMORY.md (learnings)\n4. The user reviews and approves changes\n\n### Do NOT:\n- Run improve without the user's awareness\n- Run improve more than once per day unless explicitly asked\n- Modify SOUL.md, AGENTS.md, or MEMORY.md directly — let improve handle it\n\n\n## Task Tracking\n\nFor work spanning several steps, track it with the todo tools: keep exactly one task `in_progress`, mark each `completed` as soon as it's done, and re-check the list before picking the next step. Skip todos for trivial, one-shot tasks.\n\n## Console Tools — Hashline Edit Mode\n\nYou have access to filesystem tools (ls, read_file, write_file, hashline_edit, glob, grep) and shell execution (execute). File contents use **hashline format** — each line is tagged with a content hash. Read each tool's description for detailed usage guidance.\n\n\n## Subagents\n\nSpecialist subagents are available via the `task` tool. Delegate self-contained or parallel subtasks, giving each a complete brief — they don't share your context. Work directly for simple, sequential, or single-file work.\n\nAvailable: planner, general-purpose, research.\n\n## Web Tools\n\nYou have access to the web:\n- **web search** - search the internet for current information, news, docs\n- **web fetch** - fetch and read any URL as Markdown\n\nWhen the user asks you to look something up online, visit a website, or check current information - use these tools. Do NOT refuse.\n\nYou have access to a collection of skills containing domain-specific knowledge and capabilities.\nEach skill provides specialized instructions, resources, and scripts for specific tasks.\n\n<available_skills>\n<skill>\n<name>external-services</name>\n<description>Correct tool discovery and usage for GitHub, docs, telemetry, and other external services</description>\n</skill>\n</available_skills>\n\nWhen a task falls within a skill's domain:\n1. Use `load_skill` to read the complete skill instructions\n2. Follow the skill's guidance to complete the task\n3. Use any additional skill resources and scripts as needed\n\nUse progressive disclosure: load only what you need, when you need it.",
+    "kind": "request",
+    "run_id": "019f3850-c40e-7423-9034-8f7caafcf787",
+    "conversation_id": "gate6-chat",
+    "metadata": null,
+    "state": "complete"
+  },
+  {
+    "parts": [
+      {
+        "content": "The user asked me to reply with exactly \"LIVE WIRE OK\" earlier in this thread.",
+        "id": null,
+        "signature": null,
+        "provider_name": "openrouter",
+        "provider_details": {
+          "format": "unknown",
+          "index": 0,
+          "type": "reasoning.text"
+        },
+        "part_kind": "thinking"
+      },
+      {
+        "content": "LIVE WIRE OK",
+        "id": null,
+        "provider_name": null,
+        "provider_details": null,
+        "part_kind": "text"
+      }
+    ],
+    "usage": {
+      "input_tokens": 8485,
+      "cache_write_tokens": 0,
+      "cache_read_tokens": 0,
+      "output_tokens": 27,
+      "input_audio_tokens": 0,
+      "cache_audio_read_tokens": 0,
+      "output_audio_tokens": 0,
+      "details": {
+        "is_byok": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 20,
+        "image_tokens": 0
+      }
+    },
+    "model_name": "z-ai/glm-5.2-20260616",
+    "timestamp": "2026-07-06T16:44:13.956739Z",
+    "kind": "response",
+    "provider_name": "openrouter",
+    "provider_url": "https://openrouter.ai/api/v1",
+    "provider_details": {
+      "timestamp": "2026-07-06T16:44:10Z",
+      "downstream_provider": "Novita",
+      "finish_reason": "stop",
+      "cost": 0.0127865722,
+      "upstream_inference_cost": 0.0077865722,
+      "upstream_inference_prompt_cost": 0.007709471,
+      "upstream_inference_completions_cost": 0.0000771012,
+      "is_byok": false
+    },
+    "provider_response_id": "gen-1783356250-xfFtRNgWN4x0UmuBnJxd",
+    "finish_reason": "stop",
+    "run_id": "019f3850-c40e-7423-9034-8f7caafcf787",
+    "conversation_id": "gate6-chat",
+    "metadata": null,
+    "state": "complete"
+  }
+]
