@@ -55,7 +55,14 @@ def test_fork_config_centralized(monkeypatch: pytest.MonkeyPatch) -> None:
 
     s = Settings.from_env()
     assert s.fork_max_branches == 8
-    assert s.fork_test_command == "python -m pytest -q"
+    # disc-fork-test-command-import-path: absolute running interpreter + -m
+    # pytest (cwd on sys.path), never bare "python"/"pytest" PATH luck.
+    import shlex
+    from pathlib import Path
+
+    cmd = shlex.split(s.fork_test_command)
+    assert cmd[1:] == ["-m", "pytest", "-q"]
+    assert Path(cmd[0]).exists(), f"fork test interpreter missing: {cmd[0]}"
     assert s.fork_test_timeout_s == 90.0
     assert s.fork_per_branch_budget_usd == 0.75
     assert s.fork_aggregate_budget_usd == 2.5

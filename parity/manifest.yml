@@ -355,13 +355,16 @@ findings:
     tests:
       - "projects/eval-optimizer/tests/test_forking.py::test_default_fork_test_command_imports_root_modules"
     note: >-
-      Gate-6 live find, first live outing of ADR-0018's shared-suite metric:
-      the default FORK_TEST_COMMAND ("pytest -q") used the pytest console
-      script, which does not put the workspace cwd on sys.path — so the shared
-      suite under tests/ could never import a branch's root-level
-      implementation modules and EVERY honest branch scored 0.00 (the fork
-      always aborted). Default changed to "python -m pytest -q" (-m prepends
-      the cwd). Report shape and selection semantics unchanged.
+      Gate-6 live find, first live outing of ADR-0018's shared-suite metric —
+      two stacked defects in the default FORK_TEST_COMMAND ("pytest -q"):
+      (1) the pytest console script does not put the snapshot cwd on sys.path,
+      so the shared suite under tests/ could never import a branch's
+      root-level implementation modules; (2) after switching to -m, bare
+      "python" resolved (vendor runner: shlex.split + create_subprocess_exec,
+      no shell) to uv's managed base interpreter with no pytest installed.
+      Either way EVERY honest branch scored 0.00/None and the fork always
+      aborted. Default is now the absolute running interpreter (as_posix) +
+      "-m pytest -q". Report shape and selection semantics unchanged.
   disc-422-serialization-crash:
     status: changed
     source: gate-6-live-session

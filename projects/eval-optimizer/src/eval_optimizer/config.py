@@ -2,11 +2,26 @@
 from __future__ import annotations
 
 import os
+import shlex
+import sys
 from dataclasses import dataclass
+from pathlib import Path
 
 from dotenv import load_dotenv
 
 load_dotenv()  # load .env if present; real env vars still win
+
+# Interpreter for the fork branch test runner (gate-6 live find,
+# disc-fork-test-command-import-path). Both halves matter:
+#   - `-m pytest`, not the bare console script: -m prepends the snapshot cwd
+#     to sys.path so the shared suite under tests/ can import the branch's
+#     root-level implementation modules;
+#   - the ABSOLUTE running interpreter, not bare "python": the vendor runner
+#     spawns argv via shlex.split + create_subprocess_exec (no shell), and in
+#     that spawn context bare "python" resolved to uv's managed base
+#     interpreter, which has no pytest. as_posix() because POSIX shlex eats
+#     backslashes.
+_FORK_PYTHON = shlex.quote(Path(sys.executable).as_posix())
 
 
 @dataclass(frozen=True)
@@ -57,12 +72,9 @@ class Settings:
             openrouter_api_key=os.environ.get("OPENROUTER_API_KEY", ""),
             openrouter_base_url=os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"),
             fork_max_branches=int(os.environ.get("FORK_MAX_BRANCHES", "8")),
-            # `python -m pytest`, NOT the bare console script: -m prepends the
-            # cwd to sys.path, so the shared suite under tests/ can import the
-            # branch's root-level implementation modules (gate-6 live find,
-            # disc-fork-test-command-import-path — bare `pytest -q` scored
-            # every honest branch 0.00).
-            fork_test_command=os.environ.get("FORK_TEST_COMMAND", "python -m pytest -q"),
+            fork_test_command=os.environ.get(
+                "FORK_TEST_COMMAND", f"{_FORK_PYTHON} -m pytest -q"
+            ),
             fork_test_timeout_s=float(os.environ.get("FORK_TEST_TIMEOUT_S", "90")),
             fork_per_branch_budget_usd=float(os.environ.get("FORK_PER_BRANCH_BUDGET_USD", "0.75")),
             fork_aggregate_budget_usd=float(os.environ.get("FORK_AGGREGATE_BUDGET_USD", "2.5")),
