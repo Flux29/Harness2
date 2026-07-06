@@ -68,9 +68,28 @@ findings:
       docstring disclosure promoted to a required acknowledgment. The v1
       asymmetry (shell approval-gated, pytest-on-host ungated) is removed.
   crit-fork-selection-metric:
-    status: identical            # ADR decision, Phase 6.1
+    status: changed              # ADR-0018 — shared-prefix suite, integrity-checked
     step: "6.1"
     matrix_rows: ["B:test_pass_ratio"]
+    tests:
+      - "projects/eval-optimizer/tests/test_forking.py::test_untampered_full_pass_merges"
+      - "projects/eval-optimizer/tests/test_forking.py::test_tampered_branch_disqualified"
+      - "projects/eval-optimizer/tests/test_forking.py::test_e2e_tampering_branch_disqualified_via_real_overlays"
+      - "projects/eval-optimizer/tests/test_forking.py::test_tie_break_fewest_errors_then_cost"
+      - "projects/eval-optimizer/tests/test_forking.py::test_caller_supplied_suite_lands_in_shared_prefix"
+      - "projects/eval-optimizer/tests/test_forking.py::test_parent_authors_suite_when_none_supplied"
+    note: >-
+      ADR-0018 (Accepted 2026-07-05): branches no longer grade themselves. The
+      suite enters the fork once via the shared prefix (caller-supplied tests=
+      or parent-authored pre-fork); branches implement against it and any
+      branch whose overlay end-state touches tests/ or root pytest config is
+      DISQUALIFIED (integrity check via the vendor's PUBLIC build_diff_report
+      over live overlays — sees deletions the artifact mirror cannot; layer
+      contract respected). Ranking among untampered full passes is a stated
+      tie-break (fewest errors, then cost, then approach order) replacing v1's
+      accidental first-listed-wins. Matrix B: test_pass_ratio field SHAPE
+      identical, semantics now 'shared suite outcome'; tests_tampered is an
+      ADDITIVE branch field.
   crit-flag-case-sensitivity:
     status: changed              # Phase 3.3 — unified _flag parser; EXECUTE=False now OFF
     step: "3.3"
@@ -81,9 +100,18 @@ findings:
 
   # ============================= Major ==============================
   crit-merge-threshold:
-    status: identical            # ADR sub-decision, Phase 6.1a
+    status: changed              # ADR-0018 (6.1a) — mergeable iff untampered ratio == 1.0
     step: "6.1a"
     matrix_rows: ["B:any_viable"]
+    tests:
+      - "projects/eval-optimizer/tests/test_forking.py::test_partial_pass_no_longer_merges"
+      - "projects/eval-optimizer/tests/test_forking.py::test_all_passes_tampered_aborts"
+    note: >-
+      any_viable defined numerically by ADR-0018: a branch merges iff its
+      UNTAMPERED shared-suite ratio == 1.0 (binary vendor semantics = the
+      whole suite passed; a future granular partial pass stays unmergeable
+      without revisiting the ADR). v1's `>0` threshold is gone. Per ADR-0017,
+      infrastructure failures raise and never shape any_viable.
   crit-silent-judge-fallback:
     status: changed              # 4.5 instrumented; policy RESOLVED by ADR-0017 (plan 6.2)
     step: "4.5"
@@ -91,7 +119,7 @@ findings:
     tests:
       - "projects/eval-optimizer/tests/test_forking.py::test_selection_exception_aborts_loud"
       - "projects/eval-optimizer/tests/test_forking.py::test_selection_exception_never_materializes_winner_dir"
-      - "projects/eval-optimizer/tests/test_forking.py::test_deterministic_pick_merges_partial_pass_branch"
+      - "projects/eval-optimizer/tests/test_forking.py::test_untampered_full_pass_merges"
     note: >-
       Phase 4.5 added selection_path + logging of the swallowed exception;
       ADR-0017 (Accepted 2026-07-05) then RETIRED the judge fallback from the

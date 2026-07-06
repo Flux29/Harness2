@@ -32,6 +32,10 @@ BASELINE_SAMPLE = ROOT / "baseline" / "schemas-v1" / "harness-fork-report-sample
 # Shapes mirror the vendor surface forking.py consumes: BranchOutcome fields,
 # BranchStatus.state, MergeResult.winner_branch_id, ResolveOutcome.merge_result.
 
+class FakeHandle:
+    fork_id = "fake-fork"
+
+
 class FakeOutcome:
     def __init__(self, branch_id: str, label: str, ratio: float | None,
                  cost: float | None = 0.01, turns: int = 1, errors: int = 0,
@@ -79,6 +83,8 @@ class FakeCoordinator:
     async def fork(self, specs, *, parent_history, isolation=None,
                    aggregate_budget_usd=None):
         self.calls.append(("fork", len(specs)))
+        self.forked_specs = list(specs)
+        return FakeHandle()
 
     def inspect_branches(self):
         return list(self._statuses)
@@ -124,12 +130,22 @@ class FakeResult:
 
 class FakeAgent:
     """Stub builder agent: sets the coordinator on deps (as the vendor
-    LiveForkCapability.for_run does at run start) and returns a plan result."""
+    LiveForkCapability.for_run does at run start) and returns a plan result.
+    Records the parent prompt and the work tree's files at run time so suite-
+    provenance tests (ADR-0018) can assert what the parent was asked to do."""
 
     def __init__(self, coordinator: FakeCoordinator) -> None:
         self._coordinator = coordinator
+        self.seen_prompt: str | None = None
+        self.work_files: list[str] = []
 
     async def run(self, prompt, deps=None, **kwargs):
+        from pydantic_deep import unwrap_backend
+
+        self.seen_prompt = prompt
+        root = Path(unwrap_backend(deps.backend).root_dir)
+        self.work_files = sorted(
+            p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file())
         deps.fork_coordinator = self._coordinator
         return FakeResult()
 
@@ -159,17 +175,27 @@ async def test_host_exec_requires_env_acknowledgment(monkeypatch):
     assert coord.calls == []  # refused before ANY fork work started
 
 
-def _install(monkeypatch, coordinator: FakeCoordinator) -> None:
-    monkeypatch.setattr(forking, "_builder_agent", lambda: FakeAgent(coordinator))
+def _install(monkeypatch, coordinator: FakeCoordinator,
+             tampered: set[str] | None = None) -> FakeAgent:
+    agent = FakeAgent(coordinator)
+    monkeypatch.setattr(forking, "_builder_agent", lambda: agent)
+
+    # Fake coordinators carry no real overlays, so the ADR-0018 integrity
+    # check is injected here; the REAL check runs in the E2E tests below.
+    async def fake_tampered(coord, fork_id):
+        return set(tampered or ())
+
+    monkeypatch.setattr(forking, "_tampered_branch_ids", fake_tampered)
+    return agent
 
 
 # ----------------------- deterministic selection path -----------------------
 
-async def test_deterministic_pick_merges_partial_pass_branch(monkeypatch, fork_env):
-    """The `>0` threshold merges a PARTIAL-pass branch as winner (v1 semantics;
-    the threshold itself is ADR 6.1a's decision, pinned here as-is)."""
+async def test_untampered_full_pass_merges(monkeypatch, fork_env):
+    """ADR-0018: a branch whose UNTAMPERED shared suite fully passed merges;
+    failing / no-signal siblings do not compete."""
     coord = FakeCoordinator(outcomes=[
-        FakeOutcome("b1", "partial", 0.4),
+        FakeOutcome("b1", "green", 1.0),
         FakeOutcome("b2", "failing", 0.0),
         FakeOutcome("b3", "no-signal", None),
     ])
@@ -180,7 +206,95 @@ async def test_deterministic_pick_merges_partial_pass_branch(monkeypatch, fork_e
     assert report.any_viable is True
     assert report.selection_path == "deterministic"  # 4.5 provenance
     assert [b.branch_id for b in report.branches] == ["b1", "b2", "b3"]
+    assert not any(b.tests_tampered for b in report.branches)
     assert ("aclose", None) in coord.calls
+
+
+async def test_partial_pass_no_longer_merges(monkeypatch, fork_env):
+    """ADR-0018 / 6.1a: the merge threshold is ratio == 1.0. v1's `>0` would
+    have merged a hypothetical partial pass; now anything short of a full
+    shared-suite pass aborts."""
+    coord = FakeCoordinator(outcomes=[
+        FakeOutcome("b1", "partial", 0.4),
+        FakeOutcome("b2", "worse", 0.2),
+    ])
+    _install(monkeypatch, coord)
+    report = await forking.run_forked_viability("task")
+    assert ("abort_fork", None) in coord.calls
+    assert report.winner_branch_id is None
+    assert report.any_viable is False
+
+
+async def test_tie_break_fewest_errors_then_cost(monkeypatch, fork_env):
+    """ADR-0018: ranking among full passes is STATED, not accidental — fewest
+    errors, then lowest cost. v1's stable sort made the first-listed approach
+    win every tie; this pins that the first-listed branch loses on merits."""
+    coord = FakeCoordinator(outcomes=[
+        FakeOutcome("b1", "first-listed", 1.0, errors=2, cost=0.01),
+        FakeOutcome("b2", "clean-costly", 1.0, errors=0, cost=0.09),
+        FakeOutcome("b3", "clean-cheap", 1.0, errors=0, cost=0.02),
+    ])
+    _install(monkeypatch, coord)
+    report = await forking.run_forked_viability("task")
+    assert report.winner_branch_id == "b3"  # 0 errors, cheaper than b2
+    assert ("merge_or_select", "pick:b3") in coord.calls
+
+
+async def test_tampered_branch_disqualified(monkeypatch, fork_env):
+    """ADR-0018 integrity: a full-pass branch that touched the shared suite is
+    disqualified; an honest full pass wins even at higher cost."""
+    coord = FakeCoordinator(outcomes=[
+        FakeOutcome("b1", "cheater", 1.0, errors=0, cost=0.01),
+        FakeOutcome("b2", "honest", 1.0, errors=1, cost=0.05),
+    ])
+    _install(monkeypatch, coord, tampered={"b1"})
+    report = await forking.run_forked_viability("task")
+    assert report.winner_branch_id == "b2"
+    by_id = {b.branch_id: b for b in report.branches}
+    assert by_id["b1"].tests_tampered is True
+    assert by_id["b2"].tests_tampered is False
+
+
+async def test_all_passes_tampered_aborts(monkeypatch, fork_env):
+    coord = FakeCoordinator(outcomes=[FakeOutcome("b1", "cheater", 1.0)])
+    _install(monkeypatch, coord, tampered={"b1"})
+    report = await forking.run_forked_viability("task")
+    assert ("abort_fork", None) in coord.calls
+    assert report.winner_branch_id is None
+    assert report.any_viable is False
+    assert report.branches[0].tests_tampered is True
+
+
+# ------------------------ suite provenance (ADR-0018) ------------------------
+
+async def test_caller_supplied_suite_lands_in_shared_prefix(monkeypatch, fork_env):
+    """With tests= supplied, the suite exists in the work tree BEFORE the
+    parent run (the shared prefix) and the parent is asked only to plan."""
+    coord = FakeCoordinator(outcomes=[FakeOutcome("b1", "green", 1.0)])
+    agent = _install(monkeypatch, coord)
+    await forking.run_forked_viability(
+        "task", tests={"tests/test_contract.py": "def test_ok():\n    assert True\n"})
+    assert "tests/test_contract.py" in agent.work_files
+    assert "implementation plan" in (agent.seen_prompt or "")
+    assert "write ONLY a pytest test suite" not in (agent.seen_prompt or "")
+
+
+async def test_parent_authors_suite_when_none_supplied(monkeypatch, fork_env):
+    coord = FakeCoordinator(outcomes=[FakeOutcome("b1", "green", 1.0)])
+    agent = _install(monkeypatch, coord)
+    await forking.run_forked_viability("task")
+    assert "write ONLY a pytest test suite" in (agent.seen_prompt or "")
+    # and every branch steer carries the do-not-touch-tests contract
+    assert all("disqualified (ADR-0018)" in s.steer for s in coord.forked_specs)
+
+
+async def test_caller_supplied_suite_must_live_under_tests(monkeypatch, fork_env):
+    coord = FakeCoordinator()
+    _install(monkeypatch, coord)
+    with pytest.raises(ValueError, match="must live under tests/"):
+        await forking.run_forked_viability(
+            "task", tests={"src/evil.py": "print('not a test')"})
+    assert coord.calls == []  # rejected before any fork work
 
 
 async def test_no_passing_branch_aborts(monkeypatch, fork_env):
@@ -376,6 +490,7 @@ async def test_full_testmodel_fork_run_matches_matrix_b(monkeypatch, tmp_path):
     report = await forking.run_forked_viability(
         "offline viability pin",
         approaches=[("a", "steer a"), ("b", "steer b")],
+        tests={"tests/test_contract.py": "def test_ok():\n    assert True\n"},
     )
     assert isinstance(report, HarnessForkReport)
     assert len(report.branches) == 2
@@ -384,6 +499,64 @@ async def test_full_testmodel_fork_run_matches_matrix_b(monkeypatch, tmp_path):
     assert set(sample) <= set(dumped), "Matrix B: report dropped v1 fields"
     for branch in dumped["branches"]:
         assert set(sample["branches"][0]) <= set(branch)
-    # both branches ran the trivial passing test command -> deterministic pick
+    # both branches ran the trivial passing test command -> deterministic pick;
+    # the REAL ADR-0018 integrity check ran over the live overlays (TestModel
+    # branches write nothing, so both are untampered).
+    assert not any(b.tests_tampered for b in report.branches)
     assert report.winner_branch_id is not None
+    assert report.any_viable is True
+
+
+async def test_e2e_tampering_branch_disqualified_via_real_overlays(monkeypatch, tmp_path):
+    """ADR-0018 integrity E2E through the REAL vendor machinery: a branch that
+    writes into tests/ (via a real write_file tool call landing in its real
+    copy-on-write overlay) is detected by the public diff API and disqualified,
+    while its honest sibling — identical suite outcome — wins the merge."""
+    from pydantic_ai.messages import ModelResponse, TextPart, ToolCallPart
+    from pydantic_ai.models.function import AgentInfo, FunctionModel
+    from pydantic_deep import LiveForkCapability, create_deep_agent
+
+    monkeypatch.setenv("NVIDIA_API_KEY", "nvapi-test")
+    monkeypatch.setenv("EVALOPT_ALLOW_HOST_EXEC", "1")
+    monkeypatch.setenv("TMPDIR", str(tmp_path))
+    monkeypatch.setenv("TMP", str(tmp_path))
+    monkeypatch.setenv("TEMP", str(tmp_path))
+
+    async def model_fn(messages: list, info: AgentInfo) -> ModelResponse:
+        joined = "".join(str(m) for m in messages)
+        has_tool_return = any(
+            part.__class__.__name__ == "ToolReturnPart"
+            for m in messages for part in getattr(m, "parts", []))
+        if "TAMPER-THE-SUITE" in joined and not has_tool_return:
+            return ModelResponse(parts=[ToolCallPart(
+                tool_name="write_file",
+                args={"path": "tests/test_hacked.py",
+                      "content": "def test_free_win():\n    assert True\n"},
+            )])
+        return ModelResponse(parts=[TextPart("done")])
+
+    def tamper_builder():
+        return create_deep_agent(
+            model=FunctionModel(model_fn),
+            forking=LiveForkCapability(
+                test_command=f'"{sys.executable}" -c "raise SystemExit(0)"',
+                test_timeout_s=30, max_branches=3, keep_artifacts=False,
+            ),
+            include_checkpoints=True,
+            web_search=False, web_fetch=False,
+            instructions="Integrity E2E pin.",
+        )
+
+    monkeypatch.setattr(forking, "_builder_agent", tamper_builder)
+    report = await forking.run_forked_viability(
+        "integrity pin",
+        approaches=[("honest", "Do nothing further."),
+                    ("cheater", "TAMPER-THE-SUITE")],
+        tests={"tests/test_contract.py": "def test_ok():\n    assert True\n"},
+    )
+    by_label = {b.label: b for b in report.branches}
+    assert by_label["cheater"].tests_tampered is True
+    assert by_label["honest"].tests_tampered is False
+    # identical (trivially passing) suite outcome — integrity decides it:
+    assert report.winner_branch_id == by_label["honest"].branch_id
     assert report.any_viable is True

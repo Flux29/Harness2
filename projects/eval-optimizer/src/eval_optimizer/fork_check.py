@@ -33,7 +33,8 @@ def main() -> int:
         ratio = "n/a" if b.test_pass_ratio is None else f"{b.test_pass_ratio:.2f}"
         flag = "WIN" if b.branch_id == report.winner_branch_id else "   "
         cost = "?" if b.cost_usd is None else f"${b.cost_usd:.3f}"
-        print(f"  [{flag}] {b.label:14} tests={ratio}  turns={b.turns}  errs={b.error_count}  cost={cost}")
+        tam = "  TAMPERED-DISQUALIFIED" if b.tests_tampered else ""
+        print(f"  [{flag}] {b.label:14} tests={ratio}  turns={b.turns}  errs={b.error_count}  cost={cost}{tam}")
         if b.preview:
             print(f"          {b.preview[:120]}")
     print(f"\nwinner : {report.winner_branch_id}")

@@ -126,11 +126,15 @@ class HarnessBranchResult(BaseModel):
 
     branch_id: str
     label: str
-    test_pass_ratio: float | None = None   # from the harness test_command; None = no signal
+    test_pass_ratio: float | None = None   # SHARED suite outcome (ADR-0018); binary in
+                                           # practice (1.0/0.0/None); None = no signal
     cost_usd: float | None = None
     turns: int = 0
     error_count: int = 0
     preview: str = ""                      # truncated final assistant message
+    # ADR-0018, ADDITIVE: True when the branch's overlay touched the shared
+    # suite or pytest config — the branch is disqualified from selection.
+    tests_tampered: bool = False
 
 
 class HarnessForkReport(BaseModel):

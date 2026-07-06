@@ -1,6 +1,6 @@
 # ADR-0018 — Shared-prefix test suite as the fork selection signal; merge threshold = all shared tests pass
 
-**Status:** Proposed · 2026-07-05 · resolves plan step **6.1**
+**Status:** Accepted · 2026-07-05 · resolves plan step **6.1**
 (`crit-fork-selection-metric`) and sub-decision **6.1a**
 (`crit-merge-threshold` — the numeric definition of `any_viable`) · refines
 **ADR-0011** (deterministic selection) and **ADR-0005** (deterministic-ranking
@@ -133,12 +133,23 @@ raise rather than shape `any_viable`.
 ## Implementation sketch (lands only after this ADR is Accepted)
 
 `forking.py`: parent prompt becomes suite-authoring (or writes caller-supplied
-`tests`); steers updated; `LiveForkCapability(keep_artifacts=True)`; after
-`_wait_for_branches` + `branch_outcomes`, run the tests/-integrity diff over
-the materializer's `parent/` vs `branches/<label>/`, disqualify tamperers,
-rank `(ratio == 1.0 ∧ qualified, -error_count, -cost_usd)`, merge the top or
+`tests`); steers updated; after `_wait_for_branches` + `branch_outcomes`, run
+the tests/-integrity check, disqualify tamperers, rank
+`(ratio == 1.0 ∧ qualified, error_count asc, cost_usd asc)`, merge the top or
 `abort_fork()`. `schema.py`: additive disqualification field on
-`HarnessBranchResult`. Tests: fake-coordinator suite gains materialized-
-artifact stubs (tamper and clean cases); the full-TestModel E2E pins the new
-threshold; Matrix B field-compare unchanged. Same-commit manifest flips for
-both findings, per Gate 2.
+`HarnessBranchResult`. Tests: fake-coordinator suite covers tamper/clean/
+threshold/tie-break; the full-TestModel E2E pins the new threshold; a
+FunctionModel E2E tampers through real overlays; Matrix B field-compare
+unchanged. Same-commit manifest flips for both findings, per Gate 2.
+
+**Implementation note (at acceptance, 2026-07-05):** the integrity check landed
+on the vendor's **public `build_diff_report` API over the live overlays**
+instead of the sketched `keep_artifacts=True` + on-disk artifact diff. During
+implementation the materializer source showed `flush_delete` leaves no trace
+when a branch deletes a parent file it never wrote — the artifact mirror
+cannot see the strongest tamper vector (deleting shared tests), while the diff
+API's end-state classification (`created/modified/deleted/untouched`) can.
+Same decision, stronger mechanism, no disk artifacts to clean up
+(`keep_artifacts` stays `False`); the check runs before merge/abort release
+the overlays. Protected set: `tests/**` plus root `conftest.py`, `pytest.ini`,
+`pyproject.toml`, `setup.cfg`, `tox.ini` (pytest-rerouting configs).
