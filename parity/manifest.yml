@@ -347,6 +347,27 @@ findings:
   # ===================== Discovered (post-§8) ======================
   # Not in HarnessCritique.md §8 — surfaced during Phase 0.2 baseline capture.
   # `source` marks it so Gate 2 lint one accepts it outside the catalog.
+  feat-run-survival:
+    status: changed
+    source: post-refactor-feature
+    step: "post-6"
+    matrix_rows: []
+    tests:
+      - "projects/agent-web/tests/test_run_survival.py::test_run_survives_client_disconnect"
+      - "projects/agent-web/tests/test_run_survival.py::test_normal_run_still_streams_fully"
+      - "projects/agent-web/tests/test_e2e_agui.py::test_concurrent_posts_same_thread_both_persisted"
+    note: >-
+      ISSUE-4 live find (a fork run died to a page reload): POST /agent's run
+      now executes in a background task consuming the event stream to
+      completion — on_complete (history save) always fires; events tee
+      through an asyncio.Queue to the HTTP response, so a client disconnect
+      cancels only the tee. app.state.active_runs registry feeds the
+      `running` flag on GET /threads and drains (10s bound) at shutdown.
+      Per-thread lock semantics unchanged (Phase 4.4 — the named concurrency
+      test is the regression pin). Live mid-stream reattach deliberately
+      deferred; hydration-after-completion covers it. Wire shape per event
+      unchanged (Matrix C untouched); an infrastructure failure still
+      surfaces to an attached client as a broken stream.
   feat-thread-persistence:
     status: changed
     source: post-refactor-feature

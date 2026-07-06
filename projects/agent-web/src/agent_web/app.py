@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path as _Path
@@ -27,6 +28,8 @@ from .agent import build_agent
 from .deps import make_deps
 from .mcp import build_registry, build_toolsets, status
 from .settings import Settings
+
+log = logging.getLogger("agent_web.app")
 
 
 def create_app(
@@ -52,6 +55,13 @@ def create_app(
             extra_tools=extra_tools,
         )
         yield
+        # feat-run-survival: give in-flight background runs a bounded window
+        # to finish (and save history) before the server exits.
+        pending = [t for t in app.state.active_runs.values() if not t.done()]
+        if pending:
+            _, still_running = await asyncio.wait(pending, timeout=10.0)
+            for t in still_running:
+                t.cancel()
 
     app = FastAPI(title="agent-web", lifespan=lifespan)
     # ADR-0020: CORS narrowed from "*" to what the AG-UI client actually uses,
@@ -71,6 +81,10 @@ def create_app(
 
     def _thread_lock(thread_id: str) -> asyncio.Lock:
         return thread_locks.setdefault(thread_id, asyncio.Lock())
+
+    # feat-run-survival: in-flight background runs, thread_id -> Task. Feeds
+    # the `running` flag on GET /threads; pruned when each run settles.
+    app.state.active_runs = {}
 
     @app.post("/agent")
     async def run_agent(request: Request) -> Response:
@@ -110,19 +124,55 @@ def create_app(
 
         adapter = AGUIAdapter(agent=request.app.state.agent, run_input=run_input, accept=accept)
 
-        async def locked_events():
-            # history.load moved INSIDE the lock: a queued request must see the
-            # previous run's saved history, not a pre-lock snapshot.
-            async with _thread_lock(thread_id):
-                stream = adapter.run_stream(
-                    deps=make_deps(settings.workspaces_dir, settings.state_dir, thread_id),
-                    message_history=history.load(settings, thread_id),
-                    on_complete=on_complete,
-                )
-                async for event in stream:
-                    yield event
+        # feat-run-survival: the agent run executes in a BACKGROUND task that
+        # consumes its event stream to completion — on_complete (the history
+        # save) fires no matter what the client does. Events tee through a
+        # queue to the HTTP response; a client disconnect (reload, thread
+        # switch) cancels only the tee. Before this, disconnect cancelled the
+        # response generator mid-stream and the run died with history unsaved.
+        queue: asyncio.Queue[Any] = asyncio.Queue()
 
-        return adapter.streaming_response(locked_events())
+        async def run_to_completion() -> None:
+            try:
+                # history.load INSIDE the lock (Phase 4.4): a queued request
+                # must see the previous run's saved history.
+                async with _thread_lock(thread_id):
+                    stream = adapter.run_stream(
+                        deps=make_deps(settings.workspaces_dir, settings.state_dir, thread_id),
+                        message_history=history.load(settings, thread_id),
+                        on_complete=on_complete,
+                    )
+                    async for event in stream:
+                        queue.put_nowait(event)
+            finally:
+                queue.put_nowait(None)  # end-of-stream sentinel for the tee
+                app.state.active_runs.pop(thread_id, None)
+
+        task = asyncio.create_task(run_to_completion())
+        app.state.active_runs[thread_id] = task
+
+        def _log_run_failure(t: asyncio.Task) -> None:
+            # Retrieve the exception even when no client is attached, so a
+            # failed background run is a loud log line, never a silent
+            # "exception was never retrieved" warning.
+            if not t.cancelled() and t.exception() is not None:
+                log.error("background run for thread %r failed",
+                          thread_id, exc_info=t.exception())
+
+        task.add_done_callback(_log_run_failure)
+
+        async def tee_to_client():
+            while True:
+                event = await queue.get()
+                if event is None:
+                    break
+                yield event
+            # A still-attached client sees an infrastructure failure the same
+            # way it did pre-tee: as a broken stream, not a silent end.
+            if task.done() and not task.cancelled() and (exc := task.exception()) is not None:
+                raise exc
+
+        return adapter.streaming_response(tee_to_client())
 
     # --- Thread persistence endpoints (feat-thread-persistence, ISSUE-4) ---
     # Same ADR-0020 trust surface as /agent minus the content-type rule (GETs
