@@ -347,6 +347,30 @@ findings:
   # ===================== Discovered (post-§8) ======================
   # Not in HarnessCritique.md §8 — surfaced during Phase 0.2 baseline capture.
   # `source` marks it so Gate 2 lint one accepts it outside the catalog.
+  feat-thread-persistence:
+    status: changed
+    source: post-refactor-feature
+    step: "post-6"
+    matrix_rows: []
+    tests:
+      - "projects/agent-web/tests/test_threads_api.py::test_threads_list_after_runs"
+      - "projects/agent-web/tests/test_threads_api.py::test_thread_messages_round_trip"
+      - "projects/agent-web/tests/test_threads_api.py::test_pending_interrupt_parity"
+      - "projects/agent-web/tests/test_threads_api.py::test_guard_get_403s"
+      - "projects/agent-web/tests/test_threads_api.py::test_dual_write_read_path"
+      - "projects/agent-web/tests/test_threads_api.py::test_index_regenerates_when_missing"
+    note: >-
+      ISSUE-4 session gaps WITHOUT CopilotKit Enterprise (ADR-0023): additive
+      GET /threads + GET /threads/{id}/messages under the ADR-0020 guard with
+      the content-type rule waived for body-less GETs (every other check
+      kept). Listing serves a derived index (state/threads-index.json,
+      upserted by history.save — records the ORIGINAL thread id, closing the
+      hash-slug recovery gap); missing/corrupt index regenerates from disk
+      including legacy workspaces/<slug>/history.json (the pre-5.1 dormant
+      backfill). Single-thread reads always via history.load (dual-write-
+      window correct). Pending approvals derived from trailing unreturned
+      ToolCallParts; id parity with live AG-UI interrupts pinned by
+      test_pending_interrupt_parity. Matrix D endpoints additive-only.
   feat-improve-loop:
     status: changed
     source: post-refactor-feature

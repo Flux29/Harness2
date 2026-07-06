@@ -22,7 +22,7 @@ from starlette.responses import Response
 from pydantic_ai.ui import SSE_CONTENT_TYPE
 from pydantic_ai.ui.ag_ui import AGUIAdapter
 
-from . import history, observability
+from . import history, observability, threads
 from .agent import build_agent
 from .deps import make_deps
 from .mcp import build_registry, build_toolsets, status
@@ -124,6 +124,37 @@ def create_app(
 
         return adapter.streaming_response(locked_events())
 
+    # --- Thread persistence endpoints (feat-thread-persistence, ISSUE-4) ---
+    # Same ADR-0020 trust surface as /agent minus the content-type rule (GETs
+    # carry no body; that rule exists to force preflight on cross-origin
+    # WRITES). Matrix D: additive-only — no existing endpoint changes shape.
+
+    def _refuse(reason: str, code: HTTPStatus = HTTPStatus.FORBIDDEN) -> Response:
+        return Response(content=json.dumps({"error": reason}),
+                        media_type="application/json", status_code=code)
+
+    @app.get("/threads")
+    async def get_threads(request: Request) -> Response:
+        reason = _authorize(request, settings, require_json=False)
+        if reason is not None:
+            return _refuse(reason)
+        # active_runs is wired by the run-survival layer; empty set until then.
+        running = frozenset(getattr(app.state, "active_runs", {}) or ())
+        return Response(
+            content=json.dumps({"threads": threads.list_threads(settings, running)}),
+            media_type="application/json",
+        )
+
+    @app.get("/threads/{thread_id}/messages")
+    async def get_thread_messages(thread_id: str, request: Request) -> Response:
+        reason = _authorize(request, settings, require_json=False)
+        if reason is not None:
+            return _refuse(reason)
+        payload = threads.thread_payload(settings, thread_id)
+        if payload is None:
+            return _refuse("unknown thread", HTTPStatus.NOT_FOUND)
+        return Response(content=json.dumps(payload), media_type="application/json")
+
     # The static mount is decided ONCE, here at app creation; healthz reports
     # this decision (frontend_mounted) next to the live on-disk state
     # (frontend_built) so the two can't silently contradict (Phase 4.7: a dist
@@ -181,17 +212,20 @@ def _loopback_host(host: str) -> bool:
     return h in _LOOPBACK_HOSTS
 
 
-def _authorize(request: Request, settings: Settings) -> str | None:
-    """ADR-0020 request-authenticity checks for POST /agent. Returns a reason
-    string when the request must be REFUSED (403), else None. Ordered so the
-    single verified drive-by (text/plain simple request) is caught by the
-    content-type rule even with every other check disabled.
+def _authorize(request: Request, settings: Settings, *, require_json: bool = True) -> str | None:
+    """ADR-0020 request-authenticity checks. Returns a reason string when the
+    request must be REFUSED (403), else None. Ordered so the single verified
+    drive-by (text/plain simple request) is caught by the content-type rule
+    even with every other check disabled.
 
     - Bearer: when AGENT_TOKEN is set, require it (the bind-beyond-loopback and
       future multi-user control).
-    - Content-Type must be application/json: removes the CORS "simple request"
-      bypass, so a cross-origin write now needs a preflight the allowlist
-      answers. The real AG-UI/CopilotKit client already sends JSON.
+    - Content-Type must be application/json (``require_json=True``, the POST
+      /agent posture): removes the CORS "simple request" bypass, so a
+      cross-origin write now needs a preflight the allowlist answers. The
+      body-less GET endpoints pass ``require_json=False`` — the rule exists to
+      gate writes, and GETs send no content-type; every other check still
+      applies (ADR-0023).
     - Origin, when present: same-origin (matches Host) or in cors_origins.
     - Host must be loopback (when require_loopback_host): defeats DNS rebinding,
       where Origin and Host both carry the attacker's rebound domain.
@@ -200,9 +234,10 @@ def _authorize(request: Request, settings: Settings) -> str | None:
         if request.headers.get("authorization", "") != f"Bearer {settings.agent_token}":
             return "missing or invalid bearer token"
 
-    ctype = request.headers.get("content-type", "").split(";", 1)[0].strip().lower()
-    if ctype != "application/json":
-        return "content-type must be application/json"
+    if require_json:
+        ctype = request.headers.get("content-type", "").split(";", 1)[0].strip().lower()
+        if ctype != "application/json":
+            return "content-type must be application/json"
 
     origin = request.headers.get("origin")
     if origin is not None:

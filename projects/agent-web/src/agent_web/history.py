@@ -18,11 +18,19 @@ complete message list), and dormant threads restart fresh after cutover.
 """
 from __future__ import annotations
 
+import json
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
 
-from pydantic_ai.messages import ModelMessage, ModelMessagesTypeAdapter
+from pydantic_ai.messages import (
+    ModelMessage,
+    ModelMessagesTypeAdapter,
+    ModelRequest,
+    ModelResponse,
+    ToolCallPart,
+    UserPromptPart,
+)
 
 from .deps import thread_slug
 from .settings import Settings
@@ -62,6 +70,71 @@ def save(settings: Settings, thread_id: str, messages: list[ModelMessage]) -> No
         _diff_existing_copies(settings, thread_id)
         _save_workspace_copy(settings.workspaces_dir, thread_id, data)
     _save_state_copy(settings.state_dir, thread_id, data)
+    _index_upsert(settings, thread_id, messages)
+
+
+# --- Thread index (feat-thread-persistence) ---------------------------------
+# state/threads-index.json records the ORIGINAL thread id (a hash-suffixed
+# slug cannot recover it) plus the list metadata GET /threads serves, so
+# listing never parses every history file. The index is DERIVED state:
+# threads.py regenerates it wholesale (incl. the pre-5.1 workspace backfill)
+# whenever it is missing or unreadable.
+
+
+def index_path(state_dir: Path) -> Path:
+    return Path(state_dir) / "threads-index.json"
+
+
+def title_of(messages: list[ModelMessage]) -> str:
+    """Thread display title: the first user prompt, truncated."""
+    for m in messages:
+        if isinstance(m, ModelRequest):
+            for part in m.parts:
+                if isinstance(part, UserPromptPart) and isinstance(part.content, str):
+                    t = part.content.strip()
+                    return (t[:77] + "...") if len(t) > 80 else t
+    return "(untitled)"
+
+
+def pending_tool_calls(messages: list[ModelMessage]) -> list[ToolCallPart]:
+    """Unresolved approval pause: the history ends on a ModelResponse whose
+    tool calls never received returns. That is the ONLY trailing-call state
+    on_complete persists (a normal run ends with returns + final text; a
+    mid-run crash saves nothing), so this doubles as the pending-interrupt
+    derivation for GET /threads/{id}/messages."""
+    if not messages:
+        return []
+    last = messages[-1]
+    if isinstance(last, ModelResponse):
+        return [p for p in last.parts if isinstance(p, ToolCallPart)]
+    return []
+
+
+def index_entry(thread_id: str, messages: list[ModelMessage], *,
+                created_at: str, updated_at: str) -> dict:
+    return {
+        "thread_id": thread_id,
+        "slug": thread_slug(thread_id),
+        "message_count": len(messages),
+        "title": title_of(messages),
+        "has_pending_interrupts": bool(pending_tool_calls(messages)),
+        "created_at": created_at,
+        "updated_at": updated_at,
+    }
+
+
+def _index_upsert(settings: Settings, thread_id: str, messages: list[ModelMessage]) -> None:
+    p = index_path(settings.state_dir)
+    try:
+        entries = json.loads(p.read_text(encoding="utf-8")).get("threads", {})
+    except (OSError, ValueError):
+        entries = {}
+    slug = thread_slug(thread_id)
+    now = datetime.now(timezone.utc).isoformat()
+    created = entries.get(slug, {}).get("created_at", now)
+    entries[slug] = index_entry(thread_id, messages, created_at=created, updated_at=now)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps({"threads": entries}, indent=2), encoding="utf-8")
 
 
 def _save_state_copy(state_dir: Path, thread_id: str, data: bytes) -> Path:
