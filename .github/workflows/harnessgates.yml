@@ -79,13 +79,18 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        project: [agent-web, eval-optimizer]
+        # evals/agentic-smoke is the workspace-policy test project (ADR-0022):
+        # pip-guard bypass suite + workspace-coherence checks.
+        project:
+          - projects/agent-web
+          - projects/eval-optimizer
+          - evals/agentic-smoke
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v4
       - name: Sync and test (offline suite only — no network, no tokens)
-        working-directory: projects/${{ matrix.project }}
+        working-directory: ${{ matrix.project }}
         run: |
           uv sync
           uv run pytest -q

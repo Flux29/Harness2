@@ -12,8 +12,9 @@ agents.
 
 ## Hard rules
 
-- **uv-first.** No global `pip install`. Use `uv add` / `uv run`. (Enforced by
-  the AgenticWork pre-tool-use policy.)
+- **uv-first.** No global `pip install`. Use `uv add` / `uv run`. (Guarded by
+  the AgenticWork pre-tool-use hook in harnesses that load it; the policy binds
+  everywhere — ADR-0022.)
 - **Secrets via USER env vars.** Never hard-code any key. Secrets are set as user
   environment variables (e.g. `setx OPENROUTER_API_KEY ...`); `.env` holds only
   non-secret flags, never keys.
@@ -28,7 +29,7 @@ agents.
 
 - Test: `uv run pytest`
 - Lint: `uv run ruff check .`
-- Python: 3.11–3.13, `uv` managed.
+- Python: 3.12+ (one workspace floor, ADR-0022), `uv` managed.
 - Mind your inference provider's rate limits (a free NVIDIA tier, for example, is
   ~40 req/min with no SLA): bound loop iterations and rely on the harness cost
   tracker.

@@ -318,22 +318,31 @@ findings:
     step: "0.1a"
     matrix_rows: []
   crit-aspirational-catalogs:
-    status: identical            # Phase 6.6
+    status: changed              # ADR-0022 — layer kept as tested advisory policy
     step: "6.6"
     matrix_rows: []
+    tests:
+      - "evals/agentic-smoke/tests/test_workspace_coherence.py::test_models_catalog_names_the_decided_provider"
+      - "evals/agentic-smoke/tests/test_workspace_coherence.py::test_floor_raise_target_stays_labeled"
   crit-python-floors:
-    status: identical            # Phase 6.6
+    status: changed              # ADR-0022 — one >=3.12 floor + root .python-version
     step: "6.6"
     matrix_rows: []
+    tests:
+      - "evals/agentic-smoke/tests/test_workspace_coherence.py::test_one_python_floor_across_first_party_projects"
+      - "evals/agentic-smoke/tests/test_workspace_coherence.py::test_floor_matches_catalog_and_interpreter_pin"
   crit-personal-paths:
     status: changed              # Phase 1.5 — scrubbed to <workspace-root> placeholders
     step: "1.5"
     matrix_rows: []
     verified_by: "secrets-scan job (personal-path grep) reports clean after the scrub; only the scanner's own file and the excluded plan docs still carry sample paths"
   crit-pip-hook:
-    status: identical            # Phase 6.6
+    status: changed              # ADR-0022 — shlex-tokenized matcher, ALLOW_HINTS removed
     step: "6.6"
     matrix_rows: []
+    tests:
+      - "evals/agentic-smoke/tests/test_pip_hook.py::test_denied"
+      - "evals/agentic-smoke/tests/test_pip_hook.py::test_allowed"
 
   # ===================== Discovered (post-§8) ======================
   # Not in HarnessCritique.md §8 — surfaced during Phase 0.2 baseline capture.

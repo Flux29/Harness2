@@ -3,7 +3,9 @@ name = "eval-optimizer"
 version = "0.1.0"
 description = "Evaluator-optimizer core on pydantic-deepagents; provider-flexible inference (OpenRouter default, NVIDIA/Ollama supported)."
 readme = "README.md"
-requires-python = ">=3.11,<3.14"
+# One workspace floor (ADR-0022); the old <3.14 cap encoded no demonstrated
+# dependency constraint and drops per the ADR. Root .python-version pins uv.
+requires-python = ">=3.12"
 dependencies = [
     "pydantic-deep",        # the agent harness (Vstorm) — resolved from vendor/, see [tool.uv.sources]
     "pydantic-ai",          # underlying framework (pulled in by pydantic-deep, pinned explicit)

@@ -1,3 +1,6 @@
+# Advisory catalog (ADR-0022): preferred building blocks for NEW agentic work
+# on the operating machine. Not consumed by project code, and nothing here
+# implies these stacks appear in this repository's projects.
 version: 1
 python:
   env:

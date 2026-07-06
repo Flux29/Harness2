@@ -2,7 +2,8 @@
 name = "agent-web"
 version = "0.1.0"
 description = "AG-UI web service for the vendored pydantic-deepagents harness (ADR-0012..0016)."
-requires-python = ">=3.10"
+# One workspace floor (ADR-0022); root .python-version pins the interpreter.
+requires-python = ">=3.12"
 dependencies = [
     "pydantic-deep[web,mcp,yaml]",   # vendored harness — see [tool.uv.sources]
     "pydantic-ai-slim[ag-ui]",       # AGUIAdapter + ag-ui-protocol + starlette
