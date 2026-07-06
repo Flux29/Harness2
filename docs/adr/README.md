@@ -24,7 +24,7 @@ older ones (noted inline).
 | [0016](0016-copilotkit-oss-only-enterprise-later.md) | CopilotKit OSS-only now; Enterprise Intelligence later | Accepted |
 | [0017](0017-selection-failure-policy.md) | Selection failures abort the fork, fail-loud (judge fallback retired) | Accepted |
 | [0018](0018-fork-selection-metric.md) | Shared-prefix test suite as the fork selection signal; threshold = all pass | Accepted |
-| [0019](0019-checkpoint-persistence-scope.md) | Checkpoints are per-run; durable cross-request rewind claim withdrawn | **Proposed** |
+| [0019](0019-checkpoint-persistence-scope.md) | Durable per-thread checkpoint store now; rewind UI with the deepresearch port | **Proposed** |
 
 Parent document: `../../PDR.md` (Agentic Build PDR v1.1). Relocated 2026-07-01 from
 `projects/eval-optimizer/docs/adr/` (workspace-level decisions belong at workspace

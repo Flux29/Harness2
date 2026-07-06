@@ -1,109 +1,133 @@
-# ADR-0019 — Checkpoints are per-run; the durable cross-request rewind claim is withdrawn
+# ADR-0019 — Durable per-thread checkpoint store now; rewind UI lands with the deepresearch→CopilotKit integration
 
-**Status:** Proposed · 2026-07-05 · resolves plan step **6.3**
-(`crit-checkpoint-persistence` — the critique's top congruency finding; tracked
-as ISSUE-1) · **corrects ADR-0015** (checkpointing row) · informed by Phase 5.1
-(server-only state tree) and live telemetry.
+**Status:** Proposed (revised after review) · 2026-07-05 · resolves plan step
+**6.3** (`crit-checkpoint-persistence` — the critique's top congruency finding;
+ISSUE-1) · **refines ADR-0015** (checkpointing row: storage delivered, UI
+surfacing tracked) · builds on Phase 5.1 (server-only state tree) and the
+planned deepresearch→CopilotKit feature port.
 
 ## Context
 
-ADR-0015's feature table claims: *"Checkpointing — `include_checkpoints=True`,
+ADR-0015's feature table row — *"Checkpointing: `include_checkpoints=True`,
 `checkpoint_store` per session; resume/rewind control in UI; required by
-forking."* The critique found the code disagrees, and the plan (2.6/6.3)
-deliberately HELD the docs edit until this decision: is cross-request rewind a
-real requirement (**Option A**: implement durability and keep the claim) or
-not (**Option B**: downgrade the claim to per-run and keep
-`InMemoryCheckpointStore`)?
+forking"* — is contradicted by the code: `make_deps` builds a fresh
+`InMemoryCheckpointStore()` **per request**, the frontend has no rewind
+affordance, and the web layer never handles `RewindRequested`. The plan's 6.3
+question: is cross-request rewind a real requirement (**Option A**: implement
+durability, keep the claim) or not (**Option B**: downgrade the claim)?
 
-What the refactor and the impartial witness established:
+A first draft of this ADR recommended Option B on the telemetry evidence
+(zero checkpoint/rewind activity ever recorded). **Review corrected the
+frame**: the roadmap includes rolling the functions of the vendor's
+`apps/deepresearch` into the CopilotKit UI — the rewind UI hasn't been used
+because it hasn't been *ported yet*, not because it isn't wanted. A thorough
+vendor-tree search then established the claim's true provenance and the
+port's actual requirements:
 
-1. **The claim is false three times over, not once.**
-   - *Scope:* `make_deps` builds a fresh `InMemoryCheckpointStore()` **per
-     request** — not even per-session. Nothing survives a POST.
-   - *UI:* the frontend contains **zero** checkpoint or rewind references.
-     There is no "resume/rewind control in UI" to be backed by any store.
-   - *Rewind path:* the vendor's `rewind_to` tool raises `RewindRequested`,
-     which is designed to propagate out of `agent.run()` for the **app** to
-     handle — and the web layer has no handler. Even a *within-run* agent
-     rewind would surface as a run error on the AG-UI path today.
-2. **Telemetry: the capability has never been exercised.** A Logfire query
-   over the project's recorded history (30-day window spanning the
-   deployment's entire life) finds **zero** spans or messages matching
-   `checkpoint`/`rewind` — no `save_checkpoint`, no `list_checkpoints`, no
-   `rewind_to`, from any human or any agent, ever. This is the "actual usage"
-   the plan said the decision should match.
-3. **"Required by forking" no longer binds the web layer.** agent-web forking
-   is gated OFF by default (Phase 5.2). eval-optimizer's fork engine wires its
-   **own** per-run `InMemoryCheckpointStore` for fork anchors — a per-run use
-   that works today and is untouched by either option.
-4. **Option A became cheap — but would not make the claim true.** Phase 5.1's
-   server-only `state/` tree plus the vendor's public
-   `FileCheckpointStore(directory)` means durable per-thread storage is a
-   two-line wiring change. But durability alone yields *durable dead weight*:
-   full message snapshots duplicated on disk (a second PII surface for 6.4 to
-   account for, beyond history) feeding a rewind capability that has no UI, no
-   web-layer `RewindRequested` handling, and no observed demand. Making
-   ADR-0015's sentence TRUE requires all three — that is new feature work, not
-   congruency repair.
+1. **The claim describes `apps/deepresearch`, verbatim.** The reference app
+   wires a checkpoint store **per session** (`app.py:556`), renders **Rewind
+   and Fork buttons on every assistant message** in its web UI
+   (`static/app.js:1367–1389`, timeline panel at `3048–3177`), serves
+   `GET /checkpoints`, `POST /checkpoints/{id}/rewind`, and
+   `POST /checkpoints/{id}/fork` (`app.py:1444–1516`, the fork endpoint via
+   `fork_from_checkpoint`), and catches `RewindRequested` at app level to
+   restore + persist history (`app.py:921–937`). ADR-0015's table column is
+   literally "UI surfacing" — the row recorded deepresearch's pattern as the
+   intended surfacing, alongside other not-yet-built rows (fork panel, cost
+   meter). An intent table read as a status table.
+2. **"Required by forking" is soft.** The coordinator saves `fork:<id>` /
+   `post-fork:<id>` anchor checkpoints when a store is present and only
+   **warns** otherwise ("rewind safety net unavailable" —
+   `coordinator.py:509–516`); `ForkHandle.parent_checkpoint_id` is nullable.
+   Recommended, not required.
+3. **The AG-UI layer is the one place deepresearch's own pattern breaks.**
+   deepresearch's per-session `InMemoryCheckpointStore` works because its
+   WebSocket sessions are long-lived server objects. Our AG-UI layer is
+   stateless per POST — a per-request store can never back checkpoint
+   listing, rewind buttons on prior messages, or `fork:<id>` anchoring across
+   turns (the critique's operational point). **A store that survives across
+   requests per thread is the hard prerequisite of the planned port.**
+4. **Durability is cheap and has a prepared home.** The vendor's public
+   `FileCheckpointStore(directory)` persists one JSON file per checkpoint;
+   the store protocol is async; the capability auto-prunes past
+   `max_checkpoints` (deepresearch caps at 50). Phase 5.1's `state/` tree —
+   whose settings comment already anticipated "6.3's checkpoint store if ADR
+   6.3 chooses durability" — is server-only, outside every agent-writable
+   root, and gitignored: checkpoints carry the same message-snapshot PII
+   class as history and belong inside the same trust boundary (one tree for
+   6.4 to account for).
 
 ## Decision
 
-**Option B: checkpoints are per-run, deliberately.** The durable
-cross-request rewind claim is withdrawn rather than implemented.
+**Option A, split honestly along the layer boundary: the durable per-thread
+store lands NOW; the rewind endpoints, `RewindRequested` handling, and UI
+affordances land WITH the deepresearch→CopilotKit integration — tracked, not
+implied.**
 
-1. `InMemoryCheckpointStore()` per request in `make_deps` stays — now
-   documented as the *intended* scope, not an accident. What remains true and
-   supported: checkpoints exist **within a single run** (the store the fork
-   machinery anchors on: pre/post-fork checkpoints), and per-thread isolation
-   holds (each request's store is its own object).
-2. ADR-0015's checkpointing row is annotated as corrected by this ADR (the
-   house pattern: newer ADRs supersede inline, never silent rewrites). Living
-   docs (PDR/README) already avoid the durable-rewind claim after the gate-5
-   sync; any residual claim found is aligned in the implementation commit.
-3. The unhandled-`RewindRequested` limitation is **recorded, not hidden**: if
-   an agent ever invokes `rewind_to` on the web path, the run errors. This is
-   acceptable for a tool nothing has ever called — and it is the telemetry
-   tripwire below.
-4. ISSUE-1 closes with this ADR.
-
-**Revisit trigger (recorded):** implement Option A — `FileCheckpointStore`
-under `state/checkpoints/<slug>/` (the 5.1 tree keeps it outside every
-agent-writable root), plus a web-layer `RewindRequested` handler and a UI
-affordance — when either (a) a user actually asks to resume/rewind across
-requests, or (b) telemetry shows agents attempting `rewind_to`/
-`save_checkpoint` on the web path. The 5.1 tree exists precisely so that
-upgrade is small and well-understood.
+1. `make_deps` wires `FileCheckpointStore(state_dir / "checkpoints" /
+   thread_slug(thread_id))` per thread. Each request constructs a store
+   instance over the same per-thread directory, so checkpoints — including
+   fork anchors — survive across requests *and* server restarts (stronger
+   than deepresearch's own in-process scope, as a stateless HTTP layer
+   requires). The 4.4 per-thread run lock already serializes access.
+2. What this makes true immediately: ADR-0015's "`checkpoint_store` per
+   session" (now per-thread, durable); the fork machinery's `fork:<id>` /
+   `post-fork:<id>` anchoring across turns; "required by forking" is
+   restated as *recommended* (the vendor's own semantics).
+3. What remains deferred and is recorded as the integration's checklist —
+   the deepresearch parity set: checkpoint list/rewind/fork endpoints on the
+   AG-UI surface, app-level `RewindRequested` handling, and the CopilotKit
+   timeline/buttons. Until then an agent-invoked `rewind_to` on the web path
+   still surfaces as a run error — a known, recorded limitation and the
+   telemetry tripwire for prioritizing the port.
+4. ADR-0015's row is annotated: *storage delivered by ADR-0019; UI surfacing
+   lands with the deepresearch→CopilotKit port.* ISSUE-1 closes.
 
 Options rejected:
 
-- **Option A now** — rejected on evidence: zero usage ever, no UI, no rewind
-  handler; durability alone moves the falsehood ("durable rewind" that errors
-  when invoked) instead of removing it, while growing the server-side PII
-  surface ahead of the 6.4 posture ADR.
-- **Rip out checkpointing entirely** (`include_checkpoints=False`) — rejected:
-  the per-run store is genuinely load-bearing for fork anchoring (both
-  projects), and the capability costs nothing when unused.
+- **Option B (withdraw the claim / per-run by design)** — the first draft's
+  recommendation; rejected on the corrected frame: it would resolve the
+  congruency finding by deleting the capability the roadmap is about to
+  need, then require re-doing this decision at port time. Zero telemetry
+  reflected an unshipped UI, not absent demand.
+- **Full Option A now (endpoints + UI too)** — rejected as scope creep: that
+  is the integration project itself, with its own design questions (AG-UI
+  event shapes for checkpoint timelines, CopilotKit rendering). Building the
+  storage prerequisite without the UI it serves is deliberate sequencing,
+  not congruency debt — because this ADR *says so* and names where the rest
+  lands.
+- **Per-thread in-memory singleton** (deepresearch's literal scope) —
+  rejected: restart-fragile for an always-on Task Scheduler service, and
+  `FileCheckpointStore` costs the same line of code.
 
 ## Consequences
 
-- The critique's top congruency finding resolves with **prose + intent**, not
-  new machinery: the code was right; the claim was wrong. Matrix D is
-  untouched (no new files — exactly the plan's stated parity impact for B);
-  Matrix A/B/C unaffected.
-- `crit-checkpoint-persistence` flips to `changed` with a named test pinning
-  the now-deliberate per-run scope (fresh store per request), alongside the
-  existing round-trip/isolation test; `verified_by` prose covers the doc
-  alignment. Gate 2 protocol as always.
-- ADR-0015 gains an inline correction pointer; its other rows stand.
-- A future Option A upgrade has a pre-planned shape (state tree, public
-  store class, named trigger) instead of an ambient "someday."
+- The critique's top congruency finding resolves with the claim made TRUE at
+  the storage layer and precisely scoped at the UI layer, instead of
+  withdrawn — matching the roadmap it turned out to be serving.
+- Matrix D gains the checkpoint files under `state/checkpoints/<slug>/`
+  (exactly the plan's stated parity impact for Option A); the tree is
+  already gitignored and outside every LocalBackend root — the 5.1 negative
+  test's principle extends to checkpoints with a named test.
+- Fork anchors persist: a `FORKING=1` session's pre/post-fork checkpoints
+  survive the request that created them — `fork_from_checkpoint` becomes
+  actually usable at port time.
+- Growth is bounded by the capability's auto-prune (`max_checkpoints`);
+  the implementation pins the effective cap in a test so unbounded-growth
+  regressions fail loudly.
+- `crit-checkpoint-persistence` flips to `changed` with named tests
+  (cross-request persistence, thread isolation, outside-workspace).
+- Cross-reference 6.4: one server-only `state/` tree now holds history +
+  checkpoints; the posture ADR reviews its permissions and retention once.
 
 ## Implementation sketch (lands only after this ADR is Accepted)
 
-`deps.py`: comment the per-request `InMemoryCheckpointStore` as ADR-0019
-intent. `test_deps_factory.py` (or `test_checkpoints.py`): add
-`test_checkpoint_store_is_per_run_by_design` (same thread, two requests, two
-independent empty stores). `docs/adr/0015`: annotate the checkpointing row
-"scope corrected by ADR-0019". Sweep PDR/README/HANDOFF-living-docs for any
-residual durable-rewind claim. `docs/ISSUES.md`: close ISSUE-1. Manifest:
-`crit-checkpoint-persistence` → `changed` in the same commit.
+`deps.py`: `make_deps(workspaces_dir, state_dir, thread_id)` wires
+`FileCheckpointStore(state_dir / "checkpoints" / slug)`; `app.py` passes
+`settings.state_dir`. Tests: cross-request persistence (two `make_deps`
+calls, same thread, checkpoint visible in both), isolation (distinct threads,
+distinct dirs), boundary (no checkpoint file under any workspace root),
+prune-cap pin. ADR-0015 row annotated; ISSUE-1 closed; manifest
+`crit-checkpoint-persistence` → `changed` same-commit. The integration
+checklist (endpoints, `RewindRequested` handler, UI) is recorded in
+ISSUES.md as a named successor item so it cannot silently evaporate.
