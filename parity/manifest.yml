@@ -347,6 +347,19 @@ findings:
   # ===================== Discovered (post-§8) ======================
   # Not in HarnessCritique.md §8 — surfaced during Phase 0.2 baseline capture.
   # `source` marks it so Gate 2 lint one accepts it outside the catalog.
+  disc-422-serialization-crash:
+    status: changed
+    source: gate-6-live-session
+    step: "6-exit"
+    matrix_rows: ["C:422-body"]
+    tests:
+      - "projects/agent-web/tests/test_e2e_agui.py::test_422_with_non_utf8_body_still_json"
+    note: >-
+      Gate-6 live find: a malformed request body carrying invalid UTF-8 crashed
+      e.json() inside the 3.2-fixed 422 handler — the client got a raw 500
+      instead of the contractual 422 JSON error object. Fixed with a safe
+      fallback (error list without input bytes, include_input=False); the
+      well-formed 422 path is byte-identical to the 3.2 behavior.
   disc-mcp-config-cwd-relative:
     status: changed              # Phase 4.7 — MCP_CONFIG anchors to the project root
     source: phase-0-baseline-capture

@@ -90,7 +90,17 @@ def create_app(
             # e.json() already returns a JSON string (the error list). Wrapping it
             # in json.dumps() double-encoded it into a JSON string literal, so
             # json.loads(body) yielded a str, not the error object (Phase 3.2).
-            return Response(content=e.json(), media_type="application/json",
+            try:
+                body = e.json()
+            except ValueError:
+                # e.json() re-embeds the request's input bytes; invalid UTF-8 in
+                # them crashes the serializer itself → raw 500 (gate-6 live find,
+                # disc-422-serialization-crash). The error list is the contract,
+                # not the offending bytes — drop the input and serialize safely.
+                body = json.dumps(
+                    e.errors(include_url=False, include_input=False), default=str
+                )
+            return Response(content=body, media_type="application/json",
                             status_code=HTTPStatus.UNPROCESSABLE_ENTITY)
 
         thread_id = run_input.thread_id

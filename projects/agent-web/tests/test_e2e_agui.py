@@ -54,6 +54,27 @@ async def test_422_body_is_json_object(app):
     assert isinstance(loaded, (list, dict)), f"422 body double-encoded: got {type(loaded).__name__}"
 
 
+async def test_422_with_non_utf8_body_still_json(app):
+    """Gate-6 live find (disc-422-serialization-crash): a malformed body with
+    invalid UTF-8 bytes crashed `e.json()` itself — the client got a raw 500
+    instead of the contractual 422 JSON object. The error list is the
+    contract, not the offending bytes."""
+    async with app.router.lifespan_context(app):
+        import httpx
+
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            r = await client.post(
+                "/agent",
+                content=b'{"threadId": "\xff\xfe broken',
+                headers={"content-type": "application/json"},
+            )
+    assert r.status_code == 422
+    loaded = json.loads(r.text)
+    assert isinstance(loaded, (list, dict)), f"422 body not a JSON object: got {type(loaded).__name__}"
+
+
 async def test_history_persisted_server_side(app, tmp_path):
     # Phase 5.1 (crit-history-agent-writable): the authoritative history now
     # lives in the server-only state tree — Matrix D history-LOCATION row
