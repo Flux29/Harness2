@@ -14,7 +14,6 @@ cwd does not matter — CI invokes it from a project directory).
 """
 from __future__ import annotations
 
-import importlib.util
 import re
 import sys
 from pathlib import Path
@@ -23,6 +22,10 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 VALID_STATUS = {"identical", "changed", "removed"}
+# First-party src roots — relocation resolution is filesystem-based (not import)
+# so the lint is venv-independent (CI runs it from the agent-web venv, where
+# eval_optimizer is not installed).
+_SRC_ROOTS = ("projects/agent-web/src", "projects/eval-optimizer/src", ".")
 
 
 def _load(name: str) -> dict:
@@ -41,20 +44,33 @@ def _test_exists(node_id: str) -> bool:
     return re.search(rf"^\s*(async\s+)?def\s+{re.escape(func)}\s*\(", src, re.M) is not None
 
 
+def _module_file(mod: str) -> Path | None:
+    """Resolve a dotted module to its first-party file (module.py or package
+    __init__.py) by walking the src roots — no import, so venv-independent."""
+    rel = Path(*mod.split("."))
+    for base in _SRC_ROOTS:
+        cand = ROOT / base / rel.with_suffix(".py")
+        if cand.exists():
+            return cand
+        pkg = ROOT / base / rel / "__init__.py"
+        if pkg.exists():
+            return pkg
+    return None
+
+
 def _relocation_resolves(dotted: str) -> bool:
-    """True if a dotted module.attr path is importable without executing it."""
+    """True if a dotted module or module.attr path exists in first-party source
+    (attribute presence is a source grep, side-effect free)."""
+    if _module_file(dotted) is not None:  # dotted names a module/package
+        return True
     mod, _, attr = dotted.rpartition(".")
     if not mod:
-        return importlib.util.find_spec(dotted) is not None
-    spec = importlib.util.find_spec(mod)
-    if spec is None:
         return False
-    # Attribute presence is a source grep, not an import (side-effect free).
-    origin = spec.origin
-    if not origin or not Path(origin).exists():
+    f = _module_file(mod)
+    if f is None:
         return False
     return re.search(rf"\b{re.escape(attr)}\b\s*[=:(]|def\s+{re.escape(attr)}|class\s+{re.escape(attr)}",
-                     Path(origin).read_text(encoding="utf-8")) is not None
+                     f.read_text(encoding="utf-8")) is not None
 
 
 def main() -> int:

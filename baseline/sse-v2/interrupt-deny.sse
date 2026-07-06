@@ -1,0 +1,149 @@
+data: {"type":"RUN_STARTED","timestamp":1783353407567,"threadId":"gate6-int-deny","runId":"gate6-int-deny-r1"}
+
+data: {"type":"REASONING_START","timestamp":1783353412767,"messageId":"79650b17-6023-4a39-96a8-1f2b67ed2ea1"}
+
+data: {"type":"REASONING_MESSAGE_START","timestamp":1783353412767,"messageId":"79650b17-6023-4a39-96a8-1f2b67ed2ea1","role":"reasoning"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353412767,"messageId":"79650b17-6023-4a39-96a8-1f2b67ed2ea1","delta":"The"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353412814,"messageId":"79650b17-6023-4a39-96a8-1f2b67ed2ea1","delta":" user wants"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353412820,"messageId":"79650b17-6023-4a39-96a8-1f2b67ed2ea1","delta":" me to"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353412937,"messageId":"79650b17-6023-4a39-96a8-1f2b67ed2ea1","delta":" run a"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353412945,"messageId":"79650b17-6023-4a39-96a8-1f2b67ed2ea1","delta":" specific shell"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353412950,"messageId":"79650b17-6023-4a39-96a8-1f2b67ed2ea1","delta":" command"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353413059,"messageId":"79650b17-6023-4a39-96a8-1f2b67ed2ea1","delta":". This"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353413064,"messageId":"79650b17-6023-4a39-96a8-1f2b67ed2ea1","delta":" is a"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353413067,"messageId":"79650b17-6023-4a39-96a8-1f2b67ed2ea1","delta":" simple"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353413259,"messageId":"79650b17-6023-4a39-96a8-1f2b67ed2ea1","delta":" echo command"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353413267,"messageId":"79650b17-6023-4a39-96a8-1f2b67ed2ea1","delta":". Let"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353413269,"messageId":"79650b17-6023-4a39-96a8-1f2b67ed2ea1","delta":" me execute"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353413367,"messageId":"79650b17-6023-4a39-96a8-1f2b67ed2ea1","delta":" it."}
+
+data: {"type":"REASONING_MESSAGE_END","timestamp":1783353413375,"messageId":"79650b17-6023-4a39-96a8-1f2b67ed2ea1"}
+
+data: {"type":"REASONING_ENCRYPTED_VALUE","timestamp":1783353413375,"subtype":"message","entityId":"79650b17-6023-4a39-96a8-1f2b67ed2ea1","encryptedValue":"{\"provider_name\": \"openrouter\", \"provider_details\": {\"format\": \"unknown\", \"index\": 0, \"type\": \"reasoning.text\"}}"}
+
+data: {"type":"REASONING_END","timestamp":1783353413375,"messageId":"79650b17-6023-4a39-96a8-1f2b67ed2ea1"}
+
+data: {"type":"TOOL_CALL_START","timestamp":1783353413375,"toolCallId":"call_d2b4ca309e1e402b986e5080","toolCallName":"execute","parentMessageId":"9d827081-20ba-4f15-b54c-bf36b4378f84"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353413375,"toolCallId":"call_d2b4ca309e1e402b986e5080","delta":"{"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353413377,"toolCallId":"call_d2b4ca309e1e402b986e5080","delta":"\"command\": "}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353413492,"toolCallId":"call_d2b4ca309e1e402b986e5080","delta":"\"echo"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353413500,"toolCallId":"call_d2b4ca309e1e402b986e5080","delta":" GATE"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353413508,"toolCallId":"call_d2b4ca309e1e402b986e5080","delta":"6-D"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353413509,"toolCallId":"call_d2b4ca309e1e402b986e5080","delta":"EN"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353413618,"toolCallId":"call_d2b4ca309e1e402b986e5080","delta":"Y-"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353413622,"toolCallId":"call_d2b4ca309e1e402b986e5080","delta":"PROBE"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353413626,"toolCallId":"call_d2b4ca309e1e402b986e5080","delta":"\"}"}
+
+data: {"type":"TOOL_CALL_END","timestamp":1783353413687,"toolCallId":"call_d2b4ca309e1e402b986e5080"}
+
+data: {"type":"RUN_FINISHED","timestamp":1783353414101,"threadId":"gate6-int-deny","runId":"gate6-int-deny-r1","outcome":{"type":"interrupt","interrupts":[{"id":"int-call_d2b4ca309e1e402b986e5080","reason":"tool_call","message":"Approve execute({\"command\": \"echo GATE6-DENY-PROBE\"})?","toolCallId":"call_d2b4ca309e1e402b986e5080","responseSchema":{"type":"object","properties":{"approved":{"type":"boolean"},"editedArgs":{"type":"object"},"reason":{"type":"string"}},"required":["approved"]}}]}}
+
+
+: --- run 2, resume approved=False ---
+
+data: {"type":"RUN_STARTED","timestamp":1783353414127,"threadId":"gate6-int-deny","runId":"gate6-int-deny-r2"}
+
+data: {"type":"TOOL_CALL_RESULT","timestamp":1783353415668,"messageId":"362e7ca2-95d4-4afb-9b1c-05db314e7209","toolCallId":"call_d2b4ca309e1e402b986e5080","content":"The tool call was denied.","role":"tool"}
+
+data: {"type":"REASONING_START","timestamp":1783353419509,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82"}
+
+data: {"type":"REASONING_MESSAGE_START","timestamp":1783353419509,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82","role":"reasoning"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353419509,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82","delta":"The"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353419517,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82","delta":" user wants"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353419523,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82","delta":" me to"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353419526,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82","delta":" run the"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353419534,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82","delta":" command `"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353419545,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82","delta":"echo G"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353419545,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82","delta":"ATE6"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353419550,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82","delta":"-D"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353419558,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82","delta":"ENY"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353419584,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82","delta":"-PRO"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353419587,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82","delta":"BE`"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353419609,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82","delta":" using the"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353419667,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82","delta":" execute tool"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353419694,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82","delta":". The"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353419732,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82","delta":" previous attempt"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353419783,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82","delta":" was cancelled"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353419875,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82","delta":" ("}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353419878,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82","delta":"likely"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353419918,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82","delta":" by"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353419981,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82","delta":" a hook"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353420000,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82","delta":"). Let"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353420084,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82","delta":" me try"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353420092,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82","delta":" again."}
+
+data: {"type":"REASONING_MESSAGE_END","timestamp":1783353420184,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82"}
+
+data: {"type":"REASONING_ENCRYPTED_VALUE","timestamp":1783353420184,"subtype":"message","entityId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82","encryptedValue":"{\"provider_name\": \"openrouter\", \"provider_details\": {\"format\": \"unknown\", \"index\": 0, \"type\": \"reasoning.text\"}}"}
+
+data: {"type":"REASONING_END","timestamp":1783353420184,"messageId":"68eef9f7-5c92-46b8-b4be-f9e925d96a82"}
+
+data: {"type":"TEXT_MESSAGE_START","timestamp":1783353420184,"messageId":"b8e9846c-2814-4a0f-9bc3-9147f2b306ba","role":"assistant"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353420184,"messageId":"b8e9846c-2814-4a0f-9bc3-9147f2b306ba","delta":"I"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353420277,"messageId":"b8e9846c-2814-4a0f-9bc3-9147f2b306ba","delta":"'ll run"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353420285,"messageId":"b8e9846c-2814-4a0f-9bc3-9147f2b306ba","delta":" that"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353420334,"messageId":"b8e9846c-2814-4a0f-9bc3-9147f2b306ba","delta":" command now"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353420387,"messageId":"b8e9846c-2814-4a0f-9bc3-9147f2b306ba","delta":"."}
+
+data: {"type":"TEXT_MESSAGE_END","timestamp":1783353420492,"messageId":"b8e9846c-2814-4a0f-9bc3-9147f2b306ba"}
+
+data: {"type":"TOOL_CALL_START","timestamp":1783353420493,"toolCallId":"chatcmpl-tool-bf04817d203df706","toolCallName":"execute","parentMessageId":"b8e9846c-2814-4a0f-9bc3-9147f2b306ba"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353420568,"toolCallId":"chatcmpl-tool-bf04817d203df706","delta":"{\"command\": "}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353420877,"toolCallId":"chatcmpl-tool-bf04817d203df706","delta":"\"echo GATE6-DENY-PROBE\"}"}
+
+data: {"type":"TOOL_CALL_END","timestamp":1783353420904,"toolCallId":"chatcmpl-tool-bf04817d203df706"}
+
+data: {"type":"RUN_FINISHED","timestamp":1783353421333,"threadId":"gate6-int-deny","runId":"gate6-int-deny-r2","outcome":{"type":"interrupt","interrupts":[{"id":"int-chatcmpl-tool-bf04817d203df706","reason":"tool_call","message":"Approve execute({\"command\": \"echo GATE6-DENY-PROBE\"})?","toolCallId":"chatcmpl-tool-bf04817d203df706","responseSchema":{"type":"object","properties":{"approved":{"type":"boolean"},"editedArgs":{"type":"object"},"reason":{"type":"string"}},"required":["approved"]}}]}}
+

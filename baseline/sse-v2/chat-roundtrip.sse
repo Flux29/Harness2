@@ -1,0 +1,42 @@
+data: {"type":"RUN_STARTED","timestamp":1783353004744,"threadId":"gate6-chat","runId":"g6r1"}
+
+data: {"type":"REASONING_START","timestamp":1783353015933,"messageId":"5f6f2e72-08bb-41ec-a3e9-1052f7cdfbea"}
+
+data: {"type":"REASONING_MESSAGE_START","timestamp":1783353015933,"messageId":"5f6f2e72-08bb-41ec-a3e9-1052f7cdfbea","role":"reasoning"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353015933,"messageId":"5f6f2e72-08bb-41ec-a3e9-1052f7cdfbea","delta":"The"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353015967,"messageId":"5f6f2e72-08bb-41ec-a3e9-1052f7cdfbea","delta":" user wants"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353016061,"messageId":"5f6f2e72-08bb-41ec-a3e9-1052f7cdfbea","delta":" me to"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353016154,"messageId":"5f6f2e72-08bb-41ec-a3e9-1052f7cdfbea","delta":" reply with"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353016244,"messageId":"5f6f2e72-08bb-41ec-a3e9-1052f7cdfbea","delta":" exactly \""}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353016336,"messageId":"5f6f2e72-08bb-41ec-a3e9-1052f7cdfbea","delta":"LIVE"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353016428,"messageId":"5f6f2e72-08bb-41ec-a3e9-1052f7cdfbea","delta":" WIRE"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353016514,"messageId":"5f6f2e72-08bb-41ec-a3e9-1052f7cdfbea","delta":" OK"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353016617,"messageId":"5f6f2e72-08bb-41ec-a3e9-1052f7cdfbea","delta":"\"."}
+
+data: {"type":"REASONING_MESSAGE_END","timestamp":1783353016701,"messageId":"5f6f2e72-08bb-41ec-a3e9-1052f7cdfbea"}
+
+data: {"type":"REASONING_ENCRYPTED_VALUE","timestamp":1783353016701,"subtype":"message","entityId":"5f6f2e72-08bb-41ec-a3e9-1052f7cdfbea","encryptedValue":"{\"provider_name\": \"openrouter\", \"provider_details\": {\"format\": \"unknown\", \"index\": 0, \"type\": \"reasoning.text\"}}"}
+
+data: {"type":"REASONING_END","timestamp":1783353016701,"messageId":"5f6f2e72-08bb-41ec-a3e9-1052f7cdfbea"}
+
+data: {"type":"TEXT_MESSAGE_START","timestamp":1783353016701,"messageId":"aad41f02-8335-4a81-8713-d9a9ed3b0d0e","role":"assistant"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353016701,"messageId":"aad41f02-8335-4a81-8713-d9a9ed3b0d0e","delta":"L"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353016786,"messageId":"aad41f02-8335-4a81-8713-d9a9ed3b0d0e","delta":"IVE W"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353016876,"messageId":"aad41f02-8335-4a81-8713-d9a9ed3b0d0e","delta":"IRE OK"}
+
+data: {"type":"TEXT_MESSAGE_END","timestamp":1783353017100,"messageId":"aad41f02-8335-4a81-8713-d9a9ed3b0d0e"}
+
+data: {"type":"RUN_FINISHED","timestamp":1783353017544,"threadId":"gate6-chat","runId":"g6r1","outcome":{"type":"success"}}
+

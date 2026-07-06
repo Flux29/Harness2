@@ -2,7 +2,9 @@
 
 ALL refactor work is governed by docs/HarnessRefactor.md.
 Read the current phase's section before starting any task.
-**Current phase: 3** (bump this line at each exit gate).
+**Current phase: 6 — exit gate 6 live session PASSED 2026-07-06** (final
+merges pending; once they land the parity harness is the permanent regression
+net and this line retires).
 Findings reference: docs/HarnessCritique.md.
 
 ## Commands
@@ -23,3 +25,10 @@ Findings reference: docs/HarnessCritique.md.
    python -c "import yaml,sys; yaml.safe_load(open(sys.argv[1]))" <file>
    A workflow that does not parse has never run - green history is
    meaningless if the file is invalid. Fix before commit, no exceptions.
+8. Agentic deletion is DISABLED (ADR-0021). Never `rm` a first-party file.
+   Files scheduled for deletion move to the local-only, git-ignored,
+   never-pushed `Obsolete/`; deferred-with-a-future code moves to committed,
+   import-quarantined `legacy/` (Gate 5: the live path never imports it).
+   This rule binds both this refactor and any agent acting on the repo. (The
+   harness's own runtime file tools — LocalBackend `delete_file`, fork-overlay
+   discards — are exempt: vendor-pristine + runtime hygiene, per ADR-0021.)

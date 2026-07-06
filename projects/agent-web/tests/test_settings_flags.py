@@ -58,3 +58,34 @@ def test_fork_config_centralized_defaults():
     assert s.fork_test_timeout_s == 60.0
     assert s.fork_branch_budget_usd == 0.75
     assert s.fork_aggregate_budget_usd == 2.5
+
+
+# --- Phase 4.7 (disc-mcp-config-cwd-relative): MCP_CONFIG resolution ---------
+
+def test_mcp_config_default_is_cwd_independent(monkeypatch):
+    """The default 'mcp.json' anchors to the project root, not the process CWD,
+    so the registered MCP roster no longer depends on where the server was
+    launched from (v1: launched outside projects/agent-web, mcp.json's servers
+    were silently dropped)."""
+    from agent_web.settings import _PROJECT_ROOT, _mcp_config_path
+
+    monkeypatch.delenv("MCP_CONFIG", raising=False)
+    p = _mcp_config_path()
+    assert p.is_absolute()
+    assert p == _PROJECT_ROOT / "mcp.json"
+    assert (_PROJECT_ROOT / "pyproject.toml").exists()  # anchor is the project
+
+
+def test_mcp_config_relative_env_anchors_to_project(monkeypatch):
+    from agent_web.settings import _PROJECT_ROOT, _mcp_config_path
+
+    monkeypatch.setenv("MCP_CONFIG", "conf/custom-mcp.json")
+    assert _mcp_config_path() == _PROJECT_ROOT / "conf" / "custom-mcp.json"
+
+
+def test_mcp_config_absolute_env_taken_as_is(monkeypatch, tmp_path):
+    from agent_web.settings import _mcp_config_path
+
+    target = tmp_path / "abs-mcp.json"
+    monkeypatch.setenv("MCP_CONFIG", str(target))
+    assert _mcp_config_path() == target

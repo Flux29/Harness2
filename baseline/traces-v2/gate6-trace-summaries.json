@@ -1,0 +1,22 @@
+{
+  "captured": "2026-07-06 gate-6 live session (Logfire MCP, project flux/deep-agents)",
+  "matrix_e_rows_verified": {
+    "model_attribute": "every chat span in both services reads z-ai/glm-5.2 (agent-web: 10 spans, eval-optimizer: 298 spans across all fork runs incl. diagnostics); response model z-ai/glm-5.2-20260616; zero stray models",
+    "cost_fields": "operation.cost present and > 0 on every agent-web chat span (e.g. 0.0119978, 0.0210024, 0.0120538); fork branch costs reported per-branch (winner $0.068)",
+    "token_usage_fields": "gen_ai.usage.input_tokens / output_tokens present and nonzero on all chat spans",
+    "mcp_handshakes": "30 'tools/list' spans across the session's three server boots — deployed roster {context7, deepwiki, github, logfire} all ready and in_agent at every boot",
+    "interrupt_scenario": "run-1 traces (deny 15:56:47, approve 15:57:01) contain ZERO execute_tool execute spans; deny run-2 (15:56:54) still zero; approve run-2 (15:57:08) contains EXACTLY ONE — the telemetry twin of the interrupt E2E",
+    "unexpected_exceptions": "agent-web: zero across the session; eval-optimizer final clean fork run (post-16:30Z): zero (vendor overlay tool bugs fired only in exploratory runs — ISSUE-7)"
+  },
+  "scenarios": {
+    "chat-roundtrip": {"trace_id": "019f381f52ce20c998e9d41bcd0606e7", "t0": "2026-07-06T15:50:04Z", "spans": 5, "execute_spans": 0},
+    "todo-render": {"trace_id": "019f3824213a3815fb74bba3015cd19d", "t0": "2026-07-06T15:55:19Z", "spans": 7, "execute_spans": 0},
+    "interrupt-deny-run1": {"trace_id": "019f382578544a8c5b18c9521e880fc3", "t0": "2026-07-06T15:56:47Z", "spans": 6, "execute_spans": 0},
+    "interrupt-deny-run2": {"trace_id": "019f382591f14bd68b3db46cec4445de", "t0": "2026-07-06T15:56:54Z", "spans": 6, "execute_spans": 0},
+    "interrupt-approve-run1": {"trace_id": "019f3825ae246363938604a94a3a3f43", "t0": "2026-07-06T15:57:01Z", "spans": 6, "execute_spans": 0},
+    "interrupt-approve-run2": {"trace_id": "019f3825caea149d31d12f36737519a5", "t0": "2026-07-06T15:57:08Z", "spans": 7, "execute_spans": 1},
+    "mcp-discovery": {"trace_id": "019f38264451ac871385a03580a059f3", "t0": "2026-07-06T15:57:39Z", "spans": 9, "execute_spans": 0, "note": "two search_tools calls; found 10 github_* and 4 logfire_* prefixed tools"},
+    "restart-resume": {"trace_id": "019f3850c4168cf2cbbccd1c936eb437", "t0": "2026-07-06T16:44:05Z", "spans": 6, "execute_spans": 0, "note": "post-restart; thread recalled pre-restart content from server-side history"},
+    "fork-run": {"service": "eval-optimizer", "window": "2026-07-06T16:34-16:44Z", "note": "first successful ADR-0018 live run: 2/3 branches tests=1.00, winner stdlib-min by stated tie-break (fewest errors, then cheapest: $0.068), merged, any_viable=true, exit 0; negative path (no EVALOPT_ALLOW_HOST_EXEC) refused earlier in session"}
+  }
+}

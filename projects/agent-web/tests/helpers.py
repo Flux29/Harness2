@@ -12,6 +12,8 @@ from agent_web.settings import Settings
 def make_settings(tmp_path) -> Settings:
     return Settings(
         workspaces_dir=tmp_path / "workspaces",
+        state_dir=tmp_path / "state",
+        history_dual_write=False,  # post-cutover default; window tested explicitly
         mcp_config=tmp_path / "absent-mcp.json",
         mcp_enable=(),  # no network in tests
         web_tools=False,  # TestModel rejects built-in tools
@@ -19,6 +21,11 @@ def make_settings(tmp_path) -> Settings:
         # Pin ALL feature flags: ambient env must never shape a test
         # (BROWSER is a standard OS env var and burned us once already).
         teams=False, liteparse=False, execute=False, browser=False, tool_search=False, improve=False,
+        forking=False,  # 5.2 code default, pinned like the other gated features
+        # ADR-0020: the E2E client posts over a synthetic ASGI host (Host: test),
+        # so the rebinding Host check is off here; the security suite turns it on
+        # explicitly to prove that control. Token off by default.
+        agent_token=None, require_loopback_host=False,
     )
 
 

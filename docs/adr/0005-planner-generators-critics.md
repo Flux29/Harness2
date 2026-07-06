@@ -1,6 +1,12 @@
 # ADR-0005 — Planner → Tree-of-Generators → Debate-Critics architecture
 
 **Status:** Accepted · 2026-06-29 (evolves the 2-agent evaluator-optimizer in PDR §3)
+· **Integration DEFERRED by ADR-0021 (2026-07-06):** ADR-0011's harness-native
+forking is the live plan-viability path; this architecture's substrate
+(`graph.py` scaffold, planner/generator/critic agents) is preserved in committed
+`eval_optimizer/legacy/`, out of the live import path, pending a resolution to
+resume its integration. Not superseded — the debate-critics' multi-dimensional
+scoring is not functionally replaced by forking's binary test-pass selection.
 
 ## Context
 The initial deliverable was a two-agent evaluator-optimizer loop (Optimizer +

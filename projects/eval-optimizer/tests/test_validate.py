@@ -1,7 +1,7 @@
 """Offline tests for the artifact parser (no Docker, no network)."""
 from __future__ import annotations
 
-from eval_optimizer.validate import parse_artifact
+from eval_optimizer.artifacts import parse_artifact  # ADR-0021: extracted to the live tree
 
 ARTIFACT = '''\
 All done. Here is the implementation:

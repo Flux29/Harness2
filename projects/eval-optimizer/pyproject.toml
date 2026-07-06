@@ -3,7 +3,9 @@ name = "eval-optimizer"
 version = "0.1.0"
 description = "Evaluator-optimizer core on pydantic-deepagents; provider-flexible inference (OpenRouter default, NVIDIA/Ollama supported)."
 readme = "README.md"
-requires-python = ">=3.11,<3.14"
+# One workspace floor (ADR-0022); the old <3.14 cap encoded no demonstrated
+# dependency constraint and drops per the ADR. Root .python-version pins uv.
+requires-python = ">=3.12"
 dependencies = [
     "pydantic-deep",        # the agent harness (Vstorm) — resolved from vendor/, see [tool.uv.sources]
     "pydantic-ai",          # underlying framework (pulled in by pydantic-deep, pinned explicit)
@@ -50,16 +52,11 @@ venvPath = "."
 venv = ".venv"
 include = ["src"]
 exclude = [
-    # excluded: legacy strata, resolved by ADR 6.5. DELETE these two lines when
-    # 6.5 removes/relocates the code (owner: ADR 6.5 / ISSUE-2).
-    "src/eval_optimizer/loop.py",
-    "src/eval_optimizer/graph.py",
-    # excluded: ADR-0004 memory infrastructure (psycopg typing) — genuine deferred
-    # debt, NOT a deletion candidate. Owner: Phase 4.2 (ISSUE-3).
-    "src/eval_optimizer/memory_pg.py",
-    # excluded: live provider connection check — deferred type debt.
-    # Owner: Phase 4.1 (ISSUE-3).
-    "src/eval_optimizer/check_connection.py",
+    # ADR-0021 (ISSUE-2 CLOSED): the Gen-1 strata are relocated to committed,
+    # import-quarantined legacy/. Deferred code (LLM nodes stubbed) stays out of
+    # the typed live path — the resolution ISSUE-2 anticipated. Single exclude,
+    # owned by ADR-0021; drops when the deferred integration resumes.
+    "src/eval_optimizer/legacy",
 ]
 
 [build-system]

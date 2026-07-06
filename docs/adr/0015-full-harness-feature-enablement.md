@@ -28,7 +28,7 @@ Deliberate opt-ins:
 | Feature | Switch | UI surfacing (per ADR-0012/0013) |
 |---|---|---|
 | Live forking | `forking=LiveForkCapability(test_command="pytest -q", budgets…)` | fork panel via `CustomEvent`s; deterministic pick via patched `branch_outcomes()` (ADR-0011) |
-| Checkpointing | `include_checkpoints=True`, `checkpoint_store` per session | resume/rewind control in UI; required by forking |
+| Checkpointing | `include_checkpoints=True`, `checkpoint_store` per session | resume/rewind control in UI; required by forking *(2026-07-06, ADR-0019: durable per-thread storage delivered in the state tree; the rewind UI/endpoints land with the deepresearch→CopilotKit port — ISSUE-4; "required by forking" is the vendor's warn-if-missing recommendation, not a hard dependency)* |
 | Sandbox execution | extra `.[sandbox]` + Docker backend for `include_execute` | approval-gated execute (interrupts) |
 | Skills dirs | `skill_directories=[projects/eval-optimizer/skills, …]` + `.[yaml]` | skill invocations render as tool cards |
 | Browser automation | extra `.[browser]` (Playwright) | opt-in flag per session; off by default |

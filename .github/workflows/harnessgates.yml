@@ -20,6 +20,10 @@ name: harness2-gates
 
 on:
   pull_request:
+    # labeled/unlabeled included so the label-gated ast-equality job (Gate 1)
+    # arms the moment a `relocation`/`format-only` label is applied, without
+    # needing a follow-up push.
+    types: [opened, synchronize, reopened, labeled, unlabeled]
   push:
     branches: [main]
   workflow_dispatch:
@@ -75,13 +79,18 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        project: [agent-web, eval-optimizer]
+        # evals/agentic-smoke is the workspace-policy test project (ADR-0022):
+        # pip-guard bypass suite + workspace-coherence checks.
+        project:
+          - projects/agent-web
+          - projects/eval-optimizer
+          - evals/agentic-smoke
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v4
       - name: Sync and test (offline suite only — no network, no tokens)
-        working-directory: projects/${{ matrix.project }}
+        working-directory: ${{ matrix.project }}
         run: |
           uv sync
           uv run pytest -q
@@ -159,7 +168,9 @@ jobs:
       - uses: astral-sh/setup-uv@v4
       - name: Gate 4 scan
         if: hashFiles('parity/dup_scan.py') != ''
-        run: uv run --directory projects/agent-web python ../../parity/dup_scan.py --allowlist parity/dup-allowlist.yml
+        # --today arms the expiry check: a dated allowlist entry (e.g. 5.1's
+        # dual-write) FAILS CI past its expiry — the deadline is real.
+        run: uv run --directory projects/agent-web python ../../parity/dup_scan.py --allowlist parity/dup-allowlist.yml --today "$(date -u +%F)"
       - name: Gate not yet armed
         if: hashFiles('parity/dup_scan.py') == ''
         run: echo "dup-scan arms when parity/dup_scan.py lands (Phase 0.5)"

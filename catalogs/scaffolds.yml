@@ -1,3 +1,8 @@
+# Contract (ADR-0022): ${AGENTIC_SCAFFOLDS} is a machine-level USER environment
+# variable pointing at the local AgenticWork scaffolds directory. It is
+# deliberately not defined in this repository; where it is unset, the scaffold
+# policy is inactive on that machine. This catalog is advisory — it is not
+# consumed by project code.
 version: 1
 root: ${AGENTIC_SCAFFOLDS}
 policy:

@@ -1,8 +1,10 @@
 """C5 POC (harness-native, ADR-0011): fork a builder agent across approaches,
 let the harness run each branch's tests, and report which branch is viable.
 
-Prereqs: OpenRouter key in .env; `pytest` available (dev dep). Tests run on the
-host (LocalBackend), so run on a machine you trust with the generated code.
+Prereqs: OpenRouter key in the USER env; `pytest` available (dev dep); and —
+Phase 5.2 — `EVALOPT_ALLOW_HOST_EXEC=1`. Tests run on the host (LocalBackend),
+so that acknowledgment is a required configuration on a machine you trust with
+the generated code, not just this docstring's advice.
 
 Run:  uv run python -m eval_optimizer.fork_check          (discards all files)
       uv run python -m eval_optimizer.fork_check --save   (keeps the winner in cache/fork-winner)
@@ -31,7 +33,8 @@ def main() -> int:
         ratio = "n/a" if b.test_pass_ratio is None else f"{b.test_pass_ratio:.2f}"
         flag = "WIN" if b.branch_id == report.winner_branch_id else "   "
         cost = "?" if b.cost_usd is None else f"${b.cost_usd:.3f}"
-        print(f"  [{flag}] {b.label:14} tests={ratio}  turns={b.turns}  errs={b.error_count}  cost={cost}")
+        tam = "  TAMPERED-DISQUALIFIED" if b.tests_tampered else ""
+        print(f"  [{flag}] {b.label:14} tests={ratio}  turns={b.turns}  errs={b.error_count}  cost={cost}{tam}")
         if b.preview:
             print(f"          {b.preview[:120]}")
     print(f"\nwinner : {report.winner_branch_id}")

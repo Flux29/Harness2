@@ -25,21 +25,86 @@
 findings:
   # ============================ Critical ============================
   crit-checkpoint-persistence:
-    status: identical            # ADR decision, Phase 6.3
+    status: changed              # ADR-0019 — durable per-thread FileCheckpointStore
     step: "6.3"
     matrix_rows: ["D:checkpoint-store"]
+    tests:
+      - "projects/agent-web/tests/test_checkpoints.py::test_checkpoints_survive_across_requests"
+      - "projects/agent-web/tests/test_checkpoints.py::test_checkpoints_live_outside_agent_workspace"
+      - "projects/agent-web/tests/test_checkpoints.py::test_vendor_prune_cap_default_pinned"
+    note: >-
+      ADR-0019 (Accepted 2026-07-06): Option A at the storage layer —
+      make_deps wires FileCheckpointStore(state/checkpoints/<slug>) per
+      thread, so checkpoints and fork:<id> anchors survive across requests
+      and restarts (the stateless AG-UI layer's hard prerequisite for the
+      planned deepresearch->CopilotKit port; provenance of ADR-0015's claim
+      confirmed in the vendor reference app). Matrix D gains the checkpoint
+      files in the server-only state tree (outside every LocalBackend root,
+      gitignored, same trust boundary as 5.1 history). The rewind
+      endpoints/RewindRequested handling/UI are ISSUE-4 (tracked successor);
+      growth bounded by the vendor's max_checkpoints=20 auto-prune (pinned).
   crit-history-agent-writable:
-    status: identical            # Phase 5.1 (parallel-run relocation)
+    status: changed              # Phase 5.1 — server-only history via parallel-run
     step: "5.1"
     matrix_rows: ["D:history-location"]
+    tests:
+      - "projects/agent-web/tests/test_e2e_agui.py::test_agent_workspace_cannot_see_history"
+      - "projects/agent-web/tests/test_e2e_agui.py::test_history_persisted_server_side"
+      - "projects/agent-web/tests/test_e2e_agui.py::test_dual_write_window_writes_both_copies"
+      - "projects/agent-web/tests/test_e2e_agui.py::test_dual_write_divergence_is_loud"
+      - "projects/agent-web/tests/test_e2e_agui.py::test_dual_write_reads_stay_on_v1_copy"
+    note: >-
+      Authoritative history moved to STATE_DIR/history/<slug>.json — a sibling
+      of workspaces/, outside every LocalBackend root (D:history-location row
+      flipped; message SCHEMA row unchanged). Parallel-run, not cutover:
+      HISTORY_DUAL_WRITE=1 opens the window (write both, diff previous pair on
+      every save, divergence -> ERROR log + ledger the live parity run asserts
+      empty; reads stay on the v1 copy). Cutover = remove the flag after N=5
+      clean sessions; the Gate 4 allowlist entry 5b2b397a0757feed expires
+      2026-08-15 and CI now arms expiry (--today). Migration: no one-shot
+      relocation — the window migrates active threads (each save writes the
+      full message list); dormant threads restart fresh after cutover.
   crit-fork-exec-gate:
-    status: identical            # Phase 5.2
+    status: changed              # Phase 5.2 — both host-exec paths now explicitly gated
     step: "5.2"
     matrix_rows: []
+    tests:
+      - "projects/agent-web/tests/test_agent_build.py::test_fork_disabled_by_default_no_fork_toolset"
+      - "projects/agent-web/tests/test_agent_build.py::test_fork_flag_enables_fork_toolset"
+      - "projects/eval-optimizer/tests/test_forking.py::test_host_exec_requires_env_acknowledgment"
+    note: >-
+      The contract: LLM-generated code does not execute on the host without
+      explicit approval or explicit configuration. agent-web: forking is now
+      env-gated like its siblings (FORKING=1, default OFF — the harness offers
+      no interrupt hook for test_command, so the honest gate is the flag + a
+      README warning symmetrical to the browser one); with the flag off the
+      agent's toolset carries no fork tools. eval-optimizer: the headless path
+      keeps host execution but requires EVALOPT_ALLOW_HOST_EXEC=1 — the
+      docstring disclosure promoted to a required acknowledgment. The v1
+      asymmetry (shell approval-gated, pytest-on-host ungated) is removed.
   crit-fork-selection-metric:
-    status: identical            # ADR decision, Phase 6.1
+    status: changed              # ADR-0018 — shared-prefix suite, integrity-checked
     step: "6.1"
     matrix_rows: ["B:test_pass_ratio"]
+    tests:
+      - "projects/eval-optimizer/tests/test_forking.py::test_untampered_full_pass_merges"
+      - "projects/eval-optimizer/tests/test_forking.py::test_tampered_branch_disqualified"
+      - "projects/eval-optimizer/tests/test_forking.py::test_e2e_tampering_branch_disqualified_via_real_overlays"
+      - "projects/eval-optimizer/tests/test_forking.py::test_tie_break_fewest_errors_then_cost"
+      - "projects/eval-optimizer/tests/test_forking.py::test_caller_supplied_suite_lands_in_shared_prefix"
+      - "projects/eval-optimizer/tests/test_forking.py::test_parent_authors_suite_when_none_supplied"
+    note: >-
+      ADR-0018 (Accepted 2026-07-05): branches no longer grade themselves. The
+      suite enters the fork once via the shared prefix (caller-supplied tests=
+      or parent-authored pre-fork); branches implement against it and any
+      branch whose overlay end-state touches tests/ or root pytest config is
+      DISQUALIFIED (integrity check via the vendor's PUBLIC build_diff_report
+      over live overlays — sees deletions the artifact mirror cannot; layer
+      contract respected). Ranking among untampered full passes is a stated
+      tie-break (fewest errors, then cost, then approach order) replacing v1's
+      accidental first-listed-wins. Matrix B: test_pass_ratio field SHAPE
+      identical, semantics now 'shared suite outcome'; tests_tampered is an
+      ADDITIVE branch field.
   crit-flag-case-sensitivity:
     status: changed              # Phase 3.3 — unified _flag parser; EXECUTE=False now OFF
     step: "3.3"
@@ -50,38 +115,109 @@ findings:
 
   # ============================= Major ==============================
   crit-merge-threshold:
-    status: identical            # ADR sub-decision, Phase 6.1a
+    status: changed              # ADR-0018 (6.1a) — mergeable iff untampered ratio == 1.0
     step: "6.1a"
     matrix_rows: ["B:any_viable"]
+    tests:
+      - "projects/eval-optimizer/tests/test_forking.py::test_partial_pass_no_longer_merges"
+      - "projects/eval-optimizer/tests/test_forking.py::test_all_passes_tampered_aborts"
+    note: >-
+      any_viable defined numerically by ADR-0018: a branch merges iff its
+      UNTAMPERED shared-suite ratio == 1.0 (binary vendor semantics = the
+      whole suite passed; a future granular partial pass stays unmergeable
+      without revisiting the ADR). v1's `>0` threshold is gone. Per ADR-0017,
+      infrastructure failures raise and never shape any_viable.
   crit-silent-judge-fallback:
-    status: identical            # Phase 4.5 instruments; policy is 6.2
+    status: changed              # 4.5 instrumented; policy RESOLVED by ADR-0017 (plan 6.2)
     step: "4.5"
     matrix_rows: ["B:selection_path", "E:errors"]
+    tests:
+      - "projects/eval-optimizer/tests/test_forking.py::test_selection_exception_aborts_loud"
+      - "projects/eval-optimizer/tests/test_forking.py::test_selection_exception_never_materializes_winner_dir"
+      - "projects/eval-optimizer/tests/test_forking.py::test_untampered_full_pass_merges"
+    note: >-
+      Phase 4.5 added selection_path + logging of the swallowed exception;
+      ADR-0017 (Accepted 2026-07-05) then RETIRED the judge fallback from the
+      programmatic path: a selection failure logs with traceback, aborts the
+      fork (abort_fork — cancel branches, merge nothing), and RE-RAISES.
+      selection_path keeps the 'judge_fallback' literal for schema stability
+      (Matrix B additive-only); the value is historical and unreachable.
+      Matrix E: failure paths emit the declared warning and no judge spans.
   crit-no-branch-cancel:
-    status: identical            # Phase 4.6
+    status: changed              # Phase 4.6 — timeout cancels branches; winner-copy correctness
     step: "4.6"
     matrix_rows: ["B:winner_dir"]
+    tests:
+      - "projects/eval-optimizer/tests/test_forking.py::test_wait_timeout_cancels_outstanding_branches"
+      - "projects/eval-optimizer/tests/test_forking.py::test_selection_exception_never_materializes_winner_dir"
+      - "projects/eval-optimizer/tests/test_forking.py::test_save_winner_dir_copies_on_deterministic_win"
+    note: >-
+      Both 4.0 red-side pins flipped in this commit: (1) _wait_for_branches
+      now explicitly terminates every still-running branch on timeout (vendor
+      ForkCoordinator.terminate_branch, public method — no vendor edit) before
+      returning for selection; (2) save_winner_dir copies ONLY when the
+      deterministic merge path flushed the winner — never on the
+      judge-fallback or abort paths. Matrix B winner_dir field SHAPE is
+      identical (str | None); only the copy condition changed.
   crit-concurrent-history-clobber:
-    status: identical            # Phase 4.4 (per-thread asyncio.Lock)
+    status: changed              # Phase 4.4 — per-thread asyncio.Lock serializes load->run->save
     step: "4.4"
     matrix_rows: []
+    tests:
+      - "projects/agent-web/tests/test_e2e_agui.py::test_concurrent_posts_same_thread_both_persisted"
+    note: >-
+      The E2E test was committed and run RED against the pre-4.4 code first
+      (v1 evidence: only the last save's message survived), then the lock
+      landed in the same commit. history.load moved inside the lock so a
+      queued request sees the previous run's saved history. In-process lock
+      only — matches the single-server deployment (ADR-0012).
   crit-thread-slug-collision:
-    status: identical            # 3.6 pins red tests (xfail); behavior fix lands in 4.3
+    status: changed              # Phase 4.3 — content-hash suffix for the collision class
     step: "4.3"
     matrix_rows: ["D:workspace-layout"]
+    tests:
+      - "projects/agent-web/tests/test_deps_factory.py::test_slug_distinguishes_slash_from_underscore"
+      - "projects/agent-web/tests/test_deps_factory.py::test_slug_distinguishes_long_prefix_twins"
+      - "projects/agent-web/tests/test_deps_factory.py::test_slug_sanitizes"
     note: >-
-      Red tests committed in 3.6 pin the defect without changing behavior:
-      projects/agent-web/tests/test_deps_factory.py::test_slug_distinguishes_slash_from_underscore
-      and ::test_slug_distinguishes_long_prefix_twins (xfail strict). 4.3 flips
-      this to changed, adds the content hash, and removes the xfail markers.
+      3.6's strict-xfail red tests flipped green; markers removed in the 4.3
+      commit as required. Slug rule: ids the sanitizer leaves untouched
+      (<=64 chars) — the only ids a pure function can prove collision-free —
+      keep their exact v1 directory; altered/truncated ids (the collision
+      class) relocate once to sanitized[:48] + '-' + sha256(id)[:12]. Matrix D
+      workspace-layout row re-pinned against the v1 baseline accordingly.
+      Migration: Harness1 threads with exotic ids will not resume their old
+      workspaces (accepted for the fork; clean/UUID-style ids unaffected).
   crit-nvidia-coupling:
-    status: identical            # Phase 4.1
+    status: changed              # Phase 4.1 — lazy per-provider credential validation
     step: "4.1"
     matrix_rows: []
+    tests:
+      - "projects/eval-optimizer/tests/test_models.py::test_openrouter_only_env_constructs_settings_and_model"
+      - "projects/eval-optimizer/tests/test_models.py::test_missing_openrouter_key_raises_naming_provider"
+      - "projects/eval-optimizer/tests/test_models.py::test_missing_nvidia_key_raises_naming_provider"
+      - "projects/eval-optimizer/tests/test_smoke.py::test_settings_constructs_without_provider_keys"
+    note: >-
+      Settings.from_env() no longer hard-fails on a missing NVIDIA key;
+      build_model() raises a clear error naming the missing key for the
+      provider the resolved model actually selects — including the previously
+      SILENT empty OpenRouter key. check_connection.py re-entered the pyright
+      scope (ISSUE-3 partially closed) with its type debt fixed.
   crit-toolset-frozen:
-    status: identical            # Phase 4.7
+    status: changed              # Phase 4.7 — honest snapshot reporting (minimal-change option)
     step: "4.7"
     matrix_rows: ["D:debug-mcp-keys", "D:healthz-keys"]
+    tests:
+      - "projects/agent-web/tests/test_e2e_agui.py::test_debug_mcp_snapshot_matches_agent_toolsets"
+      - "projects/agent-web/tests/test_e2e_agui.py::test_healthz_and_mcp_debug"
+    note: >-
+      The plan's honest-reporting option: /debug/mcp rows gain in_agent (the
+      agent's startup toolset snapshot, recorded in lifespan where the
+      toolsets are built) next to live registry status; /healthz gains
+      frontend_mounted (the mount decision actually taken at app creation)
+      next to the live frontend_built. Both additive-only — Matrix D key
+      tests pass against the v1 baselines. Contract: no endpoint may report
+      a state the agent doesn't have.
 
   # ============================ Moderate ============================
   crit-stale-model-facts:
@@ -122,9 +258,20 @@ findings:
     tests:
       - "projects/agent-web/tests/test_e2e_agui.py::test_422_body_is_json_object"
   crit-retry-coverage:
-    status: identical            # Phase 4.2
+    status: changed              # Phase 4.2 — embeddings on the shared retrying transport
     step: "4.2"
     matrix_rows: []
+    tests:
+      - "projects/eval-optimizer/tests/test_retry_transport.py::test_memory_embed_client_rides_retrying_transport"
+      - "projects/eval-optimizer/tests/test_retry_transport.py::test_sync_retrying_client_uses_tenacity_transport"
+    note: >-
+      memory_pg's embedding client now uses a sync twin of the shared
+      tenacity-retrying httpx transport (same 429/5xx/Retry-After policy).
+      The provider:model pass-through branch keeps pydantic-ai's own
+      transport; the models.py docstring claim was NARROWED to say so
+      (the plan allowed either resolution — the lie is what was banned).
+      memory_pg re-entered pyright scope with its 9 type errors fixed
+      (psycopg sql.Identifier composition + fetchone guards); ISSUE-3 closed.
   crit-fork-config-scatter:
     status: changed              # Phase 3.5 — fork knobs centralized per project (values unchanged)
     step: "3.5"
@@ -140,9 +287,28 @@ findings:
 
   # ============================= Minor ==============================
   crit-dead-code-strata:
-    status: identical            # ADR decision, Phase 6.5
+    status: changed              # ADR-0021 — Gen-1 relocated to committed legacy/
     step: "6.5"
     matrix_rows: []
+    tests:
+      - "projects/eval-optimizer/tests/test_smoke.py::test_verdict_roundtrip"
+      - "projects/eval-optimizer/tests/test_validate.py::test_parses_both_files"
+    note: >-
+      ADR-0021: agentic deletion is disabled, so Gen-1 (Planner->Generators->
+      Critics on pydantic-graph) is RELOCATED — not deleted — to committed,
+      import-quarantined eval_optimizer/legacy/, out of the live import path
+      (Gate 5 live-path-never-imports-legacy now armed + relative-import-aware).
+      The two tested reusables are extracted to LIVE homes: parse_artifact ->
+      artifacts.py, Verdict -> schema.py; the retargeted test_smoke/test_validate
+      are the behavioral proof they survived intact. Every byte-identical moved
+      symbol is a `relocations:` entry below (Gate 1 AST-matched; Gate 2
+      old-gone/new-present). The old ForkReport/BranchResult vocabulary moved to
+      legacy/schema.py, resolving the inventoried live-tree fork-report
+      duplication. ISSUE-2 closed (single legacy/ pyright exclude). ADR-0005/0006
+      annotated Deferred, not superseded. Four functions with in-body relative
+      imports (agents.build_planner/build_generator/build_evaluator, loop.run_loop)
+      moved with a mechanical import-depth change — not byte-identical, so
+      excluded from `relocations:` (visible in the diff; git-mv provenance).
   crit-scratchpad-committed:
     status: removed              # Phase 0.1a — docs/Deep_Agents.MD excluded pre-commit
     step: "0.1a"
@@ -152,31 +318,82 @@ findings:
     step: "0.1a"
     matrix_rows: []
   crit-aspirational-catalogs:
-    status: identical            # Phase 6.6
+    status: changed              # ADR-0022 — layer kept as tested advisory policy
     step: "6.6"
     matrix_rows: []
+    tests:
+      - "evals/agentic-smoke/tests/test_workspace_coherence.py::test_models_catalog_names_the_decided_provider"
+      - "evals/agentic-smoke/tests/test_workspace_coherence.py::test_floor_raise_target_stays_labeled"
   crit-python-floors:
-    status: identical            # Phase 6.6
+    status: changed              # ADR-0022 — one >=3.12 floor + root .python-version
     step: "6.6"
     matrix_rows: []
+    tests:
+      - "evals/agentic-smoke/tests/test_workspace_coherence.py::test_one_python_floor_across_first_party_projects"
+      - "evals/agentic-smoke/tests/test_workspace_coherence.py::test_floor_matches_catalog_and_interpreter_pin"
   crit-personal-paths:
     status: changed              # Phase 1.5 — scrubbed to <workspace-root> placeholders
     step: "1.5"
     matrix_rows: []
     verified_by: "secrets-scan job (personal-path grep) reports clean after the scrub; only the scanner's own file and the excluded plan docs still carry sample paths"
   crit-pip-hook:
-    status: identical            # Phase 6.6
+    status: changed              # ADR-0022 — shlex-tokenized matcher, ALLOW_HINTS removed
     step: "6.6"
     matrix_rows: []
+    tests:
+      - "evals/agentic-smoke/tests/test_pip_hook.py::test_denied"
+      - "evals/agentic-smoke/tests/test_pip_hook.py::test_allowed"
 
   # ===================== Discovered (post-§8) ======================
   # Not in HarnessCritique.md §8 — surfaced during Phase 0.2 baseline capture.
   # `source` marks it so Gate 2 lint one accepts it outside the catalog.
+  disc-fork-test-command-import-path:
+    status: changed
+    source: gate-6-live-session
+    step: "6-exit"
+    matrix_rows: []
+    tests:
+      - "projects/eval-optimizer/tests/test_forking.py::test_default_fork_test_command_imports_root_modules"
+    note: >-
+      Gate-6 live find, first live outing of ADR-0018's shared-suite metric —
+      two stacked defects in the default FORK_TEST_COMMAND ("pytest -q"):
+      (1) the pytest console script does not put the snapshot cwd on sys.path,
+      so the shared suite under tests/ could never import a branch's
+      root-level implementation modules; (2) after switching to -m, bare
+      "python" resolved (vendor runner: shlex.split + create_subprocess_exec,
+      no shell) to uv's managed base interpreter with no pytest installed.
+      Either way EVERY honest branch scored 0.00/None and the fork always
+      aborted. Default is now the absolute running interpreter (as_posix) +
+      "-m pytest -q". Report shape and selection semantics unchanged.
+  disc-422-serialization-crash:
+    status: changed
+    source: gate-6-live-session
+    step: "6-exit"
+    matrix_rows: ["C:422-body"]
+    tests:
+      - "projects/agent-web/tests/test_e2e_agui.py::test_422_with_non_utf8_body_still_json"
+    note: >-
+      Gate-6 live find: a malformed request body carrying invalid UTF-8 crashed
+      e.json() inside the 3.2-fixed 422 handler — the client got a raw 500
+      instead of the contractual 422 JSON error object. Fixed with a safe
+      fallback (error list without input bytes, include_input=False); the
+      well-formed 422 path is byte-identical to the 3.2 behavior.
   disc-mcp-config-cwd-relative:
-    status: identical
+    status: changed              # Phase 4.7 — MCP_CONFIG anchors to the project root
     source: phase-0-baseline-capture
-    step: "4.7"                  # later-phase decision, NOT a Phase 0 fix
-    matrix_rows: ["D:deployment-config"]
+    step: "4.7"
+    matrix_rows: ["D:deployment-config", "A:mcp_config"]
+    tests:
+      - "projects/agent-web/tests/test_settings_flags.py::test_mcp_config_default_is_cwd_independent"
+      - "projects/agent-web/tests/test_settings_flags.py::test_mcp_config_relative_env_anchors_to_project"
+      - "projects/agent-web/tests/test_settings_flags.py::test_mcp_config_absolute_env_taken_as_is"
+    resolution: >-
+      Decided in 4.7: a relative MCP_CONFIG (incl. the default mcp.json)
+      resolves against the project root, absolute paths taken as-is. Under
+      the deployed launch (CWD = projects/agent-web) this is the SAME file
+      as v1 — the deployed roster baseline is unchanged; from any other CWD
+      the roster no longer silently shrinks. Matrix A mcp_config row flipped
+      with the 4.7 citation (v1 witness kept).
     note: >-
       Settings.mcp_config defaults to the RELATIVE path "mcp.json", so which
       servers register depends on the process CWD. The deployment launches with
@@ -191,6 +408,50 @@ findings:
       logfire "ignored". Whether to resolve mcp_config relative to the package (or
       require an absolute MCP_CONFIG) is a later-phase decision (4.7), not a Phase
       0 fix. Baseline: baseline/endpoints-v1/debug-mcp.deployed.json.
+
+  disc-agent-endpoint-csrf:
+    status: changed
+    source: phase-6-adr-0020
+    step: "6.4"
+    matrix_rows: []
+    tests:
+      - "projects/agent-web/tests/test_security_posture.py::test_verified_cross_origin_driveby_now_403"
+      - "projects/agent-web/tests/test_security_posture.py::test_rebinding_host_refused"
+      - "projects/agent-web/tests/test_security_posture.py::test_token_required_when_set"
+      - "projects/agent-web/tests/test_security_posture.py::test_same_origin_json_ok"
+    note: >-
+      Surfaced by ADR-0020's composed-posture assessment and VERIFIED live: with
+      CORS locked to the bundled UI origin, a browser simple request (text/plain
+      + foreign Origin, no preflight) POSTed to /agent was fully processed
+      (200, run completed, history written) — CORS gates the response, not the
+      side effect. Fixed by app._authorize before the handler: content-type must
+      be application/json (removes the simple-request bypass so CORS preflight
+      engages), Origin must be same-origin or allowlisted, Host must be loopback
+      (rebinding defense), and an optional AGENT_TOKEN bearer (required beyond
+      loopback). CORS methods/headers narrowed from "*". No Matrix row moves:
+      the guard only adds 403 refusals to illegitimate requests; the SSE /
+      interrupt happy paths (Matrix C) are unchanged.
+
+  disc-abort-action-unsupported:
+    status: changed
+    source: phase-4-e2e
+    step: "4.6"
+    matrix_rows: ["B:any_viable"]
+    tests:
+      - "projects/eval-optimizer/tests/test_forking.py::test_no_passing_branch_aborts"
+      - "projects/eval-optimizer/tests/test_forking.py::test_e2e_fork_timeout_cancels_real_branches"
+    note: >-
+      Surfaced by the exit-gate-4 fork-timeout E2E test (which 4.5's logging
+      made visible). v1's no-passing-branch path called
+      merge_or_select("abort") — an action the vendor API never supported
+      (only 'pick:<id>'); the ValueError fell into the bare except and the
+      JUDGE quietly merged a winner on a path whose stated intent was
+      "no branch passed, abort". Fixed to the real abort API,
+      coordinator.abort_fork(): discard all branches, merge nothing, so
+      any_viable=False now genuinely means no winner was merged. The
+      exception-driven judge fallback itself is untouched (ADR 6.2 owns it).
+      The 4.0 fake coordinator wrongly accepted 'abort'; it now mirrors the
+      real API and raises.
 
   disc-typecheck-gate-miscalibrated:
     status: changed
@@ -210,4 +471,58 @@ findings:
 # relocations — populated only if ADR 6.5 chooses relocation over deletion.
 # Each entry: <old dotted path>: <new dotted path>. Gate 2 lint one verifies the
 # old path no longer resolves and the new path does; Gate 1 AST-matches each.
-relocations: {}
+relocations:
+  # ADR-0021 (6.5): Gen-1 relocated to eval_optimizer/legacy/ + two reusables
+  # extracted to live homes. Byte-identical moves only (Gate 1 AST-matched);
+  # the four in-body-relative-import functions are excluded (see the
+  # crit-dead-code-strata note). Old paths gone / new paths present (Gate 2).
+  # --- extractions to LIVE homes ---
+  eval_optimizer.validate.parse_artifact: eval_optimizer.artifacts.parse_artifact
+  eval_optimizer.agents.Verdict: eval_optimizer.schema.Verdict
+  # --- graph.py ---
+  eval_optimizer.graph.Plan: eval_optimizer.legacy.graph.Plan
+  eval_optimizer.graph.Generate: eval_optimizer.legacy.graph.Generate
+  eval_optimizer.graph.Criticize: eval_optimizer.legacy.graph.Criticize
+  eval_optimizer.graph.Rank: eval_optimizer.legacy.graph.Rank
+  eval_optimizer.graph.Validate: eval_optimizer.legacy.graph.Validate
+  eval_optimizer.graph.PipelineState: eval_optimizer.legacy.graph.PipelineState
+  eval_optimizer.graph.PipelineDeps: eval_optimizer.legacy.graph.PipelineDeps
+  eval_optimizer.graph._snapshot: eval_optimizer.legacy.graph._snapshot
+  eval_optimizer.graph._build_graph: eval_optimizer.legacy.graph._build_graph
+  eval_optimizer.graph.run_pipeline: eval_optimizer.legacy.graph.run_pipeline
+  # --- loop.py (run_loop excluded: in-body memory_pg import depth changed) ---
+  eval_optimizer.loop.Iteration: eval_optimizer.legacy.loop.Iteration
+  eval_optimizer.loop.LoopResult: eval_optimizer.legacy.loop.LoopResult
+  eval_optimizer.loop._fresh_deps: eval_optimizer.legacy.loop._fresh_deps
+  eval_optimizer.loop._optimizer_prompt: eval_optimizer.legacy.loop._optimizer_prompt
+  eval_optimizer.loop._evaluator_prompt: eval_optimizer.legacy.loop._evaluator_prompt
+  eval_optimizer.loop._format_feedback: eval_optimizer.legacy.loop._format_feedback
+  # --- agents.py (build_planner/generator/evaluator excluded: in-body config import) ---
+  eval_optimizer.agents.build_optimizer: eval_optimizer.legacy.agents.build_optimizer
+  # --- runtime.py ---
+  eval_optimizer.runtime.agent_run: eval_optimizer.legacy.runtime.agent_run
+  eval_optimizer.runtime.gather_limited: eval_optimizer.legacy.runtime.gather_limited
+  # --- validate.py (parse_artifact extracted above) ---
+  eval_optimizer.validate.write_files: eval_optimizer.legacy.validate.write_files
+  eval_optimizer.validate._run_local: eval_optimizer.legacy.validate._run_local
+  eval_optimizer.validate._run_docker: eval_optimizer.legacy.validate._run_docker
+  eval_optimizer.validate._checks_from_report: eval_optimizer.legacy.validate._checks_from_report
+  eval_optimizer.validate.validate_artifact: eval_optimizer.legacy.validate.validate_artifact
+  # --- Gen-1 schema models (live schema.py -> legacy/schema.py) ---
+  eval_optimizer.schema.ExecutionPlan: eval_optimizer.legacy.schema.ExecutionPlan
+  eval_optimizer.schema.Candidate: eval_optimizer.legacy.schema.Candidate
+  eval_optimizer.schema.Critique: eval_optimizer.legacy.schema.Critique
+  eval_optimizer.schema.RankedCandidate: eval_optimizer.legacy.schema.RankedCandidate
+  eval_optimizer.schema.PipelineResult: eval_optimizer.legacy.schema.PipelineResult
+  eval_optimizer.schema.CheckResult: eval_optimizer.legacy.schema.CheckResult
+  eval_optimizer.schema.ValidationResult: eval_optimizer.legacy.schema.ValidationResult
+  eval_optimizer.schema.BranchResult: eval_optimizer.legacy.schema.BranchResult
+  eval_optimizer.schema.ForkReport: eval_optimizer.legacy.schema.ForkReport
+  # --- *_check entrypoints (main; graph_check/planner_check/generator_check
+  #     module-level imports changed depth but their function bodies did not) ---
+  eval_optimizer.graph_check.main: eval_optimizer.legacy.graph_check.main
+  eval_optimizer.validate_check.main: eval_optimizer.legacy.validate_check.main
+  eval_optimizer.planner_check.main: eval_optimizer.legacy.planner_check.main
+  eval_optimizer.generator_check.main: eval_optimizer.legacy.generator_check.main
+  eval_optimizer.generator_check._deps: eval_optimizer.legacy.generator_check._deps
+  eval_optimizer.generator_check._run: eval_optimizer.legacy.generator_check._run

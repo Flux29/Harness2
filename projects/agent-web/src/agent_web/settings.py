@@ -35,13 +35,39 @@ def _flag(name: str, default: bool) -> bool:
     return default
 
 
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]  # projects/agent-web
+
+
+def _mcp_config_path() -> Path:
+    """Resolve MCP_CONFIG CWD-independently (Phase 4.7, disc-mcp-config-cwd-
+    relative). A relative path — including the default ``mcp.json`` — anchors
+    to the project root (where the deployed mcp.json lives), so which MCP
+    servers register no longer depends on the process CWD. Under the deployed
+    launch (CWD = projects/agent-web) this resolves to the same file as
+    before; launched from anywhere else it now finds that file instead of
+    silently dropping mcp.json's servers. Absolute paths are taken as-is."""
+    p = Path(os.getenv("MCP_CONFIG", "mcp.json"))
+    return p if p.is_absolute() else _PROJECT_ROOT / p
+
+
 @dataclass(frozen=True)
 class Settings:
     model: str = os.getenv("AGENT_MODEL", "openrouter:z-ai/glm-5.2")
     # Auto-retry on another model if the primary errors (rate limits, outages).
     fallback_model: str | None = os.getenv("FALLBACK_MODEL") or None
     workspaces_dir: Path = Path(os.getenv("WORKSPACES_DIR", "workspaces"))
-    mcp_config: Path = Path(os.getenv("MCP_CONFIG", "mcp.json"))
+    # Phase 5.1 (crit-history-agent-writable): server-only state tree, a
+    # SIBLING of workspaces_dir — never inside any LocalBackend root, so agent
+    # file tools cannot read or rewrite what lives here (history, and 6.3's
+    # checkpoint store if ADR 6.3 chooses durability).
+    state_dir: Path = Path(os.getenv("STATE_DIR", "state"))
+    # Migration window (5.1 parallel-run, NOT a hard cutover): 1 = also write
+    # the v1 workspace history copy and diff the pair on every save; READS stay
+    # on the v1 copy while the window is open. Cut over (remove the flag) after
+    # N=5 clean sessions (empty state/history/_divergences.log). The matching
+    # Gate 4 dup-allowlist entry's expiry is this window's hard deadline.
+    history_dual_write: bool = _flag("HISTORY_DUAL_WRITE", False)
+    mcp_config: Path = _mcp_config_path()
     # Comma-separated server names to enable (builtins and/or mcp.json entries).
     # 3.4a decision: the CODE default stays secret-free (context7,deepwiki). The
     # deployed roster (context7,deepwiki,github,logfire) needs a PAT + read token,
@@ -52,6 +78,14 @@ class Settings:
     cors_origins: tuple[str, ...] = tuple(
         s.strip() for s in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",") if s.strip()
     )
+    # --- Composed security posture (ADR-0020). The /agent request-authenticity
+    # guard closes the verified cross-origin drive-by; see app._authorize.
+    # Optional bearer: unset by default (loopback + guard is the single-user
+    # baseline); REQUIRED whenever the service binds beyond loopback.
+    agent_token: str | None = os.getenv("AGENT_TOKEN") or None
+    # Reject non-loopback Host headers (DNS-rebinding defense). On by default;
+    # tests over synthetic ASGI hosts (Host: testserver) set it False.
+    require_loopback_host: bool = _flag("REQUIRE_LOOPBACK_HOST", True)
     cost_budget_usd: float | None = (
         float(os.environ["COST_BUDGET_USD"]) if os.getenv("COST_BUDGET_USD") else None
     )
@@ -68,6 +102,12 @@ class Settings:
     browser: bool = _flag("BROWSER_AUTOMATION", False)  # Playwright browser automation (extra + browsers)
     # search-on-demand tool schemas instead of flat lists (token saver as MCP roster grows)
     tool_search: bool = _flag("TOOL_SEARCH", False)
+    # Phase 5.2 (crit-fork-exec-gate): Live Run Forking runs LLM-generated code
+    # AND its pytest suite ON THE HOST (LocalBackend, no interrupt hook in the
+    # harness for test_command). v1 had it always-on while shell execute was
+    # approval-gated — that asymmetry was the defect. Now env-gated like its
+    # siblings: FORKING=1 opts in, documented next to the browser warning.
+    forking: bool = _flag("FORKING", False)
     # /improve: analyzes past sessions, proposes updates to MEMORY.md/SOUL.md/AGENTS.md
     improve: bool = _flag("IMPROVE", False)
     # --- Fork configuration (ADR-0011), centralized here (Phase 3.5). Defaults

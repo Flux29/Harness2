@@ -21,3 +21,4 @@ projects/agent-web/frontend/package-lock.json
 baseline/
 projects/agent-web/workspaces/
 .pydantic-deep/
+projects/agent-web/state/

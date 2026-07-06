@@ -6,15 +6,21 @@
 # is always allowed.
 #
 # Machine-matched entries (each keyed by the dup_scan hash):
-allow: []
-#   Example (the shape a temporary, intentional duplication takes):
-#   - hash: "0123abcd4567ef01"
-#     members: ["projects/agent-web/src/agent_web/history.py::save",
-#               "projects/agent-web/src/agent_web/history.py::save_legacy"]
-#     added: "2026-07-04"
-#     owner: "5.1"
-#     expires: "2026-08-15"   # cutover deadline for the dual-write
-#     reason: "parallel-run history dual-write; expiry IS the read-cutover deadline"
+allow:
+  - hash: "5b2b397a0757feed"
+    members: ["projects/agent-web/src/agent_web/history.py::_save_state_copy",
+              "projects/agent-web/src/agent_web/history.py::_save_workspace_copy"]
+    added: "2026-07-05"
+    owner: "5.1"
+    expires: "2026-08-15"   # cutover deadline for the dual-write window
+    reason: >-
+      Parallel-run history dual-write (crit-history-agent-writable): the
+      workspace-copy writer is deliberately the structural twin of the
+      state-copy writer so this intentional duplication is machine-visible.
+      Cutover criterion: N=5 clean sessions (empty
+      state/history/_divergences.log) with HISTORY_DUAL_WRITE=1 on the
+      deployed instance; then remove _save_workspace_copy, the dual-write
+      branch, and this entry. The expiry IS the deadline — CI fails past it.
 
 # ---------------------------------------------------------------------------
 # Known v1 duplicates INVENTORY (informational — not function-level clusters, so

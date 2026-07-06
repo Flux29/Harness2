@@ -6,6 +6,8 @@ GET  /debug/mcp  registry status: answers "why is this tool missing"
 """
 from __future__ import annotations
 
+import asyncio
+import json
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path as _Path
@@ -40,20 +42,47 @@ def create_app(
     async def lifespan(app: FastAPI):
         registry = build_registry(settings.mcp_config, settings.mcp_enable)
         app.state.registry = registry
+        toolsets, mcp_snapshot = build_toolsets(registry)
+        # Phase 4.7 (crit-toolset-frozen): the agent's toolsets are built once,
+        # here; record exactly which servers made it in so /debug/mcp can
+        # report the snapshot alongside live registry status.
+        app.state.agent_mcp_servers = mcp_snapshot
         app.state.agent = build_agent(
-            settings, model=model, mcp_toolsets=build_toolsets(registry),
+            settings, model=model, mcp_toolsets=toolsets,
             extra_tools=extra_tools,
         )
         yield
 
     app = FastAPI(title="agent-web", lifespan=lifespan)
+    # ADR-0020: CORS narrowed from "*" to what the AG-UI client actually uses,
+    # so the allowlist is a real boundary (paired with the /agent guard, which
+    # forces cross-origin writes through preflight).
     app.add_middleware(
         CORSMiddleware, allow_origins=list(settings.cors_origins),
-        allow_methods=["*"], allow_headers=["*"],
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["content-type", "authorization", "accept"],
     )
+
+    # Phase 4.4 (crit-concurrent-history-clobber): one in-process lock per
+    # thread id serializes the whole load->run->save window. Concurrent posts
+    # to one thread queue; distinct threads are unaffected. In-process only —
+    # matches the single-server deployment (ADR-0012).
+    thread_locks: dict[str, asyncio.Lock] = {}
+
+    def _thread_lock(thread_id: str) -> asyncio.Lock:
+        return thread_locks.setdefault(thread_id, asyncio.Lock())
 
     @app.post("/agent")
     async def run_agent(request: Request) -> Response:
+        # ADR-0020: request-authenticity guard, BEFORE any run/history/model
+        # work. Closes the verified cross-origin drive-by (a browser
+        # text/plain "simple request" reaching the endpoint without preflight).
+        reason = _authorize(request, settings)
+        if reason is not None:
+            return Response(content=json.dumps({"error": reason}),
+                            media_type="application/json",
+                            status_code=HTTPStatus.FORBIDDEN)
+
         accept = request.headers.get("accept", SSE_CONTENT_TYPE)
         try:
             run_input = AGUIAdapter.build_run_input(await request.body())
@@ -61,21 +90,45 @@ def create_app(
             # e.json() already returns a JSON string (the error list). Wrapping it
             # in json.dumps() double-encoded it into a JSON string literal, so
             # json.loads(body) yielded a str, not the error object (Phase 3.2).
-            return Response(content=e.json(), media_type="application/json",
+            try:
+                body = e.json()
+            except ValueError:
+                # e.json() re-embeds the request's input bytes; invalid UTF-8 in
+                # them crashes the serializer itself → raw 500 (gate-6 live find,
+                # disc-422-serialization-crash). The error list is the contract,
+                # not the offending bytes — drop the input and serialize safely.
+                body = json.dumps(
+                    e.errors(include_url=False, include_input=False), default=str
+                )
+            return Response(content=body, media_type="application/json",
                             status_code=HTTPStatus.UNPROCESSABLE_ENTITY)
 
         thread_id = run_input.thread_id
 
         async def on_complete(result: Any) -> None:
-            history.save(settings.workspaces_dir, thread_id, result.all_messages())
+            history.save(settings, thread_id, result.all_messages())
 
         adapter = AGUIAdapter(agent=request.app.state.agent, run_input=run_input, accept=accept)
-        stream = adapter.run_stream(
-            deps=make_deps(settings.workspaces_dir, thread_id),
-            message_history=history.load(settings.workspaces_dir, thread_id),
-            on_complete=on_complete,
-        )
-        return adapter.streaming_response(stream)
+
+        async def locked_events():
+            # history.load moved INSIDE the lock: a queued request must see the
+            # previous run's saved history, not a pre-lock snapshot.
+            async with _thread_lock(thread_id):
+                stream = adapter.run_stream(
+                    deps=make_deps(settings.workspaces_dir, settings.state_dir, thread_id),
+                    message_history=history.load(settings, thread_id),
+                    on_complete=on_complete,
+                )
+                async for event in stream:
+                    yield event
+
+        return adapter.streaming_response(locked_events())
+
+    # The static mount is decided ONCE, here at app creation; healthz reports
+    # this decision (frontend_mounted) next to the live on-disk state
+    # (frontend_built) so the two can't silently contradict (Phase 4.7: a dist
+    # built after startup is visible as built=<time> + mounted=false).
+    startup_dist = _frontend_dist()
 
     @app.get("/healthz")
     async def healthz() -> dict[str, str]:
@@ -90,20 +143,78 @@ def create_app(
             "status": "ok",
             "harness": getattr(pydantic_deep, "__version__", "?"),
             "frontend_built": built,
+            "frontend_mounted": "true" if startup_dist else "false",
         }
 
     @app.get("/debug/mcp")
     async def debug_mcp() -> list[dict[str, Any]]:
-        return status(app.state.registry)
+        # Phase 4.7 (crit-toolset-frozen): live registry status PLUS the
+        # agent's startup snapshot. A server that turns ready after startup
+        # shows status=ready, in_agent=false — honest, not silently diverging.
+        snapshot = set(getattr(app.state, "agent_mcp_servers", ()))
+        rows = status(app.state.registry)
+        for row in rows:
+            row["in_agent"] = row["name"] in snapshot
+        return rows
 
-    dist = _frontend_dist()
-    if dist:
+    if startup_dist:
         from starlette.staticfiles import StaticFiles
 
-        app.mount("/", StaticFiles(directory=str(dist), html=True), name="frontend")
+        app.mount("/", StaticFiles(directory=str(startup_dist), html=True), name="frontend")
 
     return app
 
+
+
+_LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
+
+
+def _loopback_host(host: str) -> bool:
+    """True if a Host header names a loopback interface (port stripped)."""
+    if not host:
+        return False
+    h = host.strip()
+    if h.startswith("["):                       # [::1]:8801
+        h = h[1:].split("]", 1)[0]
+    elif h.count(":") == 1:                      # 127.0.0.1:8801
+        h = h.rsplit(":", 1)[0]
+    return h in _LOOPBACK_HOSTS
+
+
+def _authorize(request: Request, settings: Settings) -> str | None:
+    """ADR-0020 request-authenticity checks for POST /agent. Returns a reason
+    string when the request must be REFUSED (403), else None. Ordered so the
+    single verified drive-by (text/plain simple request) is caught by the
+    content-type rule even with every other check disabled.
+
+    - Bearer: when AGENT_TOKEN is set, require it (the bind-beyond-loopback and
+      future multi-user control).
+    - Content-Type must be application/json: removes the CORS "simple request"
+      bypass, so a cross-origin write now needs a preflight the allowlist
+      answers. The real AG-UI/CopilotKit client already sends JSON.
+    - Origin, when present: same-origin (matches Host) or in cors_origins.
+    - Host must be loopback (when require_loopback_host): defeats DNS rebinding,
+      where Origin and Host both carry the attacker's rebound domain.
+    """
+    if settings.agent_token:
+        if request.headers.get("authorization", "") != f"Bearer {settings.agent_token}":
+            return "missing or invalid bearer token"
+
+    ctype = request.headers.get("content-type", "").split(";", 1)[0].strip().lower()
+    if ctype != "application/json":
+        return "content-type must be application/json"
+
+    origin = request.headers.get("origin")
+    if origin is not None:
+        host = request.headers.get("host", "")
+        same_origin = origin.split("://", 1)[-1] == host
+        if not same_origin and origin not in settings.cors_origins:
+            return "origin not allowed"
+
+    if settings.require_loopback_host and not _loopback_host(request.headers.get("host", "")):
+        return "host is not loopback"
+
+    return None
 
 
 def _frontend_dist() -> _Path | None:

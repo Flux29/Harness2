@@ -7,12 +7,18 @@ right?". Run: `uv run python -m eval_optimizer.check_connection`
 from __future__ import annotations
 
 from openai import OpenAI
+from openai.types.chat import ChatCompletionToolParam
 
 from .config import Settings
 
 
 def main() -> int:
     s = Settings.from_env()
+    # from_env() no longer validates provider keys (Phase 4.1); this check
+    # targets the NVIDIA endpoint specifically, so require its key here.
+    if not s.nvidia_api_key:
+        print("FAIL: NVIDIA_API_KEY is not set — this check targets the NVIDIA endpoint.")
+        return 1
     client = OpenAI(base_url=s.nvidia_base_url, api_key=s.nvidia_api_key)
     print(f"Endpoint: {s.nvidia_base_url}")
     print(f"Model:    {s.glm_model}\n")
@@ -30,7 +36,7 @@ def main() -> int:
         return 1
 
     # 2) Tool-calling round-trip (the real risk on a free endpoint) -----------
-    tools = [
+    tools: list[ChatCompletionToolParam] = [
         {
             "type": "function",
             "function": {
@@ -60,6 +66,9 @@ def main() -> int:
         return 1
 
     call = msg.tool_calls[0]
+    if call.type != "function":
+        print(f"FAIL: unexpected tool-call type {call.type!r}.")
+        return 1
     print(f"tool call:  {call.function.name}({call.function.arguments})")
     print("\nPhase 0 PASSED: chat + tool calling both work on this endpoint.")
     return 0

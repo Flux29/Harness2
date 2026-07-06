@@ -1,8 +1,23 @@
+# Advisory catalog (ADR-0022): machine-level model/provider policy. The
+# `defaults` block is coherence-checked by evals/agentic-smoke
+# (test_workspace_coherence.py); the provider entries are advisory.
 version: 1
 defaults:
-  compatibility_python: "3.13.x"
+  # [D→C] the catalog records the VERIFIED workspace floor (ADR-0022).
+  compatibility_python: "3.12.x"
+  # ADR-0022 acceptance note / ISSUE-6: the floor unifies on 3.13 once exit
+  # gate 6 passes — aspiration stays labeled as target, never blended in.
+  target_floor_python: "3.13.x"
   latest_python_experiment: "3.14.x"
 providers:
+  openrouter:
+    api_key_env: OPENROUTER_API_KEY
+    default_model: z-ai/glm-5.2
+    use_for:
+      - all live inference across the workspace (decided default — ADR-0003, plan step 3.4)
+    rules:
+      - Do not hard-code API keys.
+      - TestModel is the only non-5.2 path, and only in offline tests.
   nvidia:
     base_url_env: NVIDIA_BASE_URL
     api_key_env: NVIDIA_API_KEY
@@ -20,6 +35,7 @@ providers:
       - private prompts
       - offline fallback
       - cheap iteration
+      - embeddings (never route embeddings to a reasoning provider)
   openai:
     use_for:
       - Codex-native workflows

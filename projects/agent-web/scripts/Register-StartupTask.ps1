@@ -6,7 +6,9 @@ $root = Split-Path $PSScriptRoot -Parent
 # Task Scheduler does not resolve commands via your shell PATH reliably -
 # bake in the absolute path to uv.exe at registration time.
 $uv = (Get-Command uv -ErrorAction Stop).Source
-$action   = New-ScheduledTaskAction -Execute $uv -Argument "run uvicorn agent_web.main:app --port 8801" -WorkingDirectory $root
+# --host 127.0.0.1 is the STATED bind invariant (plan step 5.3): the always-on
+# service listens on loopback only — declared, not left to uvicorn's default.
+$action   = New-ScheduledTaskAction -Execute $uv -Argument "run uvicorn agent_web.main:app --host 127.0.0.1 --port 8801" -WorkingDirectory $root
 $trigger  = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
 $settings = New-ScheduledTaskSettingsSet -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1) `
             -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Days 0)

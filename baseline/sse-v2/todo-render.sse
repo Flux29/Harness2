@@ -1,0 +1,118 @@
+data: {"type":"RUN_STARTED","timestamp":1783353319737,"threadId":"gate6-todo","runId":"g6r2"}
+
+data: {"type":"REASONING_START","timestamp":1783353330692,"messageId":"cbbb9b1e-190a-45ab-a368-17f5798d590d"}
+
+data: {"type":"REASONING_MESSAGE_START","timestamp":1783353330692,"messageId":"cbbb9b1e-190a-45ab-a368-17f5798d590d","role":"reasoning"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353330692,"messageId":"cbbb9b1e-190a-45ab-a368-17f5798d590d","delta":"The"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353330787,"messageId":"cbbb9b1e-190a-45ab-a368-17f5798d590d","delta":" user"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353330792,"messageId":"cbbb9b1e-190a-45ab-a368-17f5798d590d","delta":" wants me to create"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353330855,"messageId":"cbbb9b1e-190a-45ab-a368-17f5798d590d","delta":" a todo list with"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353330909,"messageId":"cbbb9b1e-190a-45ab-a368-17f5798d590d","delta":" exactly two"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353330950,"messageId":"cbbb9b1e-190a-45ab-a368-17f5798d590d","delta":" items and"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353331000,"messageId":"cbbb9b1e-190a-45ab-a368-17f5798d590d","delta":" then stop."}
+
+data: {"type":"REASONING_MESSAGE_END","timestamp":1783353331179,"messageId":"cbbb9b1e-190a-45ab-a368-17f5798d590d"}
+
+data: {"type":"REASONING_ENCRYPTED_VALUE","timestamp":1783353331179,"subtype":"message","entityId":"cbbb9b1e-190a-45ab-a368-17f5798d590d","encryptedValue":"{\"provider_name\": \"openrouter\", \"provider_details\": {\"format\": \"unknown\", \"index\": 0, \"type\": \"reasoning.text\"}}"}
+
+data: {"type":"REASONING_END","timestamp":1783353331179,"messageId":"cbbb9b1e-190a-45ab-a368-17f5798d590d"}
+
+data: {"type":"TOOL_CALL_START","timestamp":1783353331179,"toolCallId":"call_0a13c389baba40dc84b45e5e","toolCallName":"write_todos","parentMessageId":"a74664e5-16f3-4204-9894-cbf2d193f3a5"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353331179,"toolCallId":"call_0a13c389baba40dc84b45e5e","delta":""}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353331179,"toolCallId":"call_0a13c389baba40dc84b45e5e","delta":"{"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353331237,"toolCallId":"call_0a13c389baba40dc84b45e5e","delta":"\"todos\": "}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353331301,"toolCallId":"call_0a13c389baba40dc84b45e5e","delta":"[{\"active"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353331367,"toolCallId":"call_0a13c389baba40dc84b45e5e","delta":"_form"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353331400,"toolCallId":"call_0a13c389baba40dc84b45e5e","delta":"\": \"Ver"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353331469,"toolCallId":"call_0a13c389baba40dc84b45e5e","delta":"ifying wire"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353331545,"toolCallId":"call_0a13c389baba40dc84b45e5e","delta":" protocol\", \"content"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353331609,"toolCallId":"call_0a13c389baba40dc84b45e5e","delta":"\": \"verify"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353331663,"toolCallId":"call_0a13c389baba40dc84b45e5e","delta":" wire protocol\", \""}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353331713,"toolCallId":"call_0a13c389baba40dc84b45e5e","delta":"status\": \"pending"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353331768,"toolCallId":"call_0a13c389baba40dc84b45e5e","delta":"\"}, {\"active_form"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353331827,"toolCallId":"call_0a13c389baba40dc84b45e5e","delta":"\": \"Capturing"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353331893,"toolCallId":"call_0a13c389baba40dc84b45e5e","delta":" baseline\", \"content"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353331948,"toolCallId":"call_0a13c389baba40dc84b45e5e","delta":"\": \"capture"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353332077,"toolCallId":"call_0a13c389baba40dc84b45e5e","delta":" baseline\", \"status"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353332077,"toolCallId":"call_0a13c389baba40dc84b45e5e","delta":"\": \"pending\"}"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353332125,"toolCallId":"call_0a13c389baba40dc84b45e5e","delta":"]"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353332192,"toolCallId":"call_0a13c389baba40dc84b45e5e","delta":"}"}
+
+data: {"type":"TOOL_CALL_END","timestamp":1783353332275,"toolCallId":"call_0a13c389baba40dc84b45e5e"}
+
+data: {"type":"TOOL_CALL_RESULT","timestamp":1783353332308,"messageId":"6e96500a-c467-49d5-9edf-59a8902067da","toolCallId":"call_0a13c389baba40dc84b45e5e","content":"Updated 2 todos: 0 completed, 0 in progress, 2 pending","role":"tool"}
+
+data: {"type":"TEXT_MESSAGE_START","timestamp":1783353339072,"messageId":"a75382ff-f45c-463c-b55f-56874f401171","role":"assistant"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353339072,"messageId":"a75382ff-f45c-463c-b55f-56874f401171","delta":"Todo"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353339072,"messageId":"a75382ff-f45c-463c-b55f-56874f401171","delta":" list"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353339075,"messageId":"a75382ff-f45c-463c-b55f-56874f401171","delta":" created with"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353339076,"messageId":"a75382ff-f45c-463c-b55f-56874f401171","delta":" the"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353339079,"messageId":"a75382ff-f45c-463c-b55f-56874f401171","delta":" two items,"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353339081,"messageId":"a75382ff-f45c-463c-b55f-56874f401171","delta":" both left"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353339081,"messageId":"a75382ff-f45c-463c-b55f-56874f401171","delta":" as"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353339083,"messageId":"a75382ff-f45c-463c-b55f-56874f401171","delta":" `pending`:\n\n"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353339084,"messageId":"a75382ff-f45c-463c-b55f-56874f401171","delta":"1. **"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353339084,"messageId":"a75382ff-f45c-463c-b55f-56874f401171","delta":"verify wire"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353339085,"messageId":"a75382ff-f45c-463c-b55f-56874f401171","delta":" protocol"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353339087,"messageId":"a75382ff-f45c-463c-b55f-56874f401171","delta":"**\n2. **"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353339176,"messageId":"a75382ff-f45c-463c-b55f-56874f401171","delta":"capture baseline"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353339759,"messageId":"a75382ff-f45c-463c-b55f-56874f401171","delta":"**\n\nI've"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353339783,"messageId":"a75382ff-f45c-463c-b55f-56874f401171","delta":" stopped"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353339800,"messageId":"a75382ff-f45c-463c-b55f-56874f401171","delta":" here and"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353339851,"messageId":"a75382ff-f45c-463c-b55f-56874f401171","delta":" have not started"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353339887,"messageId":"a75382ff-f45c-463c-b55f-56874f401171","delta":" working on either"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353339900,"messageId":"a75382ff-f45c-463c-b55f-56874f401171","delta":" item,"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353339926,"messageId":"a75382ff-f45c-463c-b55f-56874f401171","delta":" as requested"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353339939,"messageId":"a75382ff-f45c-463c-b55f-56874f401171","delta":"."}
+
+data: {"type":"TEXT_MESSAGE_END","timestamp":1783353339984,"messageId":"a75382ff-f45c-463c-b55f-56874f401171"}
+
+data: {"type":"RUN_FINISHED","timestamp":1783353340484,"threadId":"gate6-todo","runId":"g6r2","outcome":{"type":"success"}}
+

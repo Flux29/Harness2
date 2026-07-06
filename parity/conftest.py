@@ -14,10 +14,16 @@ from __future__ import annotations
 
 import importlib
 import json
+import os
 import sys
 from pathlib import Path
 
 import pytest
+
+# Parity runs must never trace to Logfire (env leakage from a developer's .env:
+# app fixtures build Settings() with tracing on) — same rule as both project
+# conftests. CI has no token; this guards local runs.
+os.environ.pop("LOGFIRE_TOKEN", None)
 
 ROOT = Path(__file__).resolve().parents[1]
 BASELINE = ROOT / "baseline"

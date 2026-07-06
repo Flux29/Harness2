@@ -1,6 +1,10 @@
 # ADR-0006 — pydantic-graph 2.x as the orchestration substrate
 
-**Status:** Accepted · 2026-06-29
+**Status:** Accepted · 2026-06-29 · **Integration DEFERRED by ADR-0021
+(2026-07-06):** the `graph.py` pipeline is a working scaffold (real nodes +
+ranking matrix, LLM steps stubbed) preserved in committed `eval_optimizer/legacy/`
+pending resumption. pydantic-graph stays a project dependency; its determinism /
+token-cost / quality goals remain the reason to finish the integration later.
 
 ## Context
 The Schema.txt architecture (ADR-0005) is a multi-stage state machine with a

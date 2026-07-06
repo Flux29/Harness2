@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from eval_optimizer.agents import Verdict
+from eval_optimizer.schema import Verdict  # ADR-0021: extracted from legacy agents.py
 
 
 def test_verdict_roundtrip() -> None:
@@ -18,12 +18,16 @@ def test_verdict_score_bounds() -> None:
         Verdict(passed=True, score=101)
 
 
-def test_settings_requires_key(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_settings_constructs_without_provider_keys(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Phase 4.1: from_env() no longer hard-requires the NVIDIA key; credential
+    validation moved to build_model(), per selected provider (test_models.py)."""
     monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
     from eval_optimizer.config import Settings
 
-    with pytest.raises(RuntimeError):
-        Settings.from_env()
+    s = Settings.from_env()
+    assert s.nvidia_api_key == ""
+    assert s.openrouter_api_key == ""
 
 
 def test_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -51,7 +55,14 @@ def test_fork_config_centralized(monkeypatch: pytest.MonkeyPatch) -> None:
 
     s = Settings.from_env()
     assert s.fork_max_branches == 8
-    assert s.fork_test_command == "pytest -q"
+    # disc-fork-test-command-import-path: absolute running interpreter + -m
+    # pytest (cwd on sys.path), never bare "python"/"pytest" PATH luck.
+    import shlex
+    from pathlib import Path
+
+    cmd = shlex.split(s.fork_test_command)
+    assert cmd[1:] == ["-m", "pytest", "-q"]
+    assert Path(cmd[0]).exists(), f"fork test interpreter missing: {cmd[0]}"
     assert s.fork_test_timeout_s == 90.0
     assert s.fork_per_branch_budget_usd == 0.75
     assert s.fork_aggregate_budget_usd == 2.5

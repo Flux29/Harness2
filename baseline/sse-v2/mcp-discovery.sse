@@ -1,0 +1,306 @@
+data: {"type":"RUN_STARTED","timestamp":1783353459787,"threadId":"gate6-mcp","runId":"g6r4"}
+
+data: {"type":"REASONING_START","timestamp":1783353464497,"messageId":"b7ab6997-a2e5-486e-916e-4b4d83d60cd3"}
+
+data: {"type":"REASONING_MESSAGE_START","timestamp":1783353464497,"messageId":"b7ab6997-a2e5-486e-916e-4b4d83d60cd3","role":"reasoning"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353464497,"messageId":"b7ab6997-a2e5-486e-916e-4b4d83d60cd3","delta":"The"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353464500,"messageId":"b7ab6997-a2e5-486e-916e-4b4d83d60cd3","delta":" user wants me to"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353464538,"messageId":"b7ab6997-a2e5-486e-916e-4b4d83d60cd3","delta":" use the"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353464614,"messageId":"b7ab6997-a2e5-486e-916e-4b4d83d60cd3","delta":" search"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353464620,"messageId":"b7ab6997-a2e5-486e-916e-4b4d83d60cd3","delta":"_tools"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353464787,"messageId":"b7ab6997-a2e5-486e-916e-4b4d83d60cd3","delta":" tool twice -"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353464792,"messageId":"b7ab6997-a2e5-486e-916e-4b4d83d60cd3","delta":" once for"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353464792,"messageId":"b7ab6997-a2e5-486e-916e-4b4d83d60cd3","delta":" github PR"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353464800,"messageId":"b7ab6997-a2e5-486e-916e-4b4d83d60cd3","delta":" tools,"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353465187,"messageId":"b7ab6997-a2e5-486e-916e-4b4d83d60cd3","delta":" once for logfire"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353465192,"messageId":"b7ab6997-a2e5-486e-916e-4b4d83d60cd3","delta":" tools. Let"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353465192,"messageId":"b7ab6997-a2e5-486e-916e-4b4d83d60cd3","delta":" me do"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353465192,"messageId":"b7ab6997-a2e5-486e-916e-4b4d83d60cd3","delta":" both"}
+
+data: {"type":"REASONING_MESSAGE_CONTENT","timestamp":1783353465200,"messageId":"b7ab6997-a2e5-486e-916e-4b4d83d60cd3","delta":" in parallel."}
+
+data: {"type":"REASONING_MESSAGE_END","timestamp":1783353465200,"messageId":"b7ab6997-a2e5-486e-916e-4b4d83d60cd3"}
+
+data: {"type":"REASONING_ENCRYPTED_VALUE","timestamp":1783353465200,"subtype":"message","entityId":"b7ab6997-a2e5-486e-916e-4b4d83d60cd3","encryptedValue":"{\"provider_name\": \"openrouter\", \"provider_details\": {\"format\": \"unknown\", \"index\": 0, \"type\": \"reasoning.text\"}}"}
+
+data: {"type":"REASONING_END","timestamp":1783353465200,"messageId":"b7ab6997-a2e5-486e-916e-4b4d83d60cd3"}
+
+data: {"type":"TOOL_CALL_START","timestamp":1783353465200,"toolCallId":"call_a76ec2eb550344258f7c22de","toolCallName":"search_tools","parentMessageId":"47d78049-e3be-43da-85f0-fc0616742c71"}
+
+data: {"type":"REASONING_ENCRYPTED_VALUE","timestamp":1783353465200,"subtype":"tool-call","entityId":"call_a76ec2eb550344258f7c22de","encryptedValue":"{\"pydantic_ai\": {\"tool_kind\": \"tool-search\"}}"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353465200,"toolCallId":"call_a76ec2eb550344258f7c22de","delta":"{\"queries\": [\""}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353465301,"toolCallId":"call_a76ec2eb550344258f7c22de","delta":"github pull request\"]"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353465309,"toolCallId":"call_a76ec2eb550344258f7c22de","delta":"}"}
+
+data: {"type":"TOOL_CALL_END","timestamp":1783353465317,"toolCallId":"call_a76ec2eb550344258f7c22de"}
+
+data: {"type":"TOOL_CALL_START","timestamp":1783353465317,"toolCallId":"call_4ea0b9e0407545bc9e69b1e7","toolCallName":"search_tools","parentMessageId":"47d78049-e3be-43da-85f0-fc0616742c71"}
+
+data: {"type":"REASONING_ENCRYPTED_VALUE","timestamp":1783353465317,"subtype":"tool-call","entityId":"call_4ea0b9e0407545bc9e69b1e7","encryptedValue":"{\"pydantic_ai\": {\"tool_kind\": \"tool-search\"}}"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353465320,"toolCallId":"call_4ea0b9e0407545bc9e69b1e7","delta":"{\"queries\": [\""}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353465322,"toolCallId":"call_4ea0b9e0407545bc9e69b1e7","delta":"logfire telemetry"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353465326,"toolCallId":"call_4ea0b9e0407545bc9e69b1e7","delta":" traces"}
+
+data: {"type":"TOOL_CALL_ARGS","timestamp":1783353465327,"toolCallId":"call_4ea0b9e0407545bc9e69b1e7","delta":"\"]}"}
+
+data: {"type":"TOOL_CALL_END","timestamp":1783353465450,"toolCallId":"call_4ea0b9e0407545bc9e69b1e7"}
+
+data: {"type":"TOOL_CALL_RESULT","timestamp":1783353465526,"messageId":"3d8ab612-d09c-4f14-a5d9-fe084913e42a","toolCallId":"call_a76ec2eb550344258f7c22de","content":"{\"discovered_tools\":[{\"name\":\"github_add_comment_to_pending_review\",\"description\":\"Add review comment to the requester's latest pending pull request review. A pending review needs to already exist to call this (check with the user if not sure).\"},{\"name\":\"github_add_issue_comment\",\"description\":\"Add a comment and/or reaction to a specific issue or issue comment in a GitHub repository. Use this tool with pull requests as well (in this case pass pull request number as issue_number), but only if user is not asking specifically to add or react to review comments. At least one of body or reaction is required.\"},{\"name\":\"github_add_reply_to_pull_request_comment\",\"description\":\"Add a reply and/or reaction to an existing pull request comment. This can create a new comment linked as a reply to the specified comment, add an emoji reaction to the specified comment, or do both. At least one of body or reaction is required.\"},{\"name\":\"github_create_pull_request\",\"description\":\"Create a new pull request in a GitHub repository.\"},{\"name\":\"github_merge_pull_request\",\"description\":\"Merge a pull request in a GitHub repository.\"},{\"name\":\"github_pull_request_read\",\"description\":\"Get information on a specific pull request in GitHub repository.\"},{\"name\":\"github_pull_request_review_write\",\"description\":\"Create and/or submit, delete review of a pull request.\\n\\nAvailable methods:\\n- create: Create a new review of a pull request. If \\\"event\\\" parameter is provided, the review is submitted. If \\\"event\\\" is omitted, a pending review is created.\\n- submit_pending: Submit an existing pending review of a pull request. This requires that a pending review exists for the current user on the specified pull request. The \\\"body\\\" and \\\"event\\\" parameters are used when submitting the review.\\n- delete_pending: Delete an existing pending review of a pull request. This requires that a pending review exists for the current user on the specified pull request.\\n- resolve_thread: Resolve a review thread. Requires only \\\"threadId\\\" parameter with the thread's node ID (e.g., PRRT_kwDOxxx). The owner, repo, and pullNumber parameters are not used for this method. Resolving an already-resolved thread is a no-op.\\n- unresolve_thread: Unresolve a previously resolved review thread. Requires only \\\"threadId\\\" parameter. The owner, repo, and pullNumber parameters are not used for this method. Unresolving an already-unresolved thread is a no-op.\\n\"},{\"name\":\"github_request_copilot_review\",\"description\":\"Request a GitHub Copilot code review for a pull request. Use this for automated feedback on pull requests, usually before requesting a human reviewer.\"},{\"name\":\"github_update_pull_request\",\"description\":\"Update an existing pull request in a GitHub repository.\"},{\"name\":\"github_update_pull_request_branch\",\"description\":\"Update the branch of a pull request with the latest changes from the base branch.\"}]}","role":"tool"}
+
+data: {"type":"TOOL_CALL_RESULT","timestamp":1783353465526,"messageId":"59757417-4007-45e9-8b86-0cfebba0e6cb","toolCallId":"call_4ea0b9e0407545bc9e69b1e7","content":"{\"discovered_tools\":[{\"name\":\"logfire_find_exceptions_in_file\",\"description\":\"Get the details about the 10 most recent exceptions on the file.\"},{\"name\":\"logfire_arbitrary_query\",\"description\":\"Run an arbitrary query on the Pydantic Logfire database.\\n\\n    The SQL reference is available via the `sql_reference` tool.\\n    \"},{\"name\":\"logfire_logfire_link\",\"description\":\"Creates a link to help the user to view the trace in the Logfire UI.\"},{\"name\":\"logfire_schema_reference\",\"description\":\"The database schema for the Logfire DataFusion database.\\n\\n    This includes all tables, columns, and their types as well as descriptions.\\n    For example:\\n\\n    ```sql\\n    -- The records table contains spans and logs.\\n    CREATE TABLE records (\\n        message TEXT, -- The message of the record\\n        span_name TEXT, -- The name of the span, message is usually templated from this\\n        trace_id TEXT, -- The trace ID, identifies a group of spans in a trace\\n        exception_type TEXT, -- The type of the exception\\n        exception_message TEXT, -- The message of the exception\\n        -- other columns...\\n    );\\n    ```\\n    The SQL syntax is similar to Postgres, although the query engine is actually Apache DataFusion.\\n\\n    To access nested JSON fields e.g. in the `attributes` column use the `->` and `->>` operators.\\n    You may need to cast the result of these operators e.g. `(attributes->'cost')::float + 10`.\\n\\n    You should apply as much filtering as reasonable to reduce the amount of data queried.\\n    Filters on `start_timestamp`, `service_name`, `span_name`, `metric_name`, `trace_id` are efficient.\\n    \"}]}","role":"tool"}
+
+data: {"type":"TEXT_MESSAGE_START","timestamp":1783353470500,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","role":"assistant"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470500,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"Here"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470500,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" are the prefixed"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470500,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" tool names"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470500,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" I"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470500,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" discovered"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470500,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":","}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470500,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" organized by MCP"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470500,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" server. I"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470500,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" did not call"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470500,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" any of them"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470500,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":".\n\n##"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470500,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" GitHub"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470500,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" MCP Server"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470500,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" (10"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470500,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" tools,"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470500,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" all"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470500,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" prefixed"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470500,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" `github"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470508,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_`)\n\n"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470509,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"1. `"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470509,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"github_add"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470509,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_comment_to"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470509,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_pending_review"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470509,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"`\n2"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470534,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":". `github"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470576,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_add_issue"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470618,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_comment"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470651,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"`\n3"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470693,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":". `github"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470729,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_add_reply"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470768,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_to_pull"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470801,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_request_comment"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470845,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"`\n4"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470884,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":". `github"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470926,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_create_pull"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353470961,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_request`\n"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353471001,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"5. `"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353471037,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"github_merge_pull"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353471078,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_request`\n"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353471120,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"6. `"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353471167,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"github_pull_request"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353471201,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_read`\n"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353471238,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"7. `"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353471279,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"github_pull_request"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353471322,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_review_write"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353471351,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"`\n8"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353471422,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":". `github"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353471447,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_request_c"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353471493,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"opilot"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353471575,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_review`\n"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353471587,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"9. `"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353471618,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"github_update_pull"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353471997,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_request`\n"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472018,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"10. `"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472034,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"github_update"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472061,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_pull_request"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472079,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_branch`\n\n"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472094,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"## Logfire"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472100,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" MCP Server"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472132,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" (4"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472147,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" tools, all"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472150,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" prefixed `"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472159,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"logfire"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472166,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_`)\n\n"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472167,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"1. `"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472167,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"logfire"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472209,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_find_exceptions"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472251,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_in"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472287,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_file`\n"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472342,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"2. `"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472368,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"logfire"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472400,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_arbitrary"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472442,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_query`\n"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472483,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"3. `"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472523,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"logfire_log"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472583,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"fire_link"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472650,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"`\n4"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472667,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":". `log"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472722,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"fire_schema"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472750,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_reference"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472787,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"`\n\nA"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472826,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" note"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472867,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" on naming"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472901,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":": the"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472942,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" GitHub"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353472984,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" server"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473028,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" uses a"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473070,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" single `github"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473101,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_` prefix"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473151,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" consistently"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473178,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":", while the"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473222,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" Logfire server"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473267,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" uses"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473301,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" a `log"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473339,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"fire_`"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473376,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" prefix for"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473414,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" three"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473453,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" tools"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473506,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" but nests"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473526,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" a"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473567,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" second `log"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473609,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"fire` segment"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473675,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" for"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473687,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" the link"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473722,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" tool (`log"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473763,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"fire_logfire"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473800,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":"_link`)"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473842,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" — a minor"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473878,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" inconsistency"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473937,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" worth keeping"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473964,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" in mind"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353473992,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" when referencing"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353474039,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" that"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353474071,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" tool by"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","timestamp":1783353474113,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8","delta":" name."}
+
+data: {"type":"TEXT_MESSAGE_END","timestamp":1783353474137,"messageId":"772398ba-4863-483f-97bb-074ae1ea1cf8"}
+
+data: {"type":"RUN_FINISHED","timestamp":1783353474592,"threadId":"gate6-mcp","runId":"g6r4","outcome":{"type":"success"}}
+
