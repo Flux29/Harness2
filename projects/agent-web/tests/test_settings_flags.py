@@ -50,14 +50,48 @@ def test_execute_false_is_off(monkeypatch):
 def test_fork_config_centralized_defaults():
     """Phase 3.5: fork knobs live on Settings and default conservatively.
     build_agent reads settings.fork_* (exercised by test_agent_build)."""
+    import shlex
+    from pathlib import Path
+
     from agent_web.settings import Settings
 
     s = Settings()
-    assert s.fork_test_command == "pytest -q"
+    # disc-fork-test-command-import-path (second site): absolute running
+    # interpreter + -m pytest (cwd on sys.path), never bare "python"/"pytest".
+    cmd = shlex.split(s.fork_test_command)
+    assert cmd[1:] == ["-m", "pytest", "-q"]
+    assert Path(cmd[0]).exists(), f"fork test interpreter missing: {cmd[0]}"
     assert s.fork_max_branches == 4
     assert s.fork_test_timeout_s == 60.0
     assert s.fork_branch_budget_usd == 0.75
     assert s.fork_aggregate_budget_usd == 2.5
+
+
+def test_default_fork_test_command_imports_root_modules(tmp_path):
+    """The shared suite lives under tests/ and imports the implementation from
+    the workspace root. The bare `pytest` console script does not put the cwd
+    on sys.path, so the old default could never pass an honest branch — every
+    fork scored 0.00 (gate-6 live find, fixed in eval-optimizer first)."""
+    import shlex
+    import subprocess
+    import sys
+
+    from agent_web.settings import Settings
+
+    (tmp_path / "impl_mod.py").write_text("VALUE = 42\n", encoding="utf-8")
+    tests_dir = tmp_path / "tests"
+    tests_dir.mkdir()
+    (tests_dir / "test_impl.py").write_text(
+        "from impl_mod import VALUE\n\ndef test_value():\n    assert VALUE == 42\n",
+        encoding="utf-8",
+    )
+    cmd = shlex.split(Settings().fork_test_command)
+    if cmd[0] == "python":  # hermetic even if an env override uses bare python
+        cmd[0] = sys.executable
+    r = subprocess.run(cmd, cwd=tmp_path, capture_output=True, text=True, timeout=120)
+    assert r.returncode == 0, (
+        f"default fork_test_command cannot pass an honest branch:\n{r.stdout}\n{r.stderr}"
+    )
 
 
 # --- Phase 4.7 (disc-mcp-config-cwd-relative): MCP_CONFIG resolution ---------

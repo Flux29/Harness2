@@ -354,6 +354,7 @@ findings:
     matrix_rows: []
     tests:
       - "projects/eval-optimizer/tests/test_forking.py::test_default_fork_test_command_imports_root_modules"
+      - "projects/agent-web/tests/test_settings_flags.py::test_default_fork_test_command_imports_root_modules"
     note: >-
       Gate-6 live find, first live outing of ADR-0018's shared-suite metric —
       two stacked defects in the default FORK_TEST_COMMAND ("pytest -q"):
@@ -365,6 +366,9 @@ findings:
       Either way EVERY honest branch scored 0.00/None and the fork always
       aborted. Default is now the absolute running interpreter (as_posix) +
       "-m pytest -q". Report shape and selection semantics unchanged.
+      SECOND SITE (post-merge): agent-web's settings.py carried the same
+      "pytest -q" default; fixed identically. Matrix A unaffected — the fork
+      knobs are 3.5-additive, absent from the v1 settings baseline.
   disc-422-serialization-crash:
     status: changed
     source: gate-6-live-session

@@ -2,12 +2,24 @@
 from __future__ import annotations
 
 import os
+import shlex
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# Interpreter for the fork branch test runner (disc-fork-test-command-import-path,
+# second site — the gate-6 fix landed in eval-optimizer's config first). Both
+# halves matter: `-m pytest` (not the bare console script) so the shared suite
+# under tests/ can import the branch's workspace-root modules, and the ABSOLUTE
+# running interpreter (not bare "python") because the vendor runner spawns argv
+# via shlex.split + create_subprocess_exec with no shell — in that context bare
+# "python" resolved to uv's pytest-less managed base. as_posix() because POSIX
+# shlex eats backslashes.
+_FORK_PYTHON = shlex.quote(Path(sys.executable).as_posix())
 
 _TRUTHY = {"1", "true", "yes", "on"}
 _FALSY = {"0", "false", "no", "off"}
@@ -113,7 +125,7 @@ class Settings:
     # --- Fork configuration (ADR-0011), centralized here (Phase 3.5). Defaults
     # preserve the previous hardcoded behavior. Whether forking stays always-on is
     # a Phase 5.2 decision; this step only gathers the knobs into one place.
-    fork_test_command: str = os.getenv("FORK_TEST_COMMAND", "pytest -q")
+    fork_test_command: str = os.getenv("FORK_TEST_COMMAND", f"{_FORK_PYTHON} -m pytest -q")
     fork_max_branches: int = int(os.getenv("FORK_MAX_BRANCHES", "4"))
     fork_test_timeout_s: float = float(os.getenv("FORK_TEST_TIMEOUT_S", "60"))
     # Conservative budgets so a runaway branch can't repeat the 22-min/48-call
