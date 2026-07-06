@@ -34,6 +34,14 @@ The integration's checkpoint checklist, mirroring the vendor reference app
   any such error in telemetry is the tripwire to prioritize this item.
 - CopilotKit UI affordances: checkpoint timeline + per-message Rewind/Fork
   controls (the deepresearch pattern, `static/app.js`).
+- **Pending-interrupt recovery in the UI** (live find, 2026-07-06): if a user
+  sends a new message while an approval interrupt is unresolved, the frontend
+  errors (`agent_run_failed: Thread has N pending interrupt(s) not addressed
+  by resume`) instead of re-presenting the Approve/Deny banner. The guard
+  itself is correct (no silent approval bypass — ADR-0012); the gap is UX:
+  the frontend should rehydrate pending interrupts from the thread state and
+  re-offer resolution. Manual recovery: POST a `resume` entry for the
+  interrupt id (see `baseline/sse-v2/interrupt-deny.sse` for the shape).
 
 ## ISSUE-2 — Legacy-strata type errors excluded from pyright (owner: ADR 6.5)
 
