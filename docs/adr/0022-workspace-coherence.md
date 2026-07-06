@@ -1,9 +1,30 @@
 # ADR-0022 — Workspace coherence: one Python floor (3.12), the meta-workspace layer kept as tested advisory policy, pip guard hardened
 
-**Status:** Proposed · 2026-07-06 · resolves plan step **6.6**
+**Status:** Accepted · 2026-07-06 · resolves plan step **6.6**
 (`crit-python-floors`, `crit-aspirational-catalogs`, `crit-pip-hook`) ·
 completes the Phase-6 ADR set (0017–0022) — the last decision before
 exit gate 6.
+
+## Acceptance note (2026-07-06)
+
+Accepted for execution as written, with two standing additions from the
+acceptance ruling:
+
+1. **The 3.12 floor is transitional, not terminal.** Once the full refactor
+   passes (exit gate 6), the workspace unifies on a **`>=3.13` floor** so the
+   aspirational tier becomes reality — the catalog's 3.13 was the right
+   ambition pointed at the wrong moment. For a refactor of this scope,
+   holding basic framework components coherent and resolving
+   incompatibilities on the *verified* interpreter is worth the transitional
+   incongruence; the raise is a small successor step with its own
+   verification run against the v2 baselines gate 6 produces. Tracked as
+   ISSUE-6; `models.yml` carries the target explicitly
+   (`target_floor_python`) so aspiration stays labeled, never blended.
+2. **Coherence never narrows the vendor surface.** Including as many of the
+   vendor's features as practical — modified or not — remains a goal
+   (ADR-0015's enablement posture outlives the refactor). Sweeps like this
+   one rule on the *meta-workspace* layer; they must not become a vehicle
+   for trimming harness capability.
 
 ## Context
 

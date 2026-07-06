@@ -80,6 +80,23 @@ known property, not a live hole, because forking is default-off (5.2,
 first-party wrapper concern (the vendor stays pristine) and is deferred until
 forking is enabled in a deployment that matters. ADR-0020 §5.
 
+## ISSUE-6 — Post-refactor floor raise: `>=3.13` workspace-wide
+
+**Status:** open · owner: post-exit-gate-6 · recorded by ADR-0022's
+acceptance note.
+
+ADR-0022 set the transitional floor at 3.12 (the verified interpreter) to
+keep the refactor's verification base stable. The acceptance ruling: once
+exit gate 6 passes, raise `requires-python` to `>=3.13` in all three
+first-party projects plus the root `.python-version`, rebuild the venvs,
+re-verify against the v2 baselines gate 6 produces, and promote
+`catalogs/models.yml` `target_floor_python` → `compatibility_python`. The
+coherence tests (`evals/agentic-smoke/tests/test_workspace_coherence.py`)
+enforce whichever floor is current, so the raise is one commit plus a
+verification run. Standing constraint from the same note: coherence work
+never narrows the vendor feature surface (ADR-0015's enablement goal
+outlives the refactor).
+
 ## Note — server-only `state/` retention
 
 The `state/` tree (history since 5.1, checkpoints since ADR-0019) is the single
