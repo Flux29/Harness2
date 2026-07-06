@@ -30,7 +30,12 @@ FIRST_PARTY = ("projects/agent-web/src/", "projects/eval-optimizer/src/", "rules
 
 
 def _git(*args: str) -> str:
-    return subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True, check=True).stdout
+    # encoding="utf-8" is load-bearing: git blobs are UTF-8, but subprocess text
+    # mode defaults to the platform encoding (cp1252 on Windows), which mangles
+    # non-ASCII (em-dashes in docstrings) and makes byte-identical nodes falsely
+    # differ. The first real relocation surfaced this.
+    return subprocess.run(["git", *args], cwd=ROOT, capture_output=True,
+                          text=True, encoding="utf-8", check=True).stdout
 
 
 def _base_blob(base: str, rel: str) -> str | None:
@@ -58,18 +63,37 @@ def _named_node(src: str, name: str) -> ast.AST | None:
     return None
 
 
+_SRC_ROOTS = ("projects/agent-web/src", "projects/eval-optimizer/src", ".")
+
+
 def _dotted_to_file_attr(dotted: str) -> tuple[str, str]:
     """eval_optimizer.legacy.validate.parse_artifact ->
        (projects/eval-optimizer/src/eval_optimizer/legacy/validate.py, parse_artifact).
-    Walks candidate module boundaries against the filesystem."""
+    Walks candidate module boundaries against the WORKING-TREE filesystem — use
+    for the NEW (post-move) path, which exists on disk."""
     parts = dotted.split(".")
     for split in range(len(parts) - 1, 0, -1):
         modparts, attr = parts[:split], ".".join(parts[split:])
-        for base in ("projects/agent-web/src", "projects/eval-optimizer/src", "."):
+        for base in _SRC_ROOTS:
             cand = ROOT / base / (Path(*modparts).as_posix() + ".py")
             if cand.exists():
                 return cand.relative_to(ROOT).as_posix(), attr
     raise FileNotFoundError(f"cannot locate module file for {dotted!r}")
+
+
+def _dotted_to_base_file_attr(base: str, dotted: str) -> tuple[str, str]:
+    """Map an OLD dotted path -> (base-tree file, attr) by probing the BASE
+    BLOB, not the working tree. A genuine relocation removes the old module
+    from the working tree, so its file must be resolved from git `base` — the
+    reason `relocations:` never worked until it was first populated."""
+    parts = dotted.split(".")
+    for split in range(len(parts) - 1, 0, -1):
+        modparts, attr = parts[:split], ".".join(parts[split:])
+        for base_dir in _SRC_ROOTS:
+            rel = (Path(base_dir) / (Path(*modparts).as_posix() + ".py")).as_posix()
+            if _base_blob(base, rel) is not None:
+                return rel, attr
+    raise FileNotFoundError(f"cannot locate base module file for {dotted!r}")
 
 
 def _changed_py(base: str) -> list[str]:
@@ -90,15 +114,18 @@ def main() -> int:
 
     if args.mode in ("relocation", "both"):
         for old, new in relocations.items():
-            old_file, old_attr = _dotted_to_file_attr(old) if _safe(old) else (None, None)
             try:
                 new_file, new_attr = _dotted_to_file_attr(new)
             except FileNotFoundError as e:
+                errors.append(f"[relocation] new path missing in working tree: {e}")
+                continue
+            try:
+                old_file, old_attr = _dotted_to_base_file_attr(args.base, old)
+            except FileNotFoundError as e:
                 errors.append(f"[relocation] {e}")
                 continue
-            old_src = _base_blob(args.base, old_file) if old_file else None
-            if old_src is None:
-                # old path may only exist in the base tree under its pre-move name
+            old_src = _base_blob(args.base, old_file)
+            if old_src is None:  # pragma: no cover - resolver already confirmed it
                 errors.append(f"[relocation] cannot read base source for {old!r}")
                 continue
             a = _named_node(old_src, old_attr)
@@ -113,7 +140,10 @@ def main() -> int:
             old_src = _base_blob(args.base, rel)
             if old_src is None:
                 continue  # newly added file — nothing to compare
-            new_src = (ROOT / rel).read_text(encoding="utf-8")
+            wt = ROOT / rel
+            if not wt.exists():
+                continue  # deleted / moved away (relocation mode covers the move)
+            new_src = wt.read_text(encoding="utf-8")
             try:
                 if _dump(ast.parse(old_src)) != _dump(ast.parse(new_src)):
                     # only an error under the format-only label; under `both` it is
@@ -130,16 +160,6 @@ def main() -> int:
         return 1
     print("Gate 1 OK: all relocations/format-only edits are AST-equal to their originals.")
     return 0
-
-
-def _safe(dotted: str) -> bool:
-    try:
-        _dotted_to_file_attr(dotted)
-        return True
-    except FileNotFoundError:
-        # old path is gone from the working tree (expected post-move) — we read
-        # it from the base blob instead, so map via the same walker on base.
-        return True
 
 
 if __name__ == "__main__":

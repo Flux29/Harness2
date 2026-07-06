@@ -9,25 +9,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, Field
-
-from .models import build_glm_model, build_model
+from ..models import build_glm_model, build_model
+from ..schema import Verdict  # ADR-0021: Verdict extracted to the live schema
 from .schema import ExecutionPlan
 
-
-class Verdict(BaseModel):
-    """Structured judgement returned by the Evaluator. Type-safe, no JSON parsing."""
-
-    passed: bool = Field(description="True only if EVERY acceptance criterion is met.")
-    score: int = Field(ge=0, le=100, description="Overall score against the spec.")
-    issues: list[str] = Field(
-        default_factory=list,
-        description="Each entry names the spec criterion it violates and why.",
-    )
-    suggested_fixes: list[str] = Field(
-        default_factory=list,
-        description="Concrete, actionable fixes the Optimizer can apply next iteration.",
-    )
+__all__ = ["Verdict", "build_planner", "build_generator", "build_optimizer", "build_evaluator"]
 
 
 OPTIMIZER_INSTRUCTIONS = (
@@ -62,7 +48,7 @@ def build_planner(model: Any | None = None) -> Any:
     Model defaults to PLANNER_MODEL (e.g. openrouter:z-ai/glm-5.2 or z-ai/glm-5.2).
     """
     from pydantic_deep import create_deep_agent
-    from .config import Settings
+    from ..config import Settings
 
     return create_deep_agent(
         model=model or build_model(Settings.from_env().planner_model),
@@ -87,7 +73,7 @@ def build_generator(model: Any | None = None) -> Any:
     Defaults to GENERATOR_MODEL.
     """
     from pydantic_deep import create_deep_agent
-    from .config import Settings
+    from ..config import Settings
 
     return create_deep_agent(
         model=model or build_model(Settings.from_env().generator_model),
@@ -115,7 +101,7 @@ def build_evaluator(model: Any | None = None) -> Any:
     Defaults to CRITIC_MODEL.
     """
     from pydantic_deep import create_deep_agent
-    from .config import Settings
+    from ..config import Settings
 
     return create_deep_agent(
         model=model or build_model(Settings.from_env().critic_model),

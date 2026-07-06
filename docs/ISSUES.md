@@ -37,17 +37,14 @@ The integration's checkpoint checklist, mirroring the vendor reference app
 
 ## ISSUE-2 — Legacy-strata type errors excluded from pyright (owner: ADR 6.5)
 
-**Status:** open · owner **ADR 6.5** · manifest: `disc-typecheck-gate-miscalibrated`.
+**Status: CLOSED (ADR-0021, 2026-07-06)** · manifest: `disc-typecheck-gate-miscalibrated`.
 
-`src/eval_optimizer/loop.py` (15 errs) and `graph.py` (2 errs) are excluded from
-the eval-optimizer pyright scope (`[tool.pyright] exclude` in `pyproject.toml`).
-These are the superseded generations ADR 6.5 will delete or relocate — type-
-checking code slated for removal is wasted effort.
-
-**Expiry (monotonic, like the dup-allowlist):** when ADR 6.5 lands, the two
-`exclude` lines MUST be deleted — either the files are gone (delete → nothing to
-exclude) or the ADR explicitly re-owns them (e.g. moved to `legacy/` and kept
-out of the typed live path). No exclusion survives 6.5 without a living owner.
+The two file excludes (`loop.py`, `graph.py`) are replaced by a single
+`src/eval_optimizer/legacy` exclude: ADR-0021 relocated the whole Gen-1 stratum
+to the committed, import-quarantined `legacy/` package (deferred, LLM nodes
+stubbed), kept out of the typed live path — exactly the "moved to `legacy/` and
+kept out of the typed live path" resolution this issue anticipated. The exclude
+is owned by ADR-0021 and drops when the deferred integration resumes.
 
 ## ISSUE-3 — Non-legacy deferred type debt (owners: Phase 4.1 / 4.2)
 

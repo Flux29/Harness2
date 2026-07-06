@@ -10,8 +10,8 @@ from __future__ import annotations
 import asyncio
 
 from .graph import run_pipeline
-from .memory_pg import Memory
-from .observability import setup_observability
+from ..memory_pg import Memory
+from ..observability import setup_observability
 
 
 def main() -> int:

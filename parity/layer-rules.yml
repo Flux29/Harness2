@@ -28,9 +28,12 @@ rules:
     forbid_import: "pydantic_deep.toolsets.forking"
     reason: "first-party code reaches forking only through pydantic_deep's public surface (ADR standing rule); the toolsets.forking shim is deprecated"
 
-  # Post-6.5 rule (armed once a legacy/ package exists): the live path must never
-  # import legacy/. Harmless until then — there is no `legacy` module to match.
+  # ADR-0021 containment (armed — eval_optimizer/legacy/ now exists): the live
+  # path must never import legacy/. Relative imports are resolved to absolute
+  # (import_lint), so `from .legacy.x import ...` is caught; except_from exempts
+  # legacy-internal imports (legacy MAY import itself and live utilities).
   - name: live-path-never-imports-legacy
     forbid_from: "*"
+    except_from: "eval_optimizer.legacy*"
     forbid_import: "eval_optimizer.legacy"
-    reason: "ADR 6.5 containment: the live path never imports the legacy strata"
+    reason: "ADR 6.5/0021 containment: the live path never imports the legacy strata"

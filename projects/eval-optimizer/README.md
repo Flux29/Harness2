@@ -27,14 +27,18 @@ Exit criterion: prints a chat reply **and** a successful `add(...)` tool call.
 If tool calling doesn't fire, switch `GLM_MODEL` in `.env` to a fallback agentic
 model (e.g. a Llama/Nemotron variant on build.nvidia.com) and re-run.
 
-## Phase 1/2 — run the loop
+## Phase 1/2 — run the loop (deferred, ADR-0021)
 
 ```powershell
-uv run python -m eval_optimizer.loop
+uv run python -m eval_optimizer.legacy.loop
 ```
 
 Runs a throwaway palindrome-function task end-to-end through Optimizer ->
-Evaluator -> feedback -> repeat, and prints whether it passed.
+Evaluator -> feedback -> repeat, and prints whether it passed. The Gen-1
+Planner→Generators→Critics strata (`loop`, `graph`, `validate`, `agents`, and
+the `*_check` entrypoints) are **deferred, not deleted** — relocated to the
+committed, import-quarantined `eval_optimizer/legacy/` package (ADR-0021). The
+live path is harness-native forking (`fork_check` → `forking`).
 
 ## Offline tests (no key needed)
 

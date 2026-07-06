@@ -287,9 +287,28 @@ findings:
 
   # ============================= Minor ==============================
   crit-dead-code-strata:
-    status: identical            # ADR decision, Phase 6.5
+    status: changed              # ADR-0021 — Gen-1 relocated to committed legacy/
     step: "6.5"
     matrix_rows: []
+    tests:
+      - "projects/eval-optimizer/tests/test_smoke.py::test_verdict_roundtrip"
+      - "projects/eval-optimizer/tests/test_validate.py::test_parses_both_files"
+    note: >-
+      ADR-0021: agentic deletion is disabled, so Gen-1 (Planner->Generators->
+      Critics on pydantic-graph) is RELOCATED — not deleted — to committed,
+      import-quarantined eval_optimizer/legacy/, out of the live import path
+      (Gate 5 live-path-never-imports-legacy now armed + relative-import-aware).
+      The two tested reusables are extracted to LIVE homes: parse_artifact ->
+      artifacts.py, Verdict -> schema.py; the retargeted test_smoke/test_validate
+      are the behavioral proof they survived intact. Every byte-identical moved
+      symbol is a `relocations:` entry below (Gate 1 AST-matched; Gate 2
+      old-gone/new-present). The old ForkReport/BranchResult vocabulary moved to
+      legacy/schema.py, resolving the inventoried live-tree fork-report
+      duplication. ISSUE-2 closed (single legacy/ pyright exclude). ADR-0005/0006
+      annotated Deferred, not superseded. Four functions with in-body relative
+      imports (agents.build_planner/build_generator/build_evaluator, loop.run_loop)
+      moved with a mechanical import-depth change — not byte-identical, so
+      excluded from `relocations:` (visible in the diff; git-mv provenance).
   crit-scratchpad-committed:
     status: removed              # Phase 0.1a — docs/Deep_Agents.MD excluded pre-commit
     step: "0.1a"
@@ -412,4 +431,58 @@ findings:
 # relocations — populated only if ADR 6.5 chooses relocation over deletion.
 # Each entry: <old dotted path>: <new dotted path>. Gate 2 lint one verifies the
 # old path no longer resolves and the new path does; Gate 1 AST-matches each.
-relocations: {}
+relocations:
+  # ADR-0021 (6.5): Gen-1 relocated to eval_optimizer/legacy/ + two reusables
+  # extracted to live homes. Byte-identical moves only (Gate 1 AST-matched);
+  # the four in-body-relative-import functions are excluded (see the
+  # crit-dead-code-strata note). Old paths gone / new paths present (Gate 2).
+  # --- extractions to LIVE homes ---
+  eval_optimizer.validate.parse_artifact: eval_optimizer.artifacts.parse_artifact
+  eval_optimizer.agents.Verdict: eval_optimizer.schema.Verdict
+  # --- graph.py ---
+  eval_optimizer.graph.Plan: eval_optimizer.legacy.graph.Plan
+  eval_optimizer.graph.Generate: eval_optimizer.legacy.graph.Generate
+  eval_optimizer.graph.Criticize: eval_optimizer.legacy.graph.Criticize
+  eval_optimizer.graph.Rank: eval_optimizer.legacy.graph.Rank
+  eval_optimizer.graph.Validate: eval_optimizer.legacy.graph.Validate
+  eval_optimizer.graph.PipelineState: eval_optimizer.legacy.graph.PipelineState
+  eval_optimizer.graph.PipelineDeps: eval_optimizer.legacy.graph.PipelineDeps
+  eval_optimizer.graph._snapshot: eval_optimizer.legacy.graph._snapshot
+  eval_optimizer.graph._build_graph: eval_optimizer.legacy.graph._build_graph
+  eval_optimizer.graph.run_pipeline: eval_optimizer.legacy.graph.run_pipeline
+  # --- loop.py (run_loop excluded: in-body memory_pg import depth changed) ---
+  eval_optimizer.loop.Iteration: eval_optimizer.legacy.loop.Iteration
+  eval_optimizer.loop.LoopResult: eval_optimizer.legacy.loop.LoopResult
+  eval_optimizer.loop._fresh_deps: eval_optimizer.legacy.loop._fresh_deps
+  eval_optimizer.loop._optimizer_prompt: eval_optimizer.legacy.loop._optimizer_prompt
+  eval_optimizer.loop._evaluator_prompt: eval_optimizer.legacy.loop._evaluator_prompt
+  eval_optimizer.loop._format_feedback: eval_optimizer.legacy.loop._format_feedback
+  # --- agents.py (build_planner/generator/evaluator excluded: in-body config import) ---
+  eval_optimizer.agents.build_optimizer: eval_optimizer.legacy.agents.build_optimizer
+  # --- runtime.py ---
+  eval_optimizer.runtime.agent_run: eval_optimizer.legacy.runtime.agent_run
+  eval_optimizer.runtime.gather_limited: eval_optimizer.legacy.runtime.gather_limited
+  # --- validate.py (parse_artifact extracted above) ---
+  eval_optimizer.validate.write_files: eval_optimizer.legacy.validate.write_files
+  eval_optimizer.validate._run_local: eval_optimizer.legacy.validate._run_local
+  eval_optimizer.validate._run_docker: eval_optimizer.legacy.validate._run_docker
+  eval_optimizer.validate._checks_from_report: eval_optimizer.legacy.validate._checks_from_report
+  eval_optimizer.validate.validate_artifact: eval_optimizer.legacy.validate.validate_artifact
+  # --- Gen-1 schema models (live schema.py -> legacy/schema.py) ---
+  eval_optimizer.schema.ExecutionPlan: eval_optimizer.legacy.schema.ExecutionPlan
+  eval_optimizer.schema.Candidate: eval_optimizer.legacy.schema.Candidate
+  eval_optimizer.schema.Critique: eval_optimizer.legacy.schema.Critique
+  eval_optimizer.schema.RankedCandidate: eval_optimizer.legacy.schema.RankedCandidate
+  eval_optimizer.schema.PipelineResult: eval_optimizer.legacy.schema.PipelineResult
+  eval_optimizer.schema.CheckResult: eval_optimizer.legacy.schema.CheckResult
+  eval_optimizer.schema.ValidationResult: eval_optimizer.legacy.schema.ValidationResult
+  eval_optimizer.schema.BranchResult: eval_optimizer.legacy.schema.BranchResult
+  eval_optimizer.schema.ForkReport: eval_optimizer.legacy.schema.ForkReport
+  # --- *_check entrypoints (main; graph_check/planner_check/generator_check
+  #     module-level imports changed depth but their function bodies did not) ---
+  eval_optimizer.graph_check.main: eval_optimizer.legacy.graph_check.main
+  eval_optimizer.validate_check.main: eval_optimizer.legacy.validate_check.main
+  eval_optimizer.planner_check.main: eval_optimizer.legacy.planner_check.main
+  eval_optimizer.generator_check.main: eval_optimizer.legacy.generator_check.main
+  eval_optimizer.generator_check._deps: eval_optimizer.legacy.generator_check._deps
+  eval_optimizer.generator_check._run: eval_optimizer.legacy.generator_check._run

@@ -15,7 +15,7 @@ from pydantic_ai_backends import StateBackend
 from pydantic_deep import create_default_deps
 
 from .agents import build_generator, build_planner
-from .observability import setup_observability
+from ..observability import setup_observability
 from .runtime import agent_run, gather_limited
 from .schema import Candidate
 

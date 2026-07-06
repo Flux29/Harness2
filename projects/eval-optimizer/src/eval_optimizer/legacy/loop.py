@@ -10,7 +10,8 @@ import asyncio
 from dataclasses import dataclass, field
 from typing import Any
 
-from .agents import Verdict, build_evaluator, build_optimizer
+from ..schema import Verdict  # ADR-0021: Verdict now lives in the live schema
+from .agents import build_evaluator, build_optimizer
 
 
 @dataclass
@@ -83,7 +84,7 @@ async def run_loop(
 
     mem = None
     if persist_agent:
-        from .memory_pg import Memory  # lazy: only needs Postgres when persisting
+        from ..memory_pg import Memory  # lazy: only needs Postgres when persisting
 
         mem = Memory()
         prior = mem.latest_state("progress", persist_agent)

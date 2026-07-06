@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from eval_optimizer.agents import Verdict
+from eval_optimizer.schema import Verdict  # ADR-0021: extracted from legacy agents.py
 
 
 def test_verdict_roundtrip() -> None:

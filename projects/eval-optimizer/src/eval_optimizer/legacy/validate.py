@@ -13,17 +13,15 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import shutil
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
+from ..artifacts import parse_artifact  # ADR-0021: parser extracted to the live tree
 from .schema import CheckResult, ValidationResult
 
-_MARKER = re.compile(r"^#\s*={2,}\s*(.+?)\s*={2,}\s*$")   # "# === path/to/file.py ==="
-_FENCE = re.compile(r"^\s*```")                            # markdown code fence line
 _SANDBOX_IMAGE = os.environ.get("VALIDATE_SANDBOX_IMAGE", "evalopt-sandbox")
 
 # Runner executed *inside* the workspace; prints one JSON line. Named with a
@@ -54,34 +52,6 @@ print("@@EVALOPT@@" + json.dumps({
               "failed": failed, "total": passed + failed, "no_tests": no_tests},
 }))
 '''
-
-
-def parse_artifact(text: str) -> dict[str, str]:
-    """Extract {relative_path: file_content} from a generator's response.
-
-    Splits on `# === path ===` markers; drops prose before the first marker and
-    strips surrounding ``` code fences. Robust to the prose+fenced output we saw
-    from the generators.
-    """
-    files: dict[str, str] = {}
-    current: str | None = None
-    buf: list[str] = []
-
-    def _store(name: str | None, lines: list[str]) -> None:
-        if not name:
-            return
-        body = "\n".join(line for line in lines if not _FENCE.match(line)).strip()
-        files[name] = (body + "\n") if body else ""
-
-    for line in text.splitlines():
-        m = _MARKER.match(line)
-        if m:
-            _store(current, buf)
-            current, buf = m.group(1).strip(), []
-        elif current is not None:
-            buf.append(line)
-    _store(current, buf)
-    return files
 
 
 def write_files(files: dict[str, str], workdir: str | Path) -> list[str]:
