@@ -21,10 +21,14 @@ Traceable end-to-end with Logfire (opt-in via `LOGFIRE_TOKEN`).
 | `docs/adr/`, `docs/PLAN-agent-web-startup.md` | decisions & the startup/always-on plan |
 | `HANDOFF.md` | what was verified where (sandbox vs Windows-native) |
 
-> Parking policy: files scheduled for deletion are moved to a **local-only**
-> parking directory that is git-ignored and **never pushed** — so a clone never
-> receives it. Git history (this is a real fork now, not a squash) is the durable
-> record of anything removed.
+> Parking policy (two tiers, ADR-0021): agentic deletion is disabled. Files
+> genuinely **scheduled for deletion** move to a **local-only, git-ignored,
+> never-pushed** `Obsolete/` directory — a clone never receives it; git history
+> (a real fork, not a squash) is the durable record. Code that is **deferred
+> with a named future** (e.g. the Gen-1 pipeline substrate) instead moves to a
+> **committed, import-quarantined** `eval_optimizer/legacy/` — push- and
+> clone-durable, kept out of the live import path and enforced by Gate 5
+> (`live-path-never-imports-legacy`).
 
 ## Quickstart (Windows)
 

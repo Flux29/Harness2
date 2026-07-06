@@ -26,7 +26,7 @@ older ones (noted inline).
 | [0018](0018-fork-selection-metric.md) | Shared-prefix test suite as the fork selection signal; threshold = all pass | Accepted |
 | [0019](0019-checkpoint-persistence-scope.md) | Durable per-thread checkpoint store now; rewind UI with the deepresearch port | Accepted |
 | [0020](0020-composed-security-posture.md) | Composed security posture; close the verified cross-origin `/agent` drive-by | Accepted |
-| [0021](0021-legacy-strata-disposition.md) | Delete the superseded generation; extract its two tested reusables; keep pgvector memory | **Proposed** |
+| [0021](0021-legacy-strata-disposition.md) | Relocate the deferred generation to committed `legacy/`; extract its two tested reusables; keep pgvector memory | Accepted |
 
 Parent document: `../../PDR.md` (Agentic Build PDR v1.1). Relocated 2026-07-01 from
 `projects/eval-optimizer/docs/adr/` (workspace-level decisions belong at workspace
