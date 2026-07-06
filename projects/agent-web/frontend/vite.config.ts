@@ -8,6 +8,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/agent": "http://localhost:8801",
+      "/threads": "http://localhost:8801",
     },
   },
 });

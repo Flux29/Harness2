@@ -34,3 +34,24 @@ Notes:
   set, add `-H "Authorization: Bearer <token>"`.
 - **8801** is the single-server port. (`HANDOFF.md` shows an older port from the
   original host, held then by Docker; that is frozen history — always use 8801.)
+
+## 4. Thread persistence smoke (feat-thread-persistence / feat-run-survival)
+
+Manual checklist for the session-persistence surfaces (ADR-0023); run in the
+browser against the built frontend, and once against `npm run dev` (proxy):
+
+1. Chat a couple of turns, reload the page → the transcript (including tool
+   cards) reappears and the sidebar highlights the same thread.
+2. Switch between two threads in the sidebar → transcripts swap with no
+   bleed-through.
+3. "+ New thread" → blank chat; the thread appears in the sidebar with the
+   first prompt as its title after the first run.
+4. With `EXECUTE=1`: trigger an approval interrupt, reload → the Approve/Deny
+   banner REAPPEARS (no `pending interrupt(s) not addressed` error). Approve →
+   the tool executes exactly once; on a fresh interrupt, Deny → the run
+   resumes with the denial. The sidebar shows/clears the ⚠️ badge.
+5. Reload the page while a run is mid-flight → the sidebar shows ⏳ for that
+   thread; when it clears, reopening the thread shows the COMPLETED result
+   (the run survived the disconnect and saved server-side).
+6. `?thread=<id>` attaches to a specific thread; `?new=1` starts fresh.
+7. `curl http://127.0.0.1:8801/threads` lists threads with titles and flags.

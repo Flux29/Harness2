@@ -3,10 +3,11 @@
  * Generative UI: named renderer for the harness `write_todos` tool +
  * a catch-all renderer so every other tool (incl. MCP) shows its status.
  */
-import { HttpAgent, buildResumeArray, type Interrupt } from "@ag-ui/client";
+import { buildResumeArray, type Interrupt } from "@ag-ui/client";
 import { useEffect, useState } from "react";
 import {
   CopilotChat,
+  CopilotChatConfigurationProvider,
   CopilotKit,
   useAgent,
   useDefaultRenderTool,
@@ -15,23 +16,24 @@ import {
 import "@copilotkit/react-core/v2/styles.css";
 import { z } from "zod";
 
+import { PersistentAgent, ThreadSidebar } from "./persistence";
+
 const AGENT_URL = import.meta.env.VITE_AGENT_URL ?? "/agent";
 
-// Sticky thread (ISSUE-4 interim): the server keys history + workspace by
-// threadId, but every page load minted a fresh UUID — a reload "lost" the
-// session even though the server remembered everything. Pin the id in
-// localStorage:
-//   ?thread=<id>  attach to a specific thread (resume an old session)
-//   ?new=1        rotate to a fresh thread
-// After a reload the transcript still starts blank (no history-fetch endpoint
-// yet — that's the deepresearch->CopilotKit port, ISSUE-4), but the agent's
-// server-side memory, workspace, and files for the thread are intact.
+// Thread bootstrap (feat-thread-persistence, ISSUE-4): the ACTIVE thread is
+// React state on <App>, controlled through the native
+// CopilotChatConfigurationProvider threadId prop (which arms CopilotChat's
+// connect lifecycle -> PersistentAgent.connect rehydrates the transcript).
+// localStorage keeps the active thread durable across reloads;
+//   ?thread=<id>  attach to a specific thread
+//   ?new=1        start on a fresh thread
 const params = new URLSearchParams(window.location.search);
-let threadId = params.get("thread") ?? localStorage.getItem("agui-thread-id") ?? "";
-if (!threadId || params.has("new")) threadId = crypto.randomUUID();
-localStorage.setItem("agui-thread-id", threadId);
+let initialThreadId =
+  params.get("thread") ?? localStorage.getItem("agui-thread-id") ?? "";
+if (!initialThreadId || params.has("new")) initialThreadId = crypto.randomUUID();
+localStorage.setItem("agui-thread-id", initialThreadId);
 
-const agent = new HttpAgent({ url: AGENT_URL, threadId });
+const agent = new PersistentAgent({ url: AGENT_URL, threadId: initialThreadId });
 
 const TodosSchema = z.object({
   todos: z.array(z.looseObject({ content: z.string().optional(), status: z.string().optional() })).optional(),
@@ -156,7 +158,7 @@ function Chat() {
   });
 
   return (
-    <main style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+    <main style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <ApprovalBanner />
       <CopilotChat
         labels={{ welcomeMessageText: "Deep agent ready — plans, forks, files, MCP tools." }}
@@ -167,9 +169,25 @@ function Chat() {
 }
 
 export default function App() {
+  const [threadId, setThreadId] = useState(initialThreadId);
+  useEffect(() => {
+    localStorage.setItem("agui-thread-id", threadId);
+  }, [threadId]);
+
   return (
     <CopilotKit selfManagedAgents={{ default: agent }}>
-      <Chat />
+      <CopilotChatConfigurationProvider threadId={threadId}>
+        <div style={{ display: "flex", height: "100vh" }}>
+          <ThreadSidebar
+            activeId={threadId}
+            onSelect={setThreadId}
+            onNew={() => setThreadId(crypto.randomUUID())}
+          />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Chat />
+          </div>
+        </div>
+      </CopilotChatConfigurationProvider>
     </CopilotKit>
   );
 }
