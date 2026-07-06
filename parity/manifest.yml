@@ -347,7 +347,27 @@ findings:
   # ===================== Discovered (post-§8) ======================
   # Not in HarnessCritique.md §8 — surfaced during Phase 0.2 baseline capture.
   # `source` marks it so Gate 2 lint one accepts it outside the catalog.
-  disc-fork-test-command-import-path:
+  feat-improve-loop:
+    status: changed
+    source: post-refactor-feature
+    step: "post-6"
+    matrix_rows: []
+    tests:
+      - "projects/agent-web/tests/test_deps_factory.py::test_make_deps_seeds_shared_context_files"
+      - "projects/agent-web/tests/test_improve_run.py::test_stage_sessions_layout"
+      - "projects/agent-web/tests/test_improve_run.py::test_cli_zero_sessions_is_offline_noop"
+      - "projects/agent-web/tests/test_improve_run.py::test_proposals_target_the_shared_context_dir"
+    note: >-
+      Deterministic self-improvement loop. The vendor improve tool is
+      agent-callable only and pointed at a sessions dir agent-web never
+      writes; first live session confirmed the gap (urllib-over-web_search
+      pattern went uncaptured). Three additive pieces: agent_web/improve_run
+      (stages state/history into the analyzer layout, runs on settings.model,
+      report-only unless --apply), a shared context/ dir seeded into every
+      thread workspace by make_deps (copy-if-missing-or-stale) so applied
+      proposals reach future threads, and scripts/Register-ImproveTask.ps1
+      (nightly Task Scheduler trigger, report-only). Workspace layout gains
+      seeded context files — additive; Matrix D slug mapping unchanged.
     status: changed
     source: gate-6-live-session
     step: "6-exit"

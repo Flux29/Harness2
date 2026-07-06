@@ -12,12 +12,35 @@ from __future__ import annotations
 
 import hashlib
 import re
+import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
 
 from pydantic import BaseModel
 from pydantic_ai_backends import LocalBackend
 from pydantic_deep import DeepAgentDeps, FileCheckpointStore
+
+# Shared context channel (feat-improve-loop): *.md files in
+# projects/agent-web/context/ are seeded into every thread workspace, so the
+# harness's ContextFilesCapability injects them into every session and the
+# improve pipeline's accepted proposals reach FUTURE threads. Without this,
+# each thread starts from a blank workspace and improvements have no durable
+# home.
+_CONTEXT_DIR = Path(__file__).resolve().parents[2] / "context"
+
+
+def _seed_context_files(root: Path, context_dir: Path) -> None:
+    """Copy shared context files into a thread workspace.
+
+    Copy-if-missing-or-stale: a newer shared file overwrites the workspace
+    copy (thread-local edits to these files are not a supported surface —
+    the shared context/ dir is the single source of truth)."""
+    if not context_dir.is_dir():
+        return
+    for src in context_dir.glob("*.md"):
+        dest = root / src.name
+        if not dest.exists() or src.stat().st_mtime > dest.stat().st_mtime:
+            shutil.copy2(src, dest)
 
 
 class UiState(BaseModel):
@@ -51,10 +74,16 @@ def thread_slug(thread_id: str) -> str:
     return f"{sanitized[:48]}-{digest}"
 
 
-def make_deps(workspaces_dir: Path, state_dir: Path, thread_id: str) -> WebDeps:
+def make_deps(
+    workspaces_dir: Path,
+    state_dir: Path,
+    thread_id: str,
+    context_dir: Path | None = None,
+) -> WebDeps:
     slug = thread_slug(thread_id)
     root = Path(workspaces_dir) / slug
     root.mkdir(parents=True, exist_ok=True)
+    _seed_context_files(root, context_dir if context_dir is not None else _CONTEXT_DIR)
     return WebDeps(
         backend=LocalBackend(root_dir=str(root)),
         # ADR-0019: durable per-thread store, OUTSIDE every LocalBackend root

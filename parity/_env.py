@@ -23,4 +23,8 @@ CODE_DEFAULT_ENV: dict[str, str] = {
     "BROWSER_AUTOMATION": "0",
     "TOOL_SEARCH": "0",
     "IMPROVE": "0",
+    # Added when the deployment .env grew these lines post-refactor (the gap
+    # surfaced as a Matrix A "drift" that was really .env leakage):
+    "FORKING": "0",
+    "COST_BUDGET_USD": "",  # empty is falsy in its parser -> None (code default)
 }

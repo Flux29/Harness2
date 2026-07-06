@@ -49,3 +49,38 @@ def test_state_handler_protocol(tmp_path):
     d = make_deps(tmp_path / "ws", tmp_path / "state", "t")
     assert isinstance(d.state, UiState)  # dataclass w/ non-optional state => StateHandler
     assert isinstance(d, WebDeps)
+
+
+# --- feat-improve-loop: shared context channel ------------------------------
+
+def test_make_deps_seeds_shared_context_files(tmp_path):
+    """New thread workspaces receive the shared context/*.md files, and a
+    newer shared file overwrites a stale workspace copy — the channel through
+    which improve-run proposals reach future sessions."""
+    import os
+    import time
+
+    from agent_web.deps import make_deps
+
+    ctx = tmp_path / "context"
+    ctx.mkdir()
+    (ctx / "AGENTS.md").write_text("v1 rules", encoding="utf-8")
+
+    ws = tmp_path / "workspaces"
+    make_deps(ws, tmp_path / "state", "t1", context_dir=ctx)
+    seeded = ws / "t1" / "AGENTS.md"
+    assert seeded.read_text(encoding="utf-8") == "v1 rules"
+
+    # Shared update propagates on the thread's next request.
+    (ctx / "AGENTS.md").write_text("v2 rules", encoding="utf-8")
+    os.utime(ctx / "AGENTS.md", (time.time() + 5, time.time() + 5))
+    make_deps(ws, tmp_path / "state", "t1", context_dir=ctx)
+    assert seeded.read_text(encoding="utf-8") == "v2 rules"
+
+
+def test_make_deps_without_context_dir_is_fine(tmp_path):
+    from agent_web.deps import make_deps
+
+    deps = make_deps(tmp_path / "ws", tmp_path / "state", "t1",
+                     context_dir=tmp_path / "absent")
+    assert deps.backend is not None
