@@ -2,8 +2,11 @@
 
 One rule (harness docs/advanced/multi-user.md): isolation == distinct backend.
 Each AG-UI thread gets its own LocalBackend rooted under workspaces/<thread>/,
-its own checkpoint store, and its own AG-UI shared-state model (StateHandler:
-a dataclass subclass of DeepAgentDeps with a non-optional `state` field).
+its own DURABLE checkpoint store (ADR-0019: per-thread, in the 5.1 server-only
+state tree — checkpoints and fork anchors survive across requests and
+restarts, which a stateless-per-POST AG-UI layer requires), and its own AG-UI
+shared-state model (StateHandler: a dataclass subclass of DeepAgentDeps with a
+non-optional `state` field).
 """
 from __future__ import annotations
 
@@ -14,7 +17,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 from pydantic_ai_backends import LocalBackend
-from pydantic_deep import DeepAgentDeps, InMemoryCheckpointStore
+from pydantic_deep import DeepAgentDeps, FileCheckpointStore
 
 
 class UiState(BaseModel):
@@ -48,10 +51,16 @@ def thread_slug(thread_id: str) -> str:
     return f"{sanitized[:48]}-{digest}"
 
 
-def make_deps(workspaces_dir: Path, thread_id: str) -> WebDeps:
-    root = Path(workspaces_dir) / thread_slug(thread_id)
+def make_deps(workspaces_dir: Path, state_dir: Path, thread_id: str) -> WebDeps:
+    slug = thread_slug(thread_id)
+    root = Path(workspaces_dir) / slug
     root.mkdir(parents=True, exist_ok=True)
     return WebDeps(
         backend=LocalBackend(root_dir=str(root)),
-        checkpoint_store=InMemoryCheckpointStore(),
+        # ADR-0019: durable per-thread store, OUTSIDE every LocalBackend root
+        # (same trust boundary as history, 5.1). The rewind endpoints /
+        # RewindRequested handling / UI land with the deepresearch->CopilotKit
+        # port (ISSUE-4); until then this is the port's storage prerequisite
+        # and the fork machinery's cross-request anchor store.
+        checkpoint_store=FileCheckpointStore(Path(state_dir) / "checkpoints" / slug),
     )

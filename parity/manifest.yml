@@ -25,9 +25,24 @@
 findings:
   # ============================ Critical ============================
   crit-checkpoint-persistence:
-    status: identical            # ADR decision, Phase 6.3
+    status: changed              # ADR-0019 — durable per-thread FileCheckpointStore
     step: "6.3"
     matrix_rows: ["D:checkpoint-store"]
+    tests:
+      - "projects/agent-web/tests/test_checkpoints.py::test_checkpoints_survive_across_requests"
+      - "projects/agent-web/tests/test_checkpoints.py::test_checkpoints_live_outside_agent_workspace"
+      - "projects/agent-web/tests/test_checkpoints.py::test_vendor_prune_cap_default_pinned"
+    note: >-
+      ADR-0019 (Accepted 2026-07-06): Option A at the storage layer —
+      make_deps wires FileCheckpointStore(state/checkpoints/<slug>) per
+      thread, so checkpoints and fork:<id> anchors survive across requests
+      and restarts (the stateless AG-UI layer's hard prerequisite for the
+      planned deepresearch->CopilotKit port; provenance of ADR-0015's claim
+      confirmed in the vendor reference app). Matrix D gains the checkpoint
+      files in the server-only state tree (outside every LocalBackend root,
+      gitignored, same trust boundary as 5.1 history). The rewind
+      endpoints/RewindRequested handling/UI are ISSUE-4 (tracked successor);
+      growth bounded by the vendor's max_checkpoints=20 auto-prune (pinned).
   crit-history-agent-writable:
     status: changed              # Phase 5.1 — server-only history via parallel-run
     step: "5.1"

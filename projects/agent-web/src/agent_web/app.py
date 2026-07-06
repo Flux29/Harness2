@@ -91,7 +91,7 @@ def create_app(
             # previous run's saved history, not a pre-lock snapshot.
             async with _thread_lock(thread_id):
                 stream = adapter.run_stream(
-                    deps=make_deps(settings.workspaces_dir, thread_id),
+                    deps=make_deps(settings.workspaces_dir, settings.state_dir, thread_id),
                     message_history=history.load(settings, thread_id),
                     on_complete=on_complete,
                 )

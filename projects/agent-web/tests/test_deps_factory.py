@@ -35,14 +35,17 @@ def test_slug_distinguishes_long_prefix_twins():
 
 
 def test_distinct_threads_distinct_backends(tmp_path):
-    a = make_deps(tmp_path, "thread-a")
-    b = make_deps(tmp_path, "thread-b")
+    state = tmp_path / "state"
+    a = make_deps(tmp_path / "ws", state, "thread-a")
+    b = make_deps(tmp_path / "ws", state, "thread-b")
     assert a.backend is not b.backend
-    assert (tmp_path / "thread-a").is_dir() and (tmp_path / "thread-b").is_dir()
+    assert (tmp_path / "ws" / "thread-a").is_dir() and (tmp_path / "ws" / "thread-b").is_dir()
     assert a.checkpoint_store is not b.checkpoint_store
+    # ADR-0019: durable stores live in per-thread dirs under the state tree.
+    assert a.checkpoint_store._dir != b.checkpoint_store._dir
 
 
 def test_state_handler_protocol(tmp_path):
-    d = make_deps(tmp_path, "t")
+    d = make_deps(tmp_path / "ws", tmp_path / "state", "t")
     assert isinstance(d.state, UiState)  # dataclass w/ non-optional state => StateHandler
     assert isinstance(d, WebDeps)

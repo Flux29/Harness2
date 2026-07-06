@@ -5,25 +5,35 @@ by `docs/HarnessRefactor.md`. The machine-canonical state is `parity/manifest.ym
 this file is the human-readable "don't silently forget" list for items that need
 an ADR before any code or doc change.
 
-## ISSUE-1 — Checkpoint persistence claimed but per-request ephemeral (HOLD)
+## ISSUE-1 — Checkpoint persistence claimed but per-request ephemeral
 
-**Status:** open · deferred to Phase 6.3 (ADR required) · manifest:
-`crit-checkpoint-persistence`.
+**Status: CLOSED (ADR-0019, 2026-07-06)** · manifest: `crit-checkpoint-persistence`.
 
-ADR-0015 and the checkpoint docs claim durable, cross-request rewind, but the
-web layer wires `InMemoryCheckpointStore()` per request (`deps.py`), so
-checkpoints do not survive across requests. **Do not edit ADR-0015's checkpoint
-claims yet** (plan step 2.6 explicitly holds): whether cross-request rewind is a
-real requirement is the 6.3 decision —
+Resolved as **Option A, split along the layer boundary**: `make_deps` now wires
+a durable per-thread `FileCheckpointStore` under `state/checkpoints/<slug>/`
+(the 5.1 server-only tree), so checkpoints and fork anchors survive across
+requests and restarts — the storage prerequisite of the planned
+deepresearch→CopilotKit port. The rewind endpoints/UI are ISSUE-4's checklist.
+ADR-0015's row is annotated in place.
 
-- **Option A:** it is → implement a durable per-thread store (file-backed next to
-  history in the 5.1 server-only tree) and keep the claim.
-- **Option B:** it isn't → downgrade the documented claim to per-run checkpoints
-  and keep `InMemoryCheckpointStore`.
+## ISSUE-4 — deepresearch→CopilotKit checkpoint surfacing (successor to ISSUE-1)
 
-The parity impact differs (A adds files to Matrix D; B changes only prose), so
-the ADR lands before any code. Recorded here so the known-false claim is not lost
-between now and Phase 6.
+**Status:** open · owner: the deepresearch→CopilotKit integration ·
+ADR-0019's deferred half.
+
+The storage layer exists (ADR-0019); the user-facing surface does not yet.
+The integration's checkpoint checklist, mirroring the vendor reference app
+(`apps/deepresearch`):
+
+- AG-UI-surface equivalents of `GET /checkpoints`,
+  `POST /checkpoints/{id}/rewind`, `POST /checkpoints/{id}/fork`
+  (`fork_from_checkpoint`).
+- App-level `RewindRequested` handling in the web layer (restore + persist
+  history, notify the client). **Until this lands, an agent-invoked
+  `rewind_to` on the web path surfaces as a run error** — known limitation;
+  any such error in telemetry is the tripwire to prioritize this item.
+- CopilotKit UI affordances: checkpoint timeline + per-message Rewind/Fork
+  controls (the deepresearch pattern, `static/app.js`).
 
 ## ISSUE-2 — Legacy-strata type errors excluded from pyright (owner: ADR 6.5)
 

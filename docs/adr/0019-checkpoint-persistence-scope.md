@@ -1,6 +1,6 @@
 # ADR-0019 — Durable per-thread checkpoint store now; rewind UI lands with the deepresearch→CopilotKit integration
 
-**Status:** Proposed (revised after review) · 2026-07-05 · resolves plan step
+**Status:** Accepted · 2026-07-06 (revised after review 2026-07-05) · resolves plan step
 **6.3** (`crit-checkpoint-persistence` — the critique's top congruency finding;
 ISSUE-1) · **refines ADR-0015** (checkpointing row: storage delivered, UI
 surfacing tracked) · builds on Phase 5.1 (server-only state tree) and the
