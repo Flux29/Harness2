@@ -28,6 +28,7 @@ older ones (noted inline).
 | [0020](0020-composed-security-posture.md) | Composed security posture; close the verified cross-origin `/agent` drive-by | Accepted |
 | [0021](0021-legacy-strata-disposition.md) | Relocate the deferred generation to committed `legacy/`; extract its two tested reusables; keep pgvector memory | Accepted |
 | [0022](0022-workspace-coherence.md) | Workspace coherence: one Python floor (3.12, →3.13 post-gate-6); meta-workspace layer kept as tested advisory policy; pip guard hardened | Accepted |
+| [0023](0023-manual-thread-persistence.md) | Manual thread persistence over Enterprise Intelligence; runs survive their clients | Accepted |
 
 Parent document: `../../PDR.md` (Agentic Build PDR v1.1). Relocated 2026-07-01 from
 `projects/eval-optimizer/docs/adr/` (workspace-level decisions belong at workspace

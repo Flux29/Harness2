@@ -34,22 +34,32 @@ The integration's checkpoint checklist, mirroring the vendor reference app
   any such error in telemetry is the tripwire to prioritize this item.
 - CopilotKit UI affordances: checkpoint timeline + per-message Rewind/Fork
   controls (the deepresearch pattern, `static/app.js`).
-- **Transcript rehydration on reload** (live find, 2026-07-06): the frontend
-  minted a fresh threadId per page load, so a reload "lost" the session (and
-  killed any in-flight run with it via SSE disconnect) even though the server
-  kept everything. INTERIM SHIPPED: sticky threadId in localStorage with
-  `?thread=<id>` / `?new=1` overrides (App.tsx) — server-side memory,
-  workspace, and files now survive reloads. REMAINING (the port): a
-  history-fetch endpoint + initialMessages so the visible transcript survives
-  too, and a thread picker over `state/history/`.
-- **Pending-interrupt recovery in the UI** (live find, 2026-07-06): if a user
-  sends a new message while an approval interrupt is unresolved, the frontend
-  errors (`agent_run_failed: Thread has N pending interrupt(s) not addressed
-  by resume`) instead of re-presenting the Approve/Deny banner. The guard
-  itself is correct (no silent approval bypass — ADR-0012); the gap is UX:
-  the frontend should rehydrate pending interrupts from the thread state and
-  re-offer resolution. Manual recovery: POST a `resume` entry for the
-  interrupt id (see `baseline/sse-v2/interrupt-deny.sse` for the shape).
+- **Transcript rehydration on reload — RESOLVED (ADR-0023,
+  feat-thread-persistence, 2026-07-06):** `GET /threads` (derived JSON index,
+  original thread ids, pre-5.1 workspace backfill) + `GET
+  /threads/{id}/messages` (`AGUIAdapter.dump_messages` over the
+  server-authoritative history, dual-write-window aware). The frontend's
+  `PersistentAgent` implements `HttpAgent.connect()`, so CopilotChat's
+  explicit-thread connect lifecycle replays the transcript on mount and on
+  sidebar thread switch; a hand-rolled sidebar drives the native
+  provider-controlled `threadId` (`CopilotThreadsDrawer`'s list is
+  license-gated). The interim sticky-localStorage hack is absorbed as the
+  durable active-thread pointer; `?thread=` / `?new=1` unchanged.
+- **Pending-interrupt recovery in the UI — RESOLVED (same change):**
+  unresolved approvals are derived server-side (trailing `ToolCallPart`s
+  with no returns) and replayed by `connect()` as a `RUN_FINISHED` interrupt
+  outcome, so the existing ApprovalBanner re-offers Approve/Deny after a
+  reload instead of the `pending interrupt(s) not addressed` error. Shape
+  parity with live interrupts is pinned by `test_pending_interrupt_parity`.
+- **In-flight runs survive disconnects — RESOLVED (ADR-0023,
+  feat-run-survival):** POST /agent runs in a background task teeing events
+  to the response; reload/thread-switch cancels only the tee, history always
+  saves, and the sidebar's `running` flag tracks activity. REMAINING: live
+  mid-stream reattach (reconnecting mid-run currently shows the completed
+  result on next hydration rather than the live stream).
+- **Future (recorded by ADR-0023):** pgvector conversation search over
+  transcripts — the role the ADR-0004 Postgres infra is reserved for
+  (deliberately NOT used as a plain thread-metadata index).
 
 ## ISSUE-2 — Legacy-strata type errors excluded from pyright (owner: ADR 6.5)
 
