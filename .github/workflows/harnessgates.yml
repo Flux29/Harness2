@@ -20,6 +20,10 @@ name: harness2-gates
 
 on:
   pull_request:
+    # labeled/unlabeled included so the label-gated ast-equality job (Gate 1)
+    # arms the moment a `relocation`/`format-only` label is applied, without
+    # needing a follow-up push.
+    types: [opened, synchronize, reopened, labeled, unlabeled]
   push:
     branches: [main]
   workflow_dispatch:
