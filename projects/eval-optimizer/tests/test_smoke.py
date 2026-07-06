@@ -55,7 +55,7 @@ def test_fork_config_centralized(monkeypatch: pytest.MonkeyPatch) -> None:
 
     s = Settings.from_env()
     assert s.fork_max_branches == 8
-    assert s.fork_test_command == "pytest -q"
+    assert s.fork_test_command == "python -m pytest -q"
     assert s.fork_test_timeout_s == 90.0
     assert s.fork_per_branch_budget_usd == 0.75
     assert s.fork_aggregate_budget_usd == 2.5

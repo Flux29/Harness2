@@ -57,7 +57,12 @@ class Settings:
             openrouter_api_key=os.environ.get("OPENROUTER_API_KEY", ""),
             openrouter_base_url=os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"),
             fork_max_branches=int(os.environ.get("FORK_MAX_BRANCHES", "8")),
-            fork_test_command=os.environ.get("FORK_TEST_COMMAND", "pytest -q"),
+            # `python -m pytest`, NOT the bare console script: -m prepends the
+            # cwd to sys.path, so the shared suite under tests/ can import the
+            # branch's root-level implementation modules (gate-6 live find,
+            # disc-fork-test-command-import-path — bare `pytest -q` scored
+            # every honest branch 0.00).
+            fork_test_command=os.environ.get("FORK_TEST_COMMAND", "python -m pytest -q"),
             fork_test_timeout_s=float(os.environ.get("FORK_TEST_TIMEOUT_S", "90")),
             fork_per_branch_budget_usd=float(os.environ.get("FORK_PER_BRANCH_BUDGET_USD", "0.75")),
             fork_aggregate_budget_usd=float(os.environ.get("FORK_AGGREGATE_BUDGET_USD", "2.5")),

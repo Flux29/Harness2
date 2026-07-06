@@ -347,6 +347,21 @@ findings:
   # ===================== Discovered (post-§8) ======================
   # Not in HarnessCritique.md §8 — surfaced during Phase 0.2 baseline capture.
   # `source` marks it so Gate 2 lint one accepts it outside the catalog.
+  disc-fork-test-command-import-path:
+    status: changed
+    source: gate-6-live-session
+    step: "6-exit"
+    matrix_rows: []
+    tests:
+      - "projects/eval-optimizer/tests/test_forking.py::test_default_fork_test_command_imports_root_modules"
+    note: >-
+      Gate-6 live find, first live outing of ADR-0018's shared-suite metric:
+      the default FORK_TEST_COMMAND ("pytest -q") used the pytest console
+      script, which does not put the workspace cwd on sys.path — so the shared
+      suite under tests/ could never import a branch's root-level
+      implementation modules and EVERY honest branch scored 0.00 (the fork
+      always aborted). Default changed to "python -m pytest -q" (-m prepends
+      the cwd). Report shape and selection semantics unchanged.
   disc-422-serialization-crash:
     status: changed
     source: gate-6-live-session

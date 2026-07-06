@@ -560,3 +560,31 @@ async def test_e2e_tampering_branch_disqualified_via_real_overlays(monkeypatch, 
     # identical (trivially passing) suite outcome — integrity decides it:
     assert report.winner_branch_id == by_label["honest"].branch_id
     assert report.any_viable is True
+
+
+def test_default_fork_test_command_imports_root_modules(tmp_path):
+    """Gate-6 live find (disc-fork-test-command-import-path): the shared suite
+    lives under tests/ and imports the implementation from the workspace root.
+    The bare `pytest` console script does not put the cwd on sys.path, so the
+    old default (`pytest -q`) could NEVER pass an honest branch — every live
+    fork aborted with 0.00 ratios. `python -m pytest` prepends the cwd (the
+    `-m` contract), which is the property this test pins on the default."""
+    import shlex
+    import subprocess
+
+    from eval_optimizer.config import Settings
+
+    (tmp_path / "impl_mod.py").write_text("VALUE = 42\n", encoding="utf-8")
+    tests_dir = tmp_path / "tests"
+    tests_dir.mkdir()
+    (tests_dir / "test_impl.py").write_text(
+        "from impl_mod import VALUE\n\ndef test_value():\n    assert VALUE == 42\n",
+        encoding="utf-8",
+    )
+    cmd = shlex.split(Settings.from_env().fork_test_command)
+    if cmd[0] == "python":  # hermetic: the venv interpreter, not PATH luck
+        cmd[0] = sys.executable
+    r = subprocess.run(cmd, cwd=tmp_path, capture_output=True, text=True, timeout=120)
+    assert r.returncode == 0, (
+        f"default fork_test_command cannot pass an honest branch:\n{r.stdout}\n{r.stderr}"
+    )

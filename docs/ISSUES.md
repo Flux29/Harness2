@@ -97,6 +97,21 @@ verification run. Standing constraint from the same note: coherence work
 never narrows the vendor feature surface (ADR-0015's enablement goal
 outlives the refactor).
 
+## ISSUE-7 — Vendor: `BranchOverlay.grep_raw()` signature mismatch in fork branches
+
+**Status:** open · owner: vendor patch decision · surfaced by the gate-6 live
+session (first live fork run).
+
+A branch agent calling its `grep` tool with pattern + path + options crashed
+the branch: `TypeError: BranchOverlay.grep_raw() takes from 2 to 3 positional
+arguments but 5 were given` (vendor `features/forking` overlay shim's `grep_raw`
+signature lags the tool schema it fronts). The coordinator absorbed it
+("result unreadable; falling back to partial_history") and the branch was
+scored from partial history — fail-contained, not fail-clean. Vendor tree is
+READ-ONLY (standing rule 1): the fix is a patch file + `VENDOR.txt` entry, or
+an upstream report at the next re-vendor. Not gate-blocking: branches that
+avoid grep are unaffected, and the selection path stays deterministic.
+
 ## Note — server-only `state/` retention
 
 The `state/` tree (history since 5.1, checkpoints since ADR-0019) is the single
