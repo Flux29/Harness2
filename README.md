@@ -38,6 +38,24 @@ powershell -File scripts\Start-AgentWeb.ps1    # one server: http://localhost:88
 Secrets are Windows USER environment variables (see `.env.example` files);
 `.env` holds only non-secret flags. Auto-start: `scripts\Register-StartupTask.ps1`.
 
+## Security posture (ADR-0020)
+
+An always-on, single-user, loopback-bound local service. The composed threat
+model and every control live in [ADR-0020](docs/adr/0020-composed-security-posture.md);
+the essentials:
+- **Bind loopback only** (`127.0.0.1`, pinned in the startup scripts, ADR-0020 §1).
+  Binding beyond loopback **requires** setting `AGENT_TOKEN`.
+- **`POST /agent` is guarded** (ADR-0020 §2): requests must be
+  `application/json`, carry a same-origin or allowlisted `Origin`, and a
+  loopback `Host` — closing the cross-origin browser drive-by that CORS alone
+  did not (CORS gates the response, not the side effect).
+- **`AGENT_TOKEN`** (USER env, optional): when set, `/agent` also requires
+  `Authorization: Bearer <token>`; mandatory for any non-loopback bind.
+- **Execution surfaces are all off by default** and individually gated
+  (`EXECUTE` approval-gated, `FORKING=0`, `BROWSER_AUTOMATION=0`).
+- **State** (history + checkpoints) lives in a server-only `state/` tree the
+  agent cannot reach; secrets never touch `.env` or CI.
+
 ## Hard-won operational notes
 
 - Every feature is env-gated (`TEAMS`, `EXECUTE`, `TOOL_SEARCH`, …); with

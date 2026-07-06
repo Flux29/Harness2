@@ -78,6 +78,14 @@ class Settings:
     cors_origins: tuple[str, ...] = tuple(
         s.strip() for s in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",") if s.strip()
     )
+    # --- Composed security posture (ADR-0020). The /agent request-authenticity
+    # guard closes the verified cross-origin drive-by; see app._authorize.
+    # Optional bearer: unset by default (loopback + guard is the single-user
+    # baseline); REQUIRED whenever the service binds beyond loopback.
+    agent_token: str | None = os.getenv("AGENT_TOKEN") or None
+    # Reject non-loopback Host headers (DNS-rebinding defense). On by default;
+    # tests over synthetic ASGI hosts (Host: testserver) set it False.
+    require_loopback_host: bool = _flag("REQUIRE_LOOPBACK_HOST", True)
     cost_budget_usd: float | None = (
         float(os.environ["COST_BUDGET_USD"]) if os.getenv("COST_BUDGET_USD") else None
     )

@@ -23,7 +23,10 @@ ROOT = Path(__file__).resolve().parents[1]
 
 @pytest.fixture
 def client_code_default():
-    settings = Settings(mcp_enable=("context7", "deepwiki"))
+    # require_loopback_host=False: TestClient posts over a synthetic Host
+    # (testserver); the ADR-0020 rebinding check is exercised in agent-web's
+    # security suite, not the Matrix C/D parity slice.
+    settings = Settings(mcp_enable=("context7", "deepwiki"), require_loopback_host=False)
     with TestClient(create_app(settings=settings, model=TestModel())) as c:
         yield c
 

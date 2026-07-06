@@ -28,6 +28,7 @@ PydanticAI-natively and rendered by CopilotKit. Home: `projects/agent-web/`.
 | Tools | MCP servers via harness-native `pydantic_deep.mcp` registry (`mcp.json` + builtins: github, context7, deepwiki, figma; plus logfire, postgres) | 0014 |
 | Sessions | per-request `DeepAgentDeps` with per-user backend; server-owned message history keyed by AG-UI thread id, stored in a server-only `state/` tree outside agent-writable roots (Phase 5.1) | 0012 |
 | Approvals | AG-UI interrupts (`requires_approval=True` → resume flow) | 0012 |
+| Security | loopback bind (5.3); POST /agent request-authenticity guard — JSON + Origin + loopback Host, optional `AGENT_TOKEN` bearer; execution surfaces off-by-default | 0020 |
 
 Vendor install shifts from `.[cli]` to `.[web,mcp,yaml]` (+`sandbox` when execute is
 enabled) plus `pydantic-ai-slim[ag-ui]`; see `vendor/RUNBOOK.md` and

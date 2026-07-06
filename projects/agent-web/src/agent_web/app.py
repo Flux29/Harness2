@@ -7,6 +7,7 @@ GET  /debug/mcp  registry status: answers "why is this tool missing"
 from __future__ import annotations
 
 import asyncio
+import json
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path as _Path
@@ -53,9 +54,13 @@ def create_app(
         yield
 
     app = FastAPI(title="agent-web", lifespan=lifespan)
+    # ADR-0020: CORS narrowed from "*" to what the AG-UI client actually uses,
+    # so the allowlist is a real boundary (paired with the /agent guard, which
+    # forces cross-origin writes through preflight).
     app.add_middleware(
         CORSMiddleware, allow_origins=list(settings.cors_origins),
-        allow_methods=["*"], allow_headers=["*"],
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["content-type", "authorization", "accept"],
     )
 
     # Phase 4.4 (crit-concurrent-history-clobber): one in-process lock per
@@ -69,6 +74,15 @@ def create_app(
 
     @app.post("/agent")
     async def run_agent(request: Request) -> Response:
+        # ADR-0020: request-authenticity guard, BEFORE any run/history/model
+        # work. Closes the verified cross-origin drive-by (a browser
+        # text/plain "simple request" reaching the endpoint without preflight).
+        reason = _authorize(request, settings)
+        if reason is not None:
+            return Response(content=json.dumps({"error": reason}),
+                            media_type="application/json",
+                            status_code=HTTPStatus.FORBIDDEN)
+
         accept = request.headers.get("accept", SSE_CONTENT_TYPE)
         try:
             run_input = AGUIAdapter.build_run_input(await request.body())
@@ -140,6 +154,57 @@ def create_app(
 
     return app
 
+
+
+_LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
+
+
+def _loopback_host(host: str) -> bool:
+    """True if a Host header names a loopback interface (port stripped)."""
+    if not host:
+        return False
+    h = host.strip()
+    if h.startswith("["):                       # [::1]:8801
+        h = h[1:].split("]", 1)[0]
+    elif h.count(":") == 1:                      # 127.0.0.1:8801
+        h = h.rsplit(":", 1)[0]
+    return h in _LOOPBACK_HOSTS
+
+
+def _authorize(request: Request, settings: Settings) -> str | None:
+    """ADR-0020 request-authenticity checks for POST /agent. Returns a reason
+    string when the request must be REFUSED (403), else None. Ordered so the
+    single verified drive-by (text/plain simple request) is caught by the
+    content-type rule even with every other check disabled.
+
+    - Bearer: when AGENT_TOKEN is set, require it (the bind-beyond-loopback and
+      future multi-user control).
+    - Content-Type must be application/json: removes the CORS "simple request"
+      bypass, so a cross-origin write now needs a preflight the allowlist
+      answers. The real AG-UI/CopilotKit client already sends JSON.
+    - Origin, when present: same-origin (matches Host) or in cors_origins.
+    - Host must be loopback (when require_loopback_host): defeats DNS rebinding,
+      where Origin and Host both carry the attacker's rebound domain.
+    """
+    if settings.agent_token:
+        if request.headers.get("authorization", "") != f"Bearer {settings.agent_token}":
+            return "missing or invalid bearer token"
+
+    ctype = request.headers.get("content-type", "").split(";", 1)[0].strip().lower()
+    if ctype != "application/json":
+        return "content-type must be application/json"
+
+    origin = request.headers.get("origin")
+    if origin is not None:
+        host = request.headers.get("host", "")
+        same_origin = origin.split("://", 1)[-1] == host
+        if not same_origin and origin not in settings.cors_origins:
+            return "origin not allowed"
+
+    if settings.require_loopback_host and not _loopback_host(request.headers.get("host", "")):
+        return "host is not loopback"
+
+    return None
 
 
 def _frontend_dist() -> _Path | None:

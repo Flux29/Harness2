@@ -67,6 +67,30 @@ so the gate is green, each owned by the phase that already touches the file:
 When each owner phase lands, remove that file's `exclude` line and let pyright
 cover it.
 
+## ISSUE-5 — Fork `test_command` inherits the full parent environment
+
+**Status:** open · owner: fork hardening · surfaced by ADR-0018, recorded by
+ADR-0020 · manifest: `crit-fork-exec-gate` (adjacent).
+
+The vendor test runner materializes a branch and runs its `test_command` with
+`env = {**os.environ, "UV_NO_SYNC": "1"}` (its own documented SECURITY caveat,
+`coordinator._run_tests_for_branch`): a branch's tests execute with whatever
+secrets the parent process holds (OpenRouter/GitHub/Logfire tokens). This is a
+known property, not a live hole, because forking is default-off (5.2,
+`FORKING=0`) and the eval-optimizer path additionally requires
+`EVALOPT_ALLOW_HOST_EXEC=1`. Hardening — scrubbing the child env for
+`test_command` to a minimal allowlist (`PATH`/`HOME`/`SYSTEMROOT`/…) — is a
+first-party wrapper concern (the vendor stays pristine) and is deferred until
+forking is enabled in a deployment that matters. ADR-0020 §5.
+
+## Note — server-only `state/` retention
+
+The `state/` tree (history since 5.1, checkpoints since ADR-0019) is the single
+server-side PII surface. It has no auto-expiry today; checkpoints self-bound via
+the vendor's `max_checkpoints=20` prune, but history and old thread dirs grow
+unbounded. Recorded by ADR-0020 §6 as a known property for a future retention
+decision (not changed there). No issue number — a property to weigh, not a bug.
+
 ## Pointer — other deferred findings
 
 Every other deferred finding lives in `parity/findings-catalog.yml` +

@@ -350,6 +350,29 @@ findings:
       require an absolute MCP_CONFIG) is a later-phase decision (4.7), not a Phase
       0 fix. Baseline: baseline/endpoints-v1/debug-mcp.deployed.json.
 
+  disc-agent-endpoint-csrf:
+    status: changed
+    source: phase-6-adr-0020
+    step: "6.4"
+    matrix_rows: []
+    tests:
+      - "projects/agent-web/tests/test_security_posture.py::test_verified_cross_origin_driveby_now_403"
+      - "projects/agent-web/tests/test_security_posture.py::test_rebinding_host_refused"
+      - "projects/agent-web/tests/test_security_posture.py::test_token_required_when_set"
+      - "projects/agent-web/tests/test_security_posture.py::test_same_origin_json_ok"
+    note: >-
+      Surfaced by ADR-0020's composed-posture assessment and VERIFIED live: with
+      CORS locked to the bundled UI origin, a browser simple request (text/plain
+      + foreign Origin, no preflight) POSTed to /agent was fully processed
+      (200, run completed, history written) — CORS gates the response, not the
+      side effect. Fixed by app._authorize before the handler: content-type must
+      be application/json (removes the simple-request bypass so CORS preflight
+      engages), Origin must be same-origin or allowlisted, Host must be loopback
+      (rebinding defense), and an optional AGENT_TOKEN bearer (required beyond
+      loopback). CORS methods/headers narrowed from "*". No Matrix row moves:
+      the guard only adds 403 refusals to illegitimate requests; the SSE /
+      interrupt happy paths (Matrix C) are unchanged.
+
   disc-abort-action-unsupported:
     status: changed
     source: phase-4-e2e

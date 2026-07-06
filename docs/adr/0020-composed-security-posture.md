@@ -1,6 +1,6 @@
 # ADR-0020 — Composed security posture for the always-on local agent service
 
-**Status:** Proposed · 2026-07-06 · resolves plan step **6.4** (a [NEW]
+**Status:** Accepted · 2026-07-06 · resolves plan step **6.4** (a [NEW]
 posture item — no §8 catalog finding; its concrete parity-affecting change is
 the discovered endpoint-auth gap `disc-agent-endpoint-csrf`) · consolidates the
 threat model behind ADR-0012 (trust model), 5.1 (server-only state), 5.2
@@ -61,9 +61,11 @@ before the handler, enforces all three:**
      *requires* a CORS preflight — which the existing allowlist actually
      answers. The real AG-UI/CopilotKit client already sends JSON (the E2E
      suite posts `application/json`), so no legitimate caller breaks.
-   - **Origin, when present, must be in `cors_origins`.** Defends the
-     non-preflighted path directly: a foreign `Origin` is refused at the
-     handler regardless of content-type.
+   - **Origin, when present, must be same-origin (matches `Host`) or in
+     `cors_origins`.** Defends the non-preflighted path directly: a foreign
+     `Origin` is refused at the handler regardless of content-type. The
+     same-origin allowance lets the bundled UI (served from `:8801` itself)
+     through without listing its own origin.
    - **Host must be loopback** (`127.0.0.1`/`localhost[:port]`). Defeats DNS
      rebinding (the attacker's page resolves `evil.com → 127.0.0.1`; the Host
      header stays `evil.com` and is refused).
