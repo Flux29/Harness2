@@ -34,6 +34,14 @@ The integration's checkpoint checklist, mirroring the vendor reference app
   any such error in telemetry is the tripwire to prioritize this item.
 - CopilotKit UI affordances: checkpoint timeline + per-message Rewind/Fork
   controls (the deepresearch pattern, `static/app.js`).
+- **Transcript rehydration on reload** (live find, 2026-07-06): the frontend
+  minted a fresh threadId per page load, so a reload "lost" the session (and
+  killed any in-flight run with it via SSE disconnect) even though the server
+  kept everything. INTERIM SHIPPED: sticky threadId in localStorage with
+  `?thread=<id>` / `?new=1` overrides (App.tsx) — server-side memory,
+  workspace, and files now survive reloads. REMAINING (the port): a
+  history-fetch endpoint + initialMessages so the visible transcript survives
+  too, and a thread picker over `state/history/`.
 - **Pending-interrupt recovery in the UI** (live find, 2026-07-06): if a user
   sends a new message while an approval interrupt is unresolved, the frontend
   errors (`agent_run_failed: Thread has N pending interrupt(s) not addressed

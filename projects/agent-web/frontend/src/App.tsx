@@ -17,7 +17,21 @@ import { z } from "zod";
 
 const AGENT_URL = import.meta.env.VITE_AGENT_URL ?? "/agent";
 
-const agent = new HttpAgent({ url: AGENT_URL });
+// Sticky thread (ISSUE-4 interim): the server keys history + workspace by
+// threadId, but every page load minted a fresh UUID — a reload "lost" the
+// session even though the server remembered everything. Pin the id in
+// localStorage:
+//   ?thread=<id>  attach to a specific thread (resume an old session)
+//   ?new=1        rotate to a fresh thread
+// After a reload the transcript still starts blank (no history-fetch endpoint
+// yet — that's the deepresearch->CopilotKit port, ISSUE-4), but the agent's
+// server-side memory, workspace, and files for the thread are intact.
+const params = new URLSearchParams(window.location.search);
+let threadId = params.get("thread") ?? localStorage.getItem("agui-thread-id") ?? "";
+if (!threadId || params.has("new")) threadId = crypto.randomUUID();
+localStorage.setItem("agui-thread-id", threadId);
+
+const agent = new HttpAgent({ url: AGENT_URL, threadId });
 
 const TodosSchema = z.object({
   todos: z.array(z.looseObject({ content: z.string().optional(), status: z.string().optional() })).optional(),
