@@ -30,10 +30,15 @@ def build_agent(
             "2) Prefer MCP tools (github_*, context7_*, logfire_*) over shell or "
             "browser for anything they cover — GitHub repos/issues/PRs MUST use "
             "github_* tools, never `gh`, `winget`, or browsing github.com. "
-            "3) NEVER navigate to login pages or enter credentials into any "
+            "3) Web lookups go through your web_search / web_fetch tools — NEVER "
+            "shell out to fetch web content (no curl, urllib, or "
+            "Invoke-WebRequest via execute). execute is for LOCAL commands only, "
+            "and it interrupts the user for approval, so misusing it for web "
+            "access wastes their time. "
+            "4) NEVER navigate to login pages or enter credentials into any "
             "website; your credentials are provided via tools, not web forms. "
-            "4) Do not install software unless the user explicitly asks. "
-            "5) If a needed tool seems missing after searching, say so and stop "
+            "5) Do not install software unless the user explicitly asks. "
+            "6) If a needed tool seems missing after searching, say so and stop "
             "instead of improvising around it."
         ),
         model=model if model is not None else settings.model,
