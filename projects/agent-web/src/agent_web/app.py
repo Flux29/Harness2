@@ -119,6 +119,20 @@ def create_app(
 
         thread_id = run_input.thread_id
 
+        # Interrupt-resume reconciliation (disc-rehydrated-interrupt-resume):
+        # on a RESUME, the server-authoritative history is the single source.
+        # The frontend re-sends its rehydrated dump_messages snapshot as
+        # run_input.messages, but that round-trip splits a
+        # ModelResponse[Thinking,Text,ToolCall] into separate AG-UI messages;
+        # concatenated after the clean server history it leaves a trailing
+        # ModelResponse WITHOUT the tool call, and pydantic-ai raises "message
+        # history does not contain any unprocessed tool calls". Drop the client
+        # snapshot — history.load() (ending in the pending ToolCallPart) drives
+        # the resume, exactly as the live (non-reloaded) path already does.
+        resuming = bool(getattr(run_input, "resume", None))
+        if resuming:
+            run_input = run_input.model_copy(update={"messages": []})
+
         async def on_complete(result: Any) -> None:
             history.save(settings, thread_id, result.all_messages())
 
@@ -137,9 +151,19 @@ def create_app(
                 # history.load INSIDE the lock (Phase 4.4): a queued request
                 # must see the previous run's saved history.
                 async with _thread_lock(thread_id):
+                    loaded = history.load(settings, thread_id)
+                    # Defensive guard (disc-rehydrated-interrupt-resume): a
+                    # resume whose thread has no matching pending tool call
+                    # (cleared thread, or already resolved) would make
+                    # _agent_graph raise UserError and kill the run. Finish
+                    # cleanly instead — the client sees an empty, valid stream.
+                    if resuming and not history.pending_tool_calls(loaded or []):
+                        log.warning("resume for thread %r has no pending tool "
+                                    "call; ignoring (stale interrupt)", thread_id)
+                        return
                     stream = adapter.run_stream(
                         deps=make_deps(settings.workspaces_dir, settings.state_dir, thread_id),
-                        message_history=history.load(settings, thread_id),
+                        message_history=loaded,
                         on_complete=on_complete,
                     )
                     async for event in stream:

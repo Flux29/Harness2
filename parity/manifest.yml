@@ -347,6 +347,29 @@ findings:
   # ===================== Discovered (post-§8) ======================
   # Not in HarnessCritique.md §8 — surfaced during Phase 0.2 baseline capture.
   # `source` marks it so Gate 2 lint one accepts it outside the catalog.
+  disc-rehydrated-interrupt-resume:
+    status: changed
+    source: post-refactor-feature
+    step: "post-6"
+    matrix_rows: []
+    tests:
+      - "projects/agent-web/tests/test_interrupt_rehydrate.py::test_resume_on_cleared_thread_is_clean"
+      - "projects/agent-web/tests/test_interrupt_rehydrate.py::test_rehydrated_resume_approve_executes_once"
+      - "projects/agent-web/tests/test_interrupt_rehydrate.py::test_rehydrated_resume_deny_resolves"
+    note: >-
+      Live: resuming a REHYDRATED stale approval threw pydantic-ai UserError
+      ('message history does not contain any unprocessed tool calls'), run
+      dead. Two app.py changes: (1) RECONCILIATION — on resume, drop the
+      client's rehydrated dump_messages snapshot and run against the
+      server-authoritative history (ADR-0012); the live UserError is
+      GLM-message-shape dependent (real ThinkingParts round-trip through
+      dump_messages differently than TestModel's) and NOT offline-reproducible,
+      so this is defensive correctness that removes the implicated
+      client-snapshot variable — the two rehydrated-path tests are REGRESSION
+      tests, and the live rerun is the confirmation. (2) GUARD — a resume with
+      no matching pending tool call (cleared/resolved thread) emitted RUN_ERROR
+      without it, clean finish with it; that IS a real offline red/green
+      (test_resume_on_cleared_thread_is_clean). No wire/endpoint shape change.
   feat-context-budget:
     status: changed
     source: post-refactor-feature
