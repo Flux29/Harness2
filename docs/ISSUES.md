@@ -51,6 +51,26 @@ The integration's checkpoint checklist, mirroring the vendor reference app
   outcome, so the existing ApprovalBanner re-offers Approve/Deny after a
   reload instead of the `pending interrupt(s) not addressed` error. Shape
   parity with live interrupts is pinned by `test_pending_interrupt_parity`.
+- **Resuming a rehydrated interrupt — HARDENED (disc-rehydrated-interrupt-
+  resume):** clicking Approve/Deny on a reloaded stale approval threw
+  pydantic-ai `UserError` ('message history does not contain any unprocessed
+  tool calls'). Fix: on resume, the server-authoritative history is the
+  single source (the lossy client `dump_messages` snapshot is dropped —
+  ADR-0012), plus a guard that finishes cleanly instead of crashing when a
+  resume has no matching pending call. NOTE: the exact UserError is
+  GLM-message-shape dependent and was NOT reproducible offline with
+  TestModel; the reconciliation is defensive (removes the implicated client
+  snapshot) and the **live rerun is the confirmation** — the guard's crash
+  fix has a genuine offline red/green.
+- **Prompt caching is NOT available on this route (recorded):** OpenRouter
+  forwards `cache_control` only to Anthropic/Google models, so GLM-5.2
+  returns `cache_read=null` — 'how Anthropic does it' (cache the stable
+  prefix, keep full context) can't be replicated as-is. Cost is controlled
+  by CONTEXT REDUCTION instead (feat-context-budget: calibrated compaction
+  budget + zero-cost sliding window + archive search). ESCALATION PATH if
+  per-turn cost ever dominates: switch to an Anthropic/Google model for
+  native caching — an ADR-0003 revision + different cost profile (recorded,
+  not pursued).
 - **In-flight runs survive disconnects — RESOLVED (ADR-0023,
   feat-run-survival):** POST /agent runs in a background task teeing events
   to the response; reload/thread-switch cancels only the tee, history always
