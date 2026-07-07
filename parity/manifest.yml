@@ -347,6 +347,27 @@ findings:
   # ===================== Discovered (post-§8) ======================
   # Not in HarnessCritique.md §8 — surfaced during Phase 0.2 baseline capture.
   # `source` marks it so Gate 2 lint one accepts it outside the catalog.
+  feat-context-budget:
+    status: changed
+    source: post-refactor-feature
+    step: "post-6"
+    matrix_rows: []
+    tests:
+      - "projects/agent-web/tests/test_context_management.py::test_sliding_window_trims_when_over_trigger"
+      - "projects/agent-web/tests/test_context_management.py::test_sliding_window_noop_under_trigger"
+      - "projects/agent-web/tests/test_context_management.py::test_build_agent_wires_context_budget"
+    note: >-
+      Cost control for long threads (input tokens were climbing 276k->543k/turn,
+      no compaction). Prompt caching is unavailable on the GLM/OpenRouter route
+      (OpenRouter forwards cache_control only to Anthropic/Google), so cost is
+      cut by sending FEWER tokens: build_agent now passes an explicit
+      context_manager_max_tokens (calibrated to a cost budget, not GLM's ~1M
+      window which never trips) plus a zero-cost sliding-window
+      history_processor (keep first turn + last N past a token trigger; trimmed
+      turns stay retrievable via the history-archive search tool) and an
+      on_context_update budget log. All env-tunable; HISTORY_WINDOW=0 disables.
+      No wire/endpoint change (Matrix C/D untouched); the sliding window only
+      reshapes what's SENT to the model — persisted history stays complete.
   feat-run-survival:
     status: changed
     source: post-refactor-feature

@@ -122,6 +122,20 @@ class Settings:
     forking: bool = _flag("FORKING", False)
     # /improve: analyzes past sessions, proposes updates to MEMORY.md/SOUL.md/AGENTS.md
     improve: bool = _flag("IMPROVE", False)
+    # --- Context management (cost control). NOTE: prompt caching is NOT
+    # available on our route — OpenRouter forwards cache_control only to
+    # Anthropic/Google models, so GLM-5.2 never returns cache_read tokens.
+    # Cost control is therefore context REDUCTION (send fewer tokens), not
+    # cached-prefix reuse. `context_manager_max_tokens` calibrates the vendor
+    # compaction guard to a COST budget rather than GLM's ~1M window (which
+    # never trips). The sliding window trims oldest turns past a token trigger,
+    # keeping the first turn + last N; trimmed turns stay retrievable via the
+    # history-archive `search_conversation_history` tool. `HISTORY_WINDOW=0`
+    # disables the window (e.g. to fall back to summarization).
+    context_manager_max_tokens: int = int(os.getenv("CONTEXT_MANAGER_MAX_TOKENS", "120000"))
+    history_window: bool = _flag("HISTORY_WINDOW", True)
+    history_window_trigger_tokens: int = int(os.getenv("HISTORY_WINDOW_TRIGGER_TOKENS", "80000"))
+    history_window_keep_messages: int = int(os.getenv("HISTORY_WINDOW_KEEP_MESSAGES", "40"))
     # --- Fork configuration (ADR-0011), centralized here (Phase 3.5). Defaults
     # preserve the previous hardcoded behavior. Whether forking stays always-on is
     # a Phase 5.2 decision; this step only gathers the knobs into one place.

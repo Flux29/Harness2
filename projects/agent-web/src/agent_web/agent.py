@@ -7,12 +7,41 @@ pause into AG-UI interrupts instead of erroring.
 """
 from __future__ import annotations
 
+import logging
 from typing import Any, Sequence
 
 from pydantic_ai.tools import DeferredToolRequests
-from pydantic_deep import LiveForkCapability, create_deep_agent
+from pydantic_deep import (
+    LiveForkCapability,
+    create_deep_agent,
+    create_sliding_window_processor,
+)
 
 from .settings import Settings
+
+log = logging.getLogger("agent_web.context")
+
+
+def _history_processors(settings: Settings) -> list[Any]:
+    """Cost control (ADR-0003 route has no prompt caching — see settings note):
+    a zero-cost sliding window that trims oldest turns once the sent history
+    passes the token trigger, keeping the first turn (system/task) + last N.
+    Trimmed turns remain retrievable via the history-archive search tool.
+    The SINGLE swap point if summarization is ever needed instead."""
+    if not settings.history_window:
+        return []
+    return [
+        create_sliding_window_processor(
+            trigger=("tokens", settings.history_window_trigger_tokens),
+            keep=("messages", settings.history_window_keep_messages),
+            keep_head=("messages", 1),
+        )
+    ]
+
+
+def _on_context_update(pct: float, current: int, maximum: int) -> None:
+    """Make context-budget usage OBSERVABLE each turn (logs + Logfire when on)."""
+    log.info("context budget: %.0f%% (%d / %d tokens)", pct * 100, current, maximum)
 
 
 def build_agent(
@@ -59,6 +88,12 @@ def build_agent(
         include_checkpoints=True,
         skill_directories=[settings.skills_dir] if settings.skills_dir else None,
         cost_budget_usd=settings.cost_budget_usd,
+        # Cost control (no prompt caching on the GLM/OpenRouter route): calibrate
+        # the compaction guard to a cost budget (not GLM's ~1M window, which
+        # never trips) and add a zero-cost sliding window over old turns.
+        context_manager_max_tokens=settings.context_manager_max_tokens,
+        history_processors=_history_processors(settings),
+        on_context_update=_on_context_update,
         web_search=settings.web_tools,
         web_fetch=settings.web_tools,
         # Env-gated deferred features (ADR-0015): all off unless flipped in .env.
